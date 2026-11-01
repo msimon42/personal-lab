@@ -46,8 +46,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path,
-                        default=Path("packages/election_model/src/election_model/data/history-v2.json"))
-    parser.add_argument("--normalized-polls", type=Path, default=Path("data/elections/normalized/archive-polls.json"))
+                        default=Path("packages/election_model/src/election_model/data/history-v3.json"))
+    parser.add_argument("--normalized-polls", type=Path, default=Path("data/elections/normalized/archive-polls-v3.json"))
     parser.add_argument("--retrieved-at", default=None,
                         help="ISO8601 retrieval time; defaults to matching source manifest, then source mtime in UTC.")
     args = parser.parse_args()
@@ -56,8 +56,13 @@ def main() -> None:
     archive = read_538_archive(raw, retrieved_at=retrieved)
     history, metadata = aggregate_history(archive)
     snapshot = {"metadata": metadata, "races": [row.model_dump(mode="json") for row in history]}
-    write_immutable(args.output, json.dumps(snapshot, indent=2, sort_keys=True) + "\n")
-    write_immutable(args.normalized_polls, archive.model_dump_json(indent=2) + "\n")
+    outputs = {args.output: json.dumps(snapshot, indent=2, sort_keys=True) + "\n",
+               args.normalized_polls: archive.model_dump_json(indent=2) + "\n"}
+    for path, content in outputs.items():
+        if path.exists() and path.read_text(encoding="utf-8") != content:
+            raise ValueError(f"Refusing to overwrite different evidence: {path}")
+    for path, content in outputs.items():
+        write_immutable(path, content)
     print(json.dumps({"history_path": str(args.output), "normalized_polls_path": str(args.normalized_polls),
                       "race_count": len(history), "cycles": sorted({r.cycle for r in history}),
                       "source_sha256": archive.source_sha256}, sort_keys=True))

@@ -23,15 +23,18 @@ class ElectionService:
 
     def status(self) -> ResearchStatus:
         research = load_document("research.json")
-        current = load_document("current.json")
+        current = load_document("current-v2.json")
         history, _ = load_history()
-        aggregator = load_document("votehub.json") if has_document("votehub.json") else None
+        aggregator = load_document("votehub-v2.json") if has_document("votehub-v2.json") else None
         return ResearchStatus(
             as_of=date.fromisoformat(research["as_of"]), status="partial_race_coverage",
             historical_races=len(history), historical_cycles=sorted({row.cycle for row in history}),
             current_races=len(current["races"]), current_polls=len(current["polls"]),
-            sources=[SourceRecord.model_validate(row) for row in research["sources"]],
-            findings=[ResearchFinding.model_validate(row) for row in research["findings"]],
+            sources=[SourceRecord.model_validate(row) for row in
+                     research["sources"] + current["metadata"].get("eligibility_sources", [])
+                     + (aggregator["metadata"]["sources"] if aggregator else [])],
+            findings=[ResearchFinding.model_validate(row) for row in
+                      research["findings"] + [current["metadata"]["eligibility_finding"]]],
             context_observations=[ContextObservation.model_validate(row)
                                   for row in research["context_observations"]],
             limitations=research["limitations"],
@@ -47,7 +50,7 @@ class ElectionService:
         bundled = request.dataset_id != "inline"
         current = None
         if bundled:
-            current = load_document("votehub.json" if request.dataset_id == "votehub-2026-11-01" else "current.json")
+            current = load_document("votehub-v2.json" if request.dataset_id == "votehub-2026-11-01" else "current-v2.json")
             snapshot_date = date.fromisoformat(current["metadata"]["as_of"])
             if request.config.as_of != snapshot_date:
                 raise ValueError("The us-2026-11-01 snapshot supports only its November1 cutoff; "

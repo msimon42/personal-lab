@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Supplemental primary candidate-party evidence for VoteHub snapshot; original data source metadata retained in fec-votehub-candidate-evidence.json",
+  "records": [
+    {
+      "path": "fec-cn26.zip",
+      "sha256": "e931243f01510281ae17a0252c4c71c063b6a098a7f2170785ac018e338d9e34",
+      "bytes": 312601,
+      "recorded_at": "2026-11-01T20:37:15.817397+00:00"
+    },
+    {
+      "path": "fec-candidate-master-description.html",
+      "sha256": "3715b39091e903965798dcc3d9ca877c9dae0c1b54b1aa12150694b6e78dd8bc",
+      "bytes": 30224,
+      "recorded_at": "2026-11-01T20:39:03.334372+00:00"
+    },
+    {
+      "path": "fec-votehub-candidate-evidence.json",
+      "sha256": "82f1b0838d3c307806cb6cdc7169895fb53b5040f31f289f2ea8379d4274d0ba",
+      "bytes": 89937,
+      "recorded_at": "2026-11-01T20:38:49.671448+00:00"
+    }
+  ]
+}

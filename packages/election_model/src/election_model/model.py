@@ -13,7 +13,7 @@ import math
 import random
 import statistics
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 from typing import Literal, TypeAlias
 
 from .contracts import (
@@ -56,6 +56,37 @@ def _effective_sample_size(poll: Poll) -> int:
     return poll.sample_size if poll.sample_size_verified else 1000
 
 
+def election_eligibility_issue(race: Race | HistoricalRace) -> str | None:
+    """Fail closed on unknown rounds and known incompatible federal contests.
+
+    Jurisdiction guards precede caller labels, so an unsupported ranked-choice or
+    first-round contest cannot become eligible by being labeled plurality. LA and
+    the ambiguous 2018 MS archive are conservative evidence exclusions, not claims
+    that all such elections used the same rule. Explicit two-candidate final
+    runoffs outside the federal November general date may be eligible.
+    """
+    november_first = date(race.cycle, 11, 1)
+    november_general = november_first + timedelta(days=(7 - november_first.weekday()) % 7 + 1)
+    is_november_general = race.election_date == november_general
+    if race.state == "ME" and race.cycle >= 2018:
+        return "maine_ranked_choice_federal_2018_onward"
+    if race.state == "AK" and race.cycle >= 2022:
+        return "alaska_ranked_choice_federal_2022_onward"
+    if race.state == "GA" and is_november_general:
+        return "georgia_november_majority_requirement"
+    if race.state == "LA" and is_november_general:
+        return "louisiana_november_rule_and_round_not_established"
+    if race.state == "MS" and race.cycle == 2018 and race.chamber == "senate" and is_november_general:
+        return "mississippi_2018_senate_regular_special_round_ambiguous"
+    if race.voting_system == "unknown":
+        return "unknown_voting_system"
+    if race.voting_system not in {"plurality", "two_candidate_runoff"}:
+        return "unsupported_voting_system"
+    if race.poll_round != "decisive":
+        return "unknown_or_non_decisive_poll_round"
+    return None
+
+
 def _bounded_weights(raw: list[float], cap: float) -> list[float]:
     """Redistribute excess cluster weight; a cap below 1/n is infeasible."""
     if not raw:
@@ -88,6 +119,9 @@ def aggregate_polls(race: Race, polls: list[Poll], config: ModelConfig) -> PollA
     samples on a field-date tie. A missing overlap declaration cannot establish
     independence. No unobserved house, population, or mode effect is invented.
     """
+    eligibility_issue = election_eligibility_issue(race)
+    if eligibility_issue:
+        raise ValueError(f"Unsupported election voting system/round: {eligibility_issue}.")
     if config.as_of >= race.election_date:
         raise ValueError("Poll aggregation cutoff must precede election day.")
     warnings: list[str] = []
@@ -174,7 +208,7 @@ def _fit(history: list[HistoricalRace], chamber: Chamber, config: ModelConfig) -
     """Fit signed errors with equal cycle weight, rather than equal race weight."""
     by_cycle: dict[int, list[float]] = defaultdict(list)
     for row in history:
-        if row.chamber == chamber:
+        if row.chamber == chamber and election_eligibility_issue(row) is None:
             by_cycle[row.cycle].append(row.actual_margin - row.poll_margin)
     cycles = sorted(by_cycle)
     warnings: list[str] = []
@@ -201,6 +235,7 @@ def _fit(history: list[HistoricalRace], chamber: Chamber, config: ModelConfig) -
 def _eligible_history(history: list[HistoricalRace], *, cutoff: date, chamber: Chamber,
                       before_cycle: int, horizon: int) -> list[HistoricalRace]:
     return [row for row in history if row.chamber == chamber and row.cycle % 4 == 2
+            and election_eligibility_issue(row) is None
             and row.cycle < before_cycle and row.outcome_available_date <= cutoff
             and row.election_date < cutoff and row.as_of <= cutoff
             and (row.election_date - row.as_of).days == horizon]
@@ -231,12 +266,28 @@ def forecast(request: ForecastRequest) -> ForecastReport:
     included_polls = [poll for poll in request.polls
                       if not (request.exclude_partisan and poll.partisan is True)
                       and not (request.exclude_internal and poll.internal is True)]
-    aggregates = [aggregate_polls(race, included_polls, config) for race in request.races]
+    aggregates = []
+    for race in request.races:
+        eligibility_issue = election_eligibility_issue(race)
+        if eligibility_issue:
+            aggregates.append(PollAggregate(
+                race_id=race.race_id, poll_margin=None, sd_sampling=None, poll_count=0,
+                pollster_count=0, effective_pollsters=0.0,
+                warnings=[f"Unmodeled voting system/round: {eligibility_issue}. No probability is produced."],
+            ))
+        else:
+            aggregates.append(aggregate_polls(race, included_polls, config))
     warnings = [_RESEARCH_WARNING, _UNCERTAINTY_WARNING, _ARCHIVE_WARNING,
                 "Aggregate polling errors cannot identify which people switched or why; turnout, "
                 "preference change and measurement error remain distinct explanations.",
                 "Empirical adjustments use only prior midterm cycles from the same chamber with an exact "
-                "days-to-election horizon match and outcomes available by the cutoff."]
+                "days-to-election horizon match and outcomes available by the cutoff.",
+                "The legacy dem_win_probability field represents P(D-minus-R margin > 0) in an eligible "
+                "decisive contest. Other-party victories, ranked transfers and subsequent rounds are not modeled."]
+    unsupported_history = sum(election_eligibility_issue(row) is not None for row in request.history)
+    if unsupported_history:
+        warnings.append(f"Excluded {unsupported_history} historical records with unknown or unsupported voting "
+                        "system/round eligibility from empirical fitting.")
     if request.exclude_partisan or request.exclude_internal:
         warnings.append(f"Explicit partisan/internal filters excluded {len(request.polls) - len(included_polls)} "
                         "input polls with matching true flags; unknown flag values were retained and do not "
@@ -336,6 +387,7 @@ def backtest(request: BacktestRequest) -> BacktestReport:
     Historical source availability remains a disclosed proxy, not proof of replay.
     """
     eligible = [row for row in request.history if row.cycle % 4 == 2
+                and election_eligibility_issue(row) is None
                 and row.outcome_available_date <= request.as_of and row.election_date < request.as_of]
     groups: dict[tuple[int, Chamber], list[HistoricalRace]] = defaultdict(list)
     for row in eligible:
@@ -374,6 +426,10 @@ def backtest(request: BacktestRequest) -> BacktestReport:
                 "the zero-bias baseline and prior-cycle signed-error estimate."]
     if request.synthetic:
         warnings.insert(0, "SYNTHETIC evaluation: metrics establish software contracts, not election accuracy.")
+    unsupported_history = sum(election_eligibility_issue(row) is not None for row in request.history)
+    if unsupported_history:
+        warnings.append(f"Excluded {unsupported_history} historical records with unknown or unsupported voting "
+                        "system/round eligibility from both training and evaluation.")
     if skipped:
         warnings.append(f"Skipped {skipped} eligible rows without the required prior-cycle training history.")
     if not folds:

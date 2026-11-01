@@ -1,0 +1,39 @@
+{
+  "as_of": "2026-11-01",
+  "files": {
+    "historical-evaluation.json": {
+      "bytes": 9736,
+      "sha256": "83f5bc7d1a32273d5da936f040b4cded44d96c173514d51b9fafacec89b0f38c"
+    },
+    "provider-batch-01-request.json": {
+      "bytes": 674,
+      "sha256": "807c52ac3edd06bd7c441edcb9f8aa642f3305991a3fb485aaec07cf3efc575d"
+    },
+    "provider-batch-01-scenarios.json": {
+      "bytes": 28150,
+      "sha256": "44cd30b52627f50bfa3c8d802b3f7aeb978ac1db33fbd3b7944d9da2c4f07f20"
+    },
+    "provider-batch-02-request.json": {
+      "bytes": 618,
+      "sha256": "33698ec8d64d1001ca095409a979bf9229ddfa251b62da3bd686c67b0f48aeac"
+    },
+    "provider-batch-02-scenarios.json": {
+      "bytes": 21392,
+      "sha256": "a1e2bc7789cac6839e6b5b2ae5ea18f31f3f3ec776e572e1486d8a4880a46e03"
+    },
+    "race-scenarios.json": {
+      "bytes": 12746,
+      "sha256": "00a09ec91084c167870b5d3358e72bb814ffe0f192d5f5ebb1130dd70eaeb76a"
+    },
+    "research-status.json": {
+      "bytes": 23273,
+      "sha256": "c1e4e5a65a4fae5c79797d3c94b9cc1e04c20ae421e7db34918bd436d17399fd"
+    },
+    "symmetric-republican-stress.json": {
+      "bytes": 12763,
+      "sha256": "7032572b0f488307563fb7a1a26e87b10556ce442cd1921a13ec74607b8ab0eb"
+    }
+  },
+  "interpretation": "Research scenarios and retrospective diagnostics; no chamber forecast.",
+  "model_version": "0.1.1"
+}

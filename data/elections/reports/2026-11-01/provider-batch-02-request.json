@@ -1,0 +1,31 @@
+{
+  "dataset_id": "votehub-2026-11-01",
+  "race_ids": [
+    "2026-NE-02",
+    "2026-NH-01",
+    "2026-NH-02",
+    "2026-NM-01",
+    "2026-OH-SEN",
+    "2026-PA-08",
+    "2026-TX-15"
+  ],
+  "exclude_partisan": false,
+  "exclude_internal": false,
+  "races": [],
+  "polls": [],
+  "history": [],
+  "config": {
+    "as_of": "2026-11-01",
+    "seed": 20261101,
+    "draws": 5000,
+    "half_life_days": 14.0,
+    "max_poll_age_days": 45,
+    "pollster_cap": 0.35,
+    "minimum_race_sd": 4.0,
+    "national_sd": 2.0,
+    "state_sd": 1.0,
+    "bias_shrinkage_cycles": 3.0,
+    "reversal_shift": 3.0
+  },
+  "synthetic": false
+}

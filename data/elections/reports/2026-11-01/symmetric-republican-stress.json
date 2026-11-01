@@ -1,0 +1,348 @@
+{
+  "recommended_scenario": "baseline",
+  "model_version": "0.1.0",
+  "input_sha256": "6aff7e92a5854453ca4a8c659a73b1ea0dc4039b85a26e77f14bf82386462410",
+  "configuration": {
+    "as_of": "2026-11-01",
+    "seed": 20261101,
+    "draws": 5000,
+    "half_life_days": 14.0,
+    "max_poll_age_days": 45,
+    "pollster_cap": 0.35,
+    "minimum_race_sd": 4.0,
+    "national_sd": 2.0,
+    "state_sd": 1.0,
+    "bias_shrinkage_cycles": 3.0,
+    "reversal_shift": -3.0
+  },
+  "data_origin": "bundled_public",
+  "as_of": "2026-11-01",
+  "synthetic": false,
+  "status": "partial",
+  "forecasts": [
+    {
+      "race_id": "2026-KS-SEN",
+      "scenario": "baseline",
+      "poll_margin": 4.0,
+      "adjustment": 0.0,
+      "mean_margin": 4.0,
+      "sd": 6.684664844276826,
+      "dem_win_probability": 0.7245550889822036,
+      "p05": -7.065918411511307,
+      "p50": 3.9286587626669434,
+      "p95": 14.978547972547714,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": []
+    },
+    {
+      "race_id": "2026-KS-SEN",
+      "scenario": "historical",
+      "poll_margin": 4.0,
+      "adjustment": -0.20054427371488162,
+      "mean_margin": 3.7994557262851183,
+      "sd": 6.684664844276826,
+      "dem_win_probability": 0.7159568086382724,
+      "p05": -7.266462685226188,
+      "p50": 3.7281144889520617,
+      "p95": 14.778003698832833,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": []
+    },
+    {
+      "race_id": "2026-KS-SEN",
+      "scenario": "reversal",
+      "poll_margin": 4.0,
+      "adjustment": -3.0,
+      "mean_margin": 1.0,
+      "sd": 6.684664844276826,
+      "dem_win_probability": 0.5555888822235553,
+      "p05": -10.065918411511307,
+      "p50": 0.9286587626669434,
+      "p95": 11.978547972547714,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": [
+        "Explicit hypothetical D-minus-R shift; not a learned reversal."
+      ]
+    },
+    {
+      "race_id": "2026-TX-SEN",
+      "scenario": "baseline",
+      "poll_margin": 2.0,
+      "adjustment": 0.0,
+      "mean_margin": 2.0,
+      "sd": 6.684664844276826,
+      "dem_win_probability": 0.6155768846230754,
+      "p05": -8.963429739063724,
+      "p50": 1.8094772558969505,
+      "p95": 12.848551743538824,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": []
+    },
+    {
+      "race_id": "2026-TX-SEN",
+      "scenario": "historical",
+      "poll_margin": 2.0,
+      "adjustment": -0.20054427371488162,
+      "mean_margin": 1.7994557262851183,
+      "sd": 6.684664844276826,
+      "dem_win_probability": 0.6003799240151969,
+      "p05": -9.163974012778606,
+      "p50": 1.6089329821820688,
+      "p95": 12.648007469823941,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": []
+    },
+    {
+      "race_id": "2026-TX-SEN",
+      "scenario": "reversal",
+      "poll_margin": 2.0,
+      "adjustment": -3.0,
+      "mean_margin": -1.0,
+      "sd": 6.684664844276826,
+      "dem_win_probability": 0.4348130373925215,
+      "p05": -11.963429739063724,
+      "p50": -1.1905227441030495,
+      "p95": 9.848551743538824,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": [
+        "Explicit hypothetical D-minus-R shift; not a learned reversal."
+      ]
+    },
+    {
+      "race_id": "2026-IA-SEN",
+      "scenario": "baseline",
+      "poll_margin": -2.0,
+      "adjustment": 0.0,
+      "mean_margin": -2.0,
+      "sd": 6.684664844276826,
+      "dem_win_probability": 0.3760247950409918,
+      "p05": -12.966705351261021,
+      "p50": -2.1649505982352486,
+      "p95": 9.028517291255493,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": []
+    },
+    {
+      "race_id": "2026-IA-SEN",
+      "scenario": "historical",
+      "poll_margin": -2.0,
+      "adjustment": -0.20054427371488162,
+      "mean_margin": -2.2005442737148817,
+      "sd": 6.684664844276826,
+      "dem_win_probability": 0.364627074585083,
+      "p05": -13.167249624975902,
+      "p50": -2.3654948719501303,
+      "p95": 8.82797301754061,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": []
+    },
+    {
+      "race_id": "2026-IA-SEN",
+      "scenario": "reversal",
+      "poll_margin": -2.0,
+      "adjustment": -3.0,
+      "mean_margin": -5.0,
+      "sd": 6.684664844276826,
+      "dem_win_probability": 0.22605478904219156,
+      "p05": -15.966705351261021,
+      "p50": -5.164950598235249,
+      "p95": 6.028517291255493,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": [
+        "Explicit hypothetical D-minus-R shift; not a learned reversal."
+      ]
+    },
+    {
+      "race_id": "2026-NY-17",
+      "scenario": "baseline",
+      "poll_margin": 2.0,
+      "adjustment": 0.0,
+      "mean_margin": 2.0,
+      "sd": 8.613714259485041,
+      "dem_win_probability": 0.5837832433513297,
+      "p05": -12.364196334241392,
+      "p50": 1.897263454380419,
+      "p95": 15.739596163485068,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": []
+    },
+    {
+      "race_id": "2026-NY-17",
+      "scenario": "historical",
+      "poll_margin": 2.0,
+      "adjustment": -0.21107630980546754,
+      "mean_margin": 1.7889236901945325,
+      "sd": 8.613714259485041,
+      "dem_win_probability": 0.5739852029594081,
+      "p05": -12.575272644046859,
+      "p50": 1.6861871445749514,
+      "p95": 15.528519853679601,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": []
+    },
+    {
+      "race_id": "2026-NY-17",
+      "scenario": "reversal",
+      "poll_margin": 2.0,
+      "adjustment": -3.0,
+      "mean_margin": -1.0,
+      "sd": 8.613714259485041,
+      "dem_win_probability": 0.4476104779044191,
+      "p05": -15.364196334241392,
+      "p50": -1.102736545619581,
+      "p95": 12.739596163485068,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": [
+        "Explicit hypothetical D-minus-R shift; not a learned reversal."
+      ]
+    }
+  ],
+  "aggregates": [
+    {
+      "latest_poll_age_days": 4,
+      "newest_poll_end_date": "2026-10-28",
+      "oldest_poll_end_date": "2026-10-28",
+      "race_id": "2026-KS-SEN",
+      "poll_margin": 4.0,
+      "sd_sampling": 3.4249087579087414,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": [
+        "Configured pollster cap is infeasible with this few clusters; equal-weight minimum applies."
+      ]
+    },
+    {
+      "latest_poll_age_days": 13,
+      "newest_poll_end_date": "2026-10-19",
+      "oldest_poll_end_date": "2026-10-19",
+      "race_id": "2026-TX-SEN",
+      "poll_margin": 2.0,
+      "sd_sampling": 3.065289545866752,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": [
+        "Configured pollster cap is infeasible with this few clusters; equal-weight minimum applies."
+      ]
+    },
+    {
+      "latest_poll_age_days": 26,
+      "newest_poll_end_date": "2026-10-06",
+      "oldest_poll_end_date": "2026-10-06",
+      "race_id": "2026-IA-SEN",
+      "poll_margin": -2.0,
+      "sd_sampling": 3.7613418227664854,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": [
+        "Configured pollster cap is infeasible with this few clusters; equal-weight minimum applies.",
+        "Latest retained poll is 26 days old at cutoff; no fitted late-movement or age-based uncertainty model is available."
+      ]
+    },
+    {
+      "latest_poll_age_days": 33,
+      "newest_poll_end_date": "2026-09-29",
+      "oldest_poll_end_date": "2026-09-29",
+      "race_id": "2026-NY-17",
+      "poll_margin": 2.0,
+      "sd_sampling": 4.846648326421054,
+      "poll_count": 1,
+      "pollster_count": 1,
+      "effective_pollsters": 1.0,
+      "warnings": [
+        "Configured pollster cap is infeasible with this few clusters; equal-weight minimum applies.",
+        "Latest retained poll is 33 days old at cutoff; no fitted late-movement or age-based uncertainty model is available."
+      ]
+    }
+  ],
+  "calibrations": [
+    {
+      "chamber": "house",
+      "training_cycles": [
+        1998,
+        2002,
+        2006,
+        2010,
+        2014,
+        2018,
+        2022
+      ],
+      "race_count": 569,
+      "cycle_count": 7,
+      "estimated_bias": -0.21107630980546754,
+      "residual_sd": 8.613714259485041,
+      "shrinkage_weight": 0.7,
+      "warnings": []
+    },
+    {
+      "chamber": "senate",
+      "training_cycles": [
+        1998,
+        2002,
+        2006,
+        2010,
+        2014,
+        2018,
+        2022
+      ],
+      "race_count": 202,
+      "cycle_count": 7,
+      "estimated_bias": -0.20054427371488162,
+      "residual_sd": 6.684664844276826,
+      "shrinkage_weight": 0.7,
+      "warnings": []
+    }
+  ],
+  "unmodeled_races": [],
+  "requested_race_count": 4,
+  "modeled_race_count": 4,
+  "warnings": [
+    "Research scenarios only: probabilities are not a calibrated complete election forecast. No chamber-control probability is produced; the requested race list is incomplete.",
+    "Uncertainty floors and national/state correlation components are configurable sensitivity assumptions, not fitted 2026 parameters. More polls do not remove common polling error.",
+    "Bundled archive evaluation is a retrospective diagnostic, not an exact as-of replay: original publication availability is proxied and the historical archive selects eventual top-two candidates. Bundled historical coverage ends in 2022; it does not establish 2026 calibration.",
+    "Aggregate polling errors cannot identify which people switched or why; turnout, preference change and measurement error remain distinct explanations.",
+    "Empirical adjustments use only prior midterm cycles from the same chamber with an exact days-to-election horizon match and outcomes available by the cutoff.",
+    "Monte Carlo seed=20261101, draws=5000; maximum probability simulation standard error is approximately 0.007.",
+    "Partial research seed only:3 Senate races and1 House district, all from one polling firm; no chamber universe or control probabilities.",
+    "Probabilities are research scenarios with assumed uncertainty/correlation; they are not a validated complete2026 forecast.",
+    "Aggregate data cannot establish who changed votes, whether voters concealed preferences, or why polling errors occur.",
+    "Archive available now is not a vintage dataset; historical publication dates are unknown.",
+    "Observation dates are median field dates, not publication dates or field end dates.",
+    "Candidates are the retrospectively selected top two election finishers; selection bias remains.",
+    "The provider has already imputed some sample sizes without a row-level imputation flag.",
+    "Historical actual margins are the archive's values; independent official-return reconciliation is not supplied.",
+    "This snapshot has no 2024 or 2026 election observations.",
+    "Publication lag and outcome availability lag are declared proxies, not observed release dates.",
+    "Archive map vintage is unknown; no district baseline or cross-map transfer is modeled.",
+    "November specials sharing the federal general-election date may remain as distinct race IDs.",
+    "Historical selection favors polled competitive D/R races and is not a representative chamber slate.",
+    "Baseline is the default: retrospective held-out evidence does not justify promoting a directional correction.",
+    "All four current seed polls come from Emerson; there is no independent cross-firm confirmation. The seed is not an exhaustive inventory of races or polls."
+  ]
+}

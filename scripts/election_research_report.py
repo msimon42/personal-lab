@@ -9,6 +9,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from election_model import __version__
 from election_model.contracts import BacktestRequest, ForecastRequest
 from election_model.service import ElectionService
 
@@ -25,6 +26,7 @@ def write_immutable(path: Path, raw: bytes) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--include-provider", action="store_true", help="Also evaluate all opt-in provider races in explicit bounded batches.")
     parser.add_argument("--forecast-input", type=Path,
                         help="A bounded ForecastRequest JSON file; default is the four-race primary snapshot.")
     args = parser.parse_args()
@@ -45,8 +47,17 @@ def main() -> None:
         "symmetric-republican-stress.json": service.forecast(negative),
         "historical-evaluation.json": service.backtest(BacktestRequest()),
     }
+    if args.include_provider:
+        ids = service.status().aggregator_race_ids
+        for start in range(0, len(ids), 10):
+            provider = ForecastRequest.model_validate({
+                "dataset_id": "votehub-2026-11-01", "race_ids": ids[start:start + 10],
+                "config": {"as_of": "2026-11-01"},
+            })
+            outputs[f"provider-batch-{start // 10 + 1:02d}-request.json"] = provider
+            outputs[f"provider-batch-{start // 10 + 1:02d}-scenarios.json"] = service.forecast(provider)
     encoded = {name: (value.model_dump_json(indent=2) + "\n").encode("utf-8") for name, value in outputs.items()}
-    manifest = {"model_version": "0.1.0", "as_of": request.config.as_of.isoformat(),
+    manifest = {"model_version": __version__, "as_of": request.config.as_of.isoformat(),
                 "interpretation": "Research scenarios and retrospective diagnostics; no chamber forecast.",
                 "files": {name: {"bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
                           for name, raw in encoded.items()}}

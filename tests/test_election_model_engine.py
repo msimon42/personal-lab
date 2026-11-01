@@ -22,7 +22,8 @@ ELECTIONS = {2010: date(2010, 11, 2), 2014: date(2014, 11, 4), 2018: date(2018, 
 
 def race(race_id="synthetic-senate-AA", state="AA", chamber="senate"):
     return Race(race_id=race_id, chamber=chamber, state=state, election_date=ELECTIONS[2026],
-                cycle=2026, map_vintage="synthetic-2026" if chamber == "house" else None)
+                cycle=2026, map_vintage="synthetic-2026" if chamber == "house" else None,
+                voting_system="plurality", poll_round="decisive")
 
 
 def poll(poll_id="synthetic-poll", pollster="synthetic-firm", race_id="synthetic-senate-AA", **changes):
@@ -38,7 +39,8 @@ def history(cycle, residual=-4.0, chamber="senate", suffix="AA", **changes):
     values = dict(race_id=f"synthetic-{cycle}-{chamber}-{suffix}", chamber=chamber, state="AA", cycle=cycle,
                   election_date=election_date, as_of=election_date - timedelta(days=2),
                   poll_margin=0.0, actual_margin=residual, poll_count=3, pollster_count=3,
-                  source_id="synthetic", outcome_available_date=election_date + timedelta(days=30))
+                  source_id="synthetic", outcome_available_date=election_date + timedelta(days=30),
+                  voting_system="plurality", poll_round="decisive")
     return HistoricalRace(**(values | changes))
 
 
@@ -300,3 +302,88 @@ def test_post_election_cutoffs_cannot_enter_direct_aggregation_or_forecast():
         ForecastRequest(races=[race()], polls=[poll()], config=ModelConfig(as_of=ELECTIONS[2026]))
     with pytest.raises(ValidationError, match="must precede election day"):
         history(2018, as_of=ELECTIONS[2018])
+
+
+def test_missing_voting_system_and_round_never_default_to_plurality_or_final_round():
+    unknown = Race(**race().model_dump(exclude={"voting_system", "poll_round"}))
+    assert unknown.voting_system == unknown.poll_round == "unknown"
+    result = forecast(request(races=[unknown]))
+    assert result.status == "missing_data"
+    assert result.forecasts == []
+    assert result.unmodeled_races == [unknown.race_id]
+    assert "unknown_voting_system" in " ".join(result.aggregates[0].warnings)
+    with pytest.raises(ValueError, match="unknown_voting_system"):
+        aggregate_polls(unknown, [poll()], ModelConfig(as_of=AS_OF))
+
+
+@pytest.mark.parametrize("system,round_name", [
+    ("ranked_choice", "decisive"), ("ranked_choice", "first_choice"),
+    ("majority_runoff", "first_choice"), ("plurality", "first_choice"),
+    ("plurality", "unknown"), ("unknown", "decisive"),
+])
+def test_unsupported_voting_system_or_round_is_explicitly_unmodeled(system, round_name):
+    unsupported = race().model_copy(update={"voting_system": system, "poll_round": round_name})
+    result = forecast(request(races=[unsupported]))
+    assert result.status == "missing_data"
+    assert result.forecasts == []
+    assert result.aggregates[0].poll_margin is None
+    assert "No probability is produced" in " ".join(result.aggregates[0].warnings)
+
+
+@pytest.mark.parametrize("state,reason", [
+    ("ME", "maine_ranked_choice"), ("AK", "alaska_ranked_choice"),
+    ("GA", "georgia_november_majority"), ("LA", "louisiana_november_rule"),
+])
+def test_known_jurisdiction_guards_override_false_plurality_decisive_labels(state, reason):
+    mislabeled = race(state=state)  # Deliberately claims plurality + decisive.
+    result = forecast(request(races=[mislabeled]))
+    assert result.forecasts == []
+    assert result.unmodeled_races == [mislabeled.race_id]
+    assert reason in " ".join(result.aggregates[0].warnings)
+    with pytest.raises(ValueError, match=reason):
+        aggregate_polls(mislabeled, [poll()], ModelConfig(as_of=AS_OF))
+
+
+def test_mixed_supported_and_unsupported_targets_return_partial_coverage_without_unsupported_probabilities():
+    unsupported = race("synthetic-senate-ME", state="ME")
+    result = forecast(request(races=[race(), unsupported], polls=[
+        poll(), poll("me", "me", race_id=unsupported.race_id),
+    ]))
+    assert result.status == "partial"
+    assert result.requested_race_count == 2 and result.modeled_race_count == 1
+    assert result.unmodeled_races == [unsupported.race_id]
+    assert len(result.forecasts) == 3
+    assert {row.race_id for row in result.forecasts} == {race().race_id}
+    assert result.probability_target == "positive_d_minus_r_in_supported_decisive_round"
+    assert all(0.0 <= row.dem_win_probability <= 1.0 for row in result.forecasts)
+
+
+def test_explicit_two_candidate_final_runoff_outside_november_general_is_supported():
+    final_runoff = race(state="GA").model_copy(update={
+        "election_date": date(2026, 12, 1), "voting_system": "two_candidate_runoff", "poll_round": "decisive",
+    })
+    sample = poll(start_date=date(2026, 11, 23), end_date=date(2026, 11, 25),
+                  available_date=date(2026, 11, 26))
+    result = forecast(ForecastRequest(races=[final_runoff], polls=[sample],
+                                      config=ModelConfig(as_of=date(2026, 11, 29), draws=1000), synthetic=True))
+    assert result.status == "ready"
+    assert len(result.forecasts) == 3
+    assert result.unmodeled_races == []
+
+
+def test_unknown_or_incompatible_history_cannot_poison_bias_or_backtest_metrics():
+    eligible = [history(2010), history(2014)]
+    unsupported = [history(2018, 80.0, state="ME"), history(2022, 80.0, state="AK"),
+                   history(2010, 80.0, suffix="GA", state="GA"),
+                   history(2014, 80.0, suffix="LA", state="LA"),
+                   history(2018, 80.0, suffix="MS", state="MS"),
+                   history(2022, 80.0, suffix="unknown", voting_system="unknown")]
+    result = forecast(request(rows=eligible + unsupported))
+    assert result.calibrations[0].training_cycles == [2010, 2014]
+    assert result.calibrations[0].race_count == 2
+    assert result.calibrations[0].estimated_bias == pytest.approx(-1.6)
+    assert "Excluded 6 historical records" in " ".join(result.warnings)
+    evaluated = backtest(BacktestRequest(history=eligible + unsupported, as_of=AS_OF, synthetic=True))
+    assert evaluated.history_count == 2
+    assert evaluated.folds == []
+    assert "Excluded 6 historical records" in " ".join(evaluated.warnings)

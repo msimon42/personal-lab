@@ -8,6 +8,7 @@ The accepted amendments in `architecture-amendments/` replace the historical web
 
 - `personal-lab-toolkit` composes core and optional domain packages. It owns registry/profiles, CLI/MCP adapters and verified host confirmation bridges.
 - `toolkit-core` supplies transport-independent contracts, SQLite/blobs, guarded filesystem capabilities, bounded runs, scoped artifacts and plan authorization. It imports no game, MCP or host code.
+- `election-model` owns public aggregate polling data, research scenarios and retrospective evaluation. It depends only on Pydantic and the standard library; the optional election-research host profile registers its bounded read-only operations.
 - The existing `eu5-mod-engine` package retains `backend` imports and pure parser/analysis/planning semantics. Generic core is its only new dependency. SDK/host code moves into the toolkit.
 
 Startup selects trusted lazy factories before registration. `core-only` does not import game code; the test-only text-statistics toolset independently exercises the seam. Future languages or conflicting dependencies may run separate processes from this repository.

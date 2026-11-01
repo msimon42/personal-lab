@@ -19,6 +19,35 @@ from .contracts import HistoricalRace
 
 
 RAW_URL = "https://raw.githubusercontent.com/fivethirtyeight/data/master/pollster-ratings/raw_polls.csv"
+FEDERAL_STATE_CODES = frozenset(
+    "AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT "
+    "NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split()
+)
+ELIGIBILITY_POLICY = {
+    "supported_voting_systems": ["plurality", "two_candidate_runoff"],
+    "required_poll_round": "decisive",
+    "unknown_support": "excluded; no plurality or decisive-round default in public contracts",
+    "jurisdiction_guards_override_payload_labels": True,
+    "archive_scope": "Only supported federal November general-date D/R contests are normalized.",
+    "conservative_exclusions": [
+        {"state": "ME", "from_cycle": 2018, "reason": "ranked-choice federal contests",
+         "sources": ["https://www.maine.gov/sos/elections-voting/ranked-choice-voting-frequently-asked-questions",
+                     "https://www.maine.gov/sos/sites/maine.gov.sos/files/content/assets/"
+                     "RCVpowerpointtimeline.UpdateJAN2021.pdf"]},
+        {"state": "AK", "from_cycle": 2022, "reason": "ranked-choice federal contests",
+         "sources": ["https://www.elections.alaska.gov/2021/03/"]},
+        {"state": "GA", "reason": "November general margin does not establish majority/runoff outcome",
+         "sources": ["https://sos.ga.gov/news/secretary-raffensperger-calls-general-assembly-put-georgia-voters-"
+                     "santas-nice-list-and-end"]},
+        {"state": "LA", "reason": "Historical November rule/round eligibility is not established; "
+         "this does not assert identical runoff rules across cycles.",
+         "sources": ["https://www.sos.la.gov/elections-voting/types-of-elections"]},
+        {"state": "MS", "cycle": 2018, "chamber": "senate",
+         "reason": "Archive lacks a verified regular/special-round distinction; both are conservatively excluded.",
+         "sources": ["https://www.sos.ms.gov/elections/electionresults_aspx/"
+                     "elections_results_2018_countyrunoff.aspx"]},
+    ],
+}
 ARCHIVE_LIMITATIONS = [
     "Archive available now is not a vintage dataset; historical publication dates are unknown.",
     "Observation dates are median field dates, not publication dates or field end dates.",
@@ -26,6 +55,8 @@ ARCHIVE_LIMITATIONS = [
     "The provider has already imputed some sample sizes without a row-level imputation flag.",
     "Historical actual margins are the archive's values; independent official-return reconciliation is not supplied.",
     "This snapshot has no 2024 or 2026 election observations.",
+    "Unknown or incompatible voting systems/rounds are excluded separately at race level; "
+    "no first-choice ranked-choice or November runoff-threshold margin is treated as a final win probability.",
 ]
 
 
@@ -201,7 +232,7 @@ def aggregate_history(archive: ArchiveData, *, publication_lag_days: int = 7,
     not recovered by these assumptions.
     """
     from .contracts import ModelConfig, Poll, Race
-    from .model import aggregate_polls
+    from .model import aggregate_polls, election_eligibility_issue
 
     if not 0 <= publication_lag_days <= 30 or not 1 <= horizon_days <= 90:
         raise ValueError("Publication lag must be 0..30 days and horizon 1..90 days.")
@@ -211,13 +242,26 @@ def aggregate_history(archive: ArchiveData, *, publication_lag_days: int = 7,
     history: list[HistoricalRace] = []
     unmodeled = 0
     normalized_poll_count = 0
+    eligibility_exclusions: list[dict] = []
+    eligibility_excluded_counts: dict[str, int] = {}
     for race_id in sorted(grouped):
         rows = grouped[race_id]
         reference = rows[0]
         cutoff = reference.election_date - timedelta(days=horizon_days)
         race = Race(race_id=race_id, chamber=reference.chamber, state=reference.state,
                     election_date=reference.election_date, cycle=reference.cycle,
-                    map_vintage=f"archive-{reference.cycle}-unknown-map" if reference.chamber == "house" else None)
+                    map_vintage=f"archive-{reference.cycle}-unknown-map" if reference.chamber == "house" else None,
+                    voting_system="plurality", poll_round="decisive")
+        eligibility_issue = ("unknown_federal_state" if reference.state not in FEDERAL_STATE_CODES
+                             else election_eligibility_issue(race))
+        if eligibility_issue:
+            eligibility_excluded_counts[eligibility_issue] = eligibility_excluded_counts.get(eligibility_issue, 0) + 1
+            eligibility_exclusions.append({
+                "race_id": race_id, "state": reference.state, "chamber": reference.chamber,
+                "cycle": reference.cycle, "election_date": reference.election_date.isoformat(),
+                "reason": eligibility_issue,
+            })
+            continue
         polls = [Poll(
             poll_id=f"538-{p.poll_id}-{p.question_id}", race_id=race_id, pollster=p.pollster,
             start_date=p.median_field_date, end_date=p.median_field_date,
@@ -235,9 +279,10 @@ def aggregate_history(archive: ArchiveData, *, publication_lag_days: int = 7,
             election_date=reference.election_date, as_of=cutoff, poll_margin=round(aggregate.poll_margin, 12),
             actual_margin=reference.actual_margin, poll_count=aggregate.poll_count,
             pollster_count=aggregate.pollster_count, source_id="538-pollster-ratings-2023",
-            outcome_available_date=reference.election_date + timedelta(days=30)))
+            outcome_available_date=reference.election_date + timedelta(days=30),
+            voting_system="plurality", poll_round="decisive"))
     metadata = {
-        "schema_version": "2.0", "kind": "retrospective_archive_evaluation",
+        "schema_version": "3.0", "kind": "retrospective_archive_evaluation",
         "source_sha256": archive.source_sha256, "source_url": archive.source_url,
         "retrieved_at": archive.retrieved_at.isoformat(), "license": archive.license,
         "attribution": archive.attribution, "raw_rows": archive.raw_rows,
@@ -245,6 +290,10 @@ def aggregate_history(archive: ArchiveData, *, publication_lag_days: int = 7,
         "selected_races": archive.selected_races, "selected_cycles": archive.selected_cycles,
         "excluded_counts": archive.excluded_counts, "modeled_races": len(history),
         "races_without_eligible_poll": unmodeled, "eligible_poll_count": normalized_poll_count,
+        "eligibility_excluded_races": len(eligibility_exclusions),
+        "eligibility_excluded_counts": eligibility_excluded_counts,
+        "eligibility_exclusions": eligibility_exclusions,
+        "eligibility_policy": ELIGIBILITY_POLICY,
         "normalization": {
             "elections": "D/R top-two House/Senate, November federal election date in midterm cycles",
             "poll_dates": "median field date used as both start/end proxy",
@@ -260,6 +309,8 @@ def aggregate_history(archive: ArchiveData, *, publication_lag_days: int = 7,
             "Archive map vintage is unknown; no district baseline or cross-map transfer is modeled.",
             "November specials sharing the federal general-election date may remain as distinct race IDs.",
             "Historical selection favors polled competitive D/R races and is not a representative chamber slate.",
+            "Eligibility exclusions are mutually exclusive race-level dispositions, separate from raw-row filters "
+            "and races without eligible polls. They conservatively remove ambiguous rules instead of predicting runoffs.",
         ],
     }
     return history, metadata

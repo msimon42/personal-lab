@@ -1,0 +1,144 @@
+{
+  "recorded_at": "2026-11-01T21:06:27.439655+00:00",
+  "model_version": "0.1.1",
+  "fixes": [
+    {
+      "review": "P2 voting-system/round eligibility",
+      "status": "fixed",
+      "behavior": "Explicit supported system and decisive poll round required. Unknown/unsupported targets have no probabilities. Known jurisdiction restrictions override incorrect plurality labels. Historical incompatible/ambiguous rounds are excluded before calibration."
+    },
+    {
+      "review": "P2 candidate-evidence trust during provider import",
+      "status": "fixed",
+      "behavior": "Importer invokes exact raw-FEC verification before auditing or writing. Changed party/chamber/district mappings fail without output; proof and source hashes retained in votehub-v2 metadata."
+    }
+  ],
+  "checks": [
+    {
+      "command": "UV_CACHE_DIR=/tmp/personal-lab-uv-cache /tmp/personal-lab-tools/uv run --offline python scripts/check.py",
+      "execution_boundary": "approved native process-inspection access; all native tests use disposable temporary processes",
+      "result": "passed",
+      "pytest_tests": 946,
+      "pytest_seconds": 77.36,
+      "other_checks": [
+        "Ruff",
+        "mypy:11 configured source files",
+        "generated schemas/contracts",
+        "20 synthetic fixtures"
+      ],
+      "game_runs": 0,
+      "model_calls": 0
+    },
+    {
+      "command": "UV_CACHE_DIR=/tmp/personal-lab-uv-cache /tmp/personal-lab-tools/uv run --offline --extra dev ruff check backend packages apps tests scripts",
+      "result": "passed"
+    },
+    {
+      "command": "UV_CACHE_DIR=/tmp/personal-lab-uv-cache /tmp/personal-lab-tools/uv run --offline --extra dev pytest tests/test_election_model_engine.py tests/test_election_history.py tests/test_election_votehub.py tests/test_election_fec.py tests/test_election_service.py tests/test_lab_election.py tests/test_election_packaging.py",
+      "result": "passed",
+      "tests": 107,
+      "seconds": 9.22
+    },
+    {
+      "command": ".venv/bin/python scripts/election_import_history.py --source data/elections/sources/538-raw-polls.csv",
+      "result": "passed",
+      "repeated_identical_runs": 2,
+      "history_file": "history-v3.json",
+      "normalized_file": "archive-polls-v3.json"
+    },
+    {
+      "command": ".venv/bin/python scripts/election_import_votehub.py",
+      "result": "passed",
+      "repeated_identical_runs": 2,
+      "output": "votehub-v2.json"
+    },
+    {
+      "command": ".venv/bin/python scripts/election_verify_candidate_evidence.py --check",
+      "result": "passed",
+      "verified_mappings": 108,
+      "usable_dem_rep_labels": 92,
+      "unmatched_answers": 80
+    },
+    {
+      "command": ".venv/bin/python scripts/election_research_report.py --include-provider --output-dir data/elections/reports/2026-11-01-v0.1.1",
+      "result": "passed",
+      "repeated_identical_runs": 2,
+      "verified_manifest_files": 8
+    },
+    {
+      "command": "git diff --exit-code 7eeaca3 -- specs schemas/ck3",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "evaluation": {
+    "historical_races": 749,
+    "house_history": 554,
+    "senate_history": 195,
+    "evaluated_races": 629,
+    "house_evaluated": 484,
+    "senate_evaluated": 145,
+    "cycles": [
+      2006,
+      2010,
+      2014,
+      2018,
+      2022
+    ],
+    "folds": 10,
+    "metrics": {
+      "baseline": {
+        "mae": 5.828127666247543,
+        "brier": 0.11097018372298895,
+        "interval90_coverage": 0.9379968203497615,
+        "mean_interval90_width": 27.48684048504733,
+        "rmse": 7.901852692370681
+      },
+      "historical": {
+        "mae": 5.875361646995415,
+        "brier": 0.11178857266277462,
+        "interval90_coverage": 0.9332273449920508,
+        "mean_interval90_width": 27.48684048504733,
+        "rmse": 7.943554008528736
+      }
+    },
+    "aggregation": "Race-count weighted fold metrics; RMSE is sqrt(weighted mean of squared fold RMSE). Folds/rows within a cycle are dependent; this is retrospective diagnostic evidence, not vintage replay."
+  },
+  "eligibility_exclusions": {
+    "candidate_race_records": 28,
+    "counts": {
+      "alaska_ranked_choice_federal_2022_onward": 1,
+      "georgia_november_majority_requirement": 21,
+      "maine_ranked_choice_federal_2018_onward": 5,
+      "mississippi_2018_senate_regular_special_round_ambiguous": 1
+    },
+    "remaining_without_eligible_poll": 58,
+    "note": "Of28 candidate records excluded,22 had contributed to the superseded771-record calibration;6 already lacked eligible polls. Active749records are all explicitly supported."
+  },
+  "current_coverage": {
+    "primary_races": 4,
+    "primary_polls": 4,
+    "provider_races": 17,
+    "provider_polls": 22,
+    "provider_firms": 15,
+    "provider_source_records": 302,
+    "provider_rejected_records": 280,
+    "chamber_control_probabilities": false
+  },
+  "probability_target": "positive_d_minus_r_in_supported_decisive_round; independent other-candidate outcomes are not modeled",
+  "artifact_hashes": {
+    "history-v3.json": "63faee944caa91a654d9519176abbb9a02b5f39dcad9c58f236f8db7ea5f5287",
+    "current-v2.json": "38fb7cb417cdff933c185b1bad39108cce8afc68883f890b78fc3e01b8b311b8",
+    "votehub-v2.json": "19498e0d2b95a5ef9d5021f85c934287384f93684b4a1f360e3dddc9ff4cf565"
+  },
+  "prior_execution_boundary_evidence": "verification.json preserves the initial4 sandbox-sensitive native failures and their successful approved rerun. No failing-before-change baseline is claimed; no denied operation was bypassed.",
+  "limitations": [
+    "No2024 row-level archive, historical publication dates are proxies, selected polled-race sample is incomplete.",
+    "No RCV or subsequent-majority-runoff model. Conservative jurisdiction exclusions can discard potentially usable rows pending round-specific evidence.",
+    "Provider numerical values/sample sizes/publication dates retain unverified/proxy status. FEC party affiliation does not certify nomination.",
+    "Synthetic tests establish software behavior; no actual-game or Windows production qualification was performed."
+  ]
+}

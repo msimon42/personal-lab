@@ -20,14 +20,14 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_packaged_evidence_is_real_partial_and_dates_are_honest():
     service = ElectionService()
     status = service.status()
-    assert status.historical_races == 771
+    assert status.historical_races == 749
     assert status.historical_cycles == [1998, 2002, 2006, 2010, 2014, 2018, 2022]
     assert status.current_races == 4 and status.current_polls == 4
     assert {finding.status for finding in status.findings} >= {"observed", "methodological", "missing"}
-    for document in ("history.json", "history-v2.json", "current.json", "research.json"):
+    for document in ("history.json", "history-v2.json", "history-v3.json", "current.json", "current-v2.json", "research.json"):
         assert load_document(document)
     history, metadata = load_history()
-    assert metadata["schema_version"] == "2.0"
+    assert metadata["schema_version"] == "3.0"
     assert all(row.cycle < 2024 for row in history)
     with pytest.raises(ValueError, match="Unknown trusted"):
         load_document("../../secret")
@@ -82,4 +82,57 @@ def test_research_report_repeats_identically_and_refuses_changed_evidence(tmp_pa
     (tmp_path / "race-scenarios.json").write_text("different evidence")
     failed = subprocess.run(command, capture_output=True, text=True)
     assert failed.returncode != 0 and "Refusing to replace" in failed.stderr
-    assert json.loads((tmp_path / "manifest.json").read_text())["model_version"] == "0.1.0"
+    assert json.loads((tmp_path / "manifest.json").read_text())["model_version"] == "0.1.1"
+
+
+def test_provider_dataset_is_opt_in_party_verified_and_unverified_sampling_is_explicit():
+    service = ElectionService()
+    status = service.status()
+    assert status.aggregator_races == 17 and status.aggregator_polls == 22
+    assert status.aggregator_rejections == 280
+    assert len(status.aggregator_race_ids) == 17
+    assert any(source.source_id == "fec-candidate-master-2026" for source in status.sources)
+    request = ForecastRequest.model_validate({"dataset_id": "votehub-2026-11-01",
+                                             "race_ids": ["2026-NC-SEN", "2026-OH-SEN"],
+                                             "config": {"as_of": "2026-11-01"}})
+    report = service.forecast(request)
+    assert report.status == "partial" and report.modeled_race_count == 2
+    assert any("placeholder" in warning for warning in report.warnings)
+    assert any("provider" in warning.lower() for warning in report.warnings)
+    raw = load_document("votehub-v2.json")
+    assert all(poll["sample_size_verified"] is False for poll in raw["polls"])
+    assert all(poll["availability_basis"] == "provider_created_at_proxy" for poll in raw["polls"])
+    with pytest.raises(ValueError, match="at most ten"):
+        service.forecast(ForecastRequest.model_validate({"dataset_id": "votehub-2026-11-01",
+                                                        "config": {"as_of": "2026-11-01"}}))
+    with pytest.raises(ValueError, match="absent"):
+        service.forecast(request.model_copy(update={"race_ids": ["not-in-snapshot"]}))
+
+
+def test_active_history_has_decisive_eligibility_and_archived_v2_is_not_silently_reused():
+    from election_model.contracts import HistoricalRace
+    from election_model.model import election_eligibility_issue
+
+    history, metadata = load_history()
+    assert len(history) == 749
+    assert metadata["eligibility_excluded_races"] == 28
+    assert metadata["selected_races"] == (len(history) + metadata["eligibility_excluded_races"]
+                                           + metadata["races_without_eligible_poll"])
+    assert all(row.voting_system == "plurality" and row.poll_round == "decisive" for row in history)
+    assert all(election_eligibility_issue(row) is None for row in history)
+    assert any(row["state"] == "ME" and row["cycle"] == 2018
+               for row in metadata["eligibility_exclusions"])
+    archived = [HistoricalRace.model_validate(row) for row in load_document("history-v2.json")["races"]]
+    report = ElectionService().backtest(BacktestRequest(history=archived))
+    assert report.evaluated_race_count == 0 and not report.folds
+    assert any("unsupported" in warning or "unknown" in warning for warning in report.warnings)
+
+
+def test_active_provider_bundle_records_mandatory_exact_fec_verification():
+    data = load_document("votehub-v2.json")
+    proof = data["metadata"]["candidate_verification"]
+    assert proof["status"] == "verified" and proof["verified_mappings"] == 108
+    assert proof["usable_dem_rep_labels"] == 92
+    assert proof["evidence_sha256"] == data["metadata"]["candidate_evidence_sha256"]
+    assert all(race["voting_system"] == "plurality" and race["poll_round"] == "decisive"
+               for race in data["races"])

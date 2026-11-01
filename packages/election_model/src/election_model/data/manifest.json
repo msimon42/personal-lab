@@ -1,5 +1,9 @@
 {
   "files": {
+    "current-v2.json": {
+      "bytes": 8972,
+      "sha256": "38fb7cb417cdff933c185b1bad39108cce8afc68883f890b78fc3e01b8b311b8"
+    },
     "current.json": {
       "bytes": 3783,
       "sha256": "6715f9e9ff8e3b7db2ac8287890551f47bb8ecbd5001a8c433e8ea766f0818b5"
@@ -8,6 +12,10 @@
       "bytes": 309454,
       "sha256": "a9c75e1f8cdd5712cc2831e46e754e13d1a399531e36247f09171cce156558bc"
     },
+    "history-v3.json": {
+      "bytes": 360736,
+      "sha256": "63faee944caa91a654d9519176abbb9a02b5f39dcad9c58f236f8db7ea5f5287"
+    },
     "history.json": {
       "bytes": 311376,
       "sha256": "d9f12e567b339207dd8928d766b5032ed19459852d56d37541ed0870ab41bcb2"
@@ -15,6 +23,14 @@
     "research.json": {
       "bytes": 14731,
       "sha256": "b81e4d5ef12eb3dfecce5dab7a15a8e84c6f8ce58fa283367ec06800a1ff3e10"
+    },
+    "votehub-v2.json": {
+      "bytes": 267510,
+      "sha256": "19498e0d2b95a5ef9d5021f85c934287384f93684b4a1f360e3dddc9ff4cf565"
+    },
+    "votehub.json": {
+      "bytes": 265455,
+      "sha256": "b256ad2bc584392adfada8da4e774c4073306a7a363e9f0efcb7e5b508e06b1e"
     }
   },
   "schema_version": "1.0"

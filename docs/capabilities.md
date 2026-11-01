@@ -6,6 +6,7 @@ as successful stubs.
 
 | Capability | Available scope |
 |---|---|
+| Aggregate election research and error scenarios | Explicit election-research profile; public dated partial snapshots; no chamber odds or demographic inference |
 | Core diagnostics, runs, bounded artifacts | Local selected instance; artifacts retain profile/disclosure checks |
 | EU5 static scan and inspection | Synthetic fixtures and configured read-only roots; coverage remains explicit |
 | EU5 staged repair and experimental export | Supported deterministic edits, revision/hash checks, full preservation gates |

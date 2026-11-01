@@ -10,6 +10,9 @@ from typing import Literal, get_args
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+VotingSystem = Literal["plurality", "two_candidate_runoff", "ranked_choice", "majority_runoff", "unknown"]
+PollRound = Literal["decisive", "first_choice", "unknown"]
+
 
 class Contract(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
@@ -71,6 +74,8 @@ class Race(Contract):
     election_date: date
     cycle: int = Field(ge=1990, le=2100)
     map_vintage: str | None = Field(default=None, max_length=180)
+    voting_system: VotingSystem = "unknown"
+    poll_round: PollRound = "unknown"
 
     @model_validator(mode="after")
     def coherent(self):
@@ -94,6 +99,8 @@ class HistoricalRace(Contract):
     pollster_count: int = Field(ge=1, le=1000)
     source_id: str = Field(min_length=1, max_length=100)
     outcome_available_date: date
+    voting_system: VotingSystem = "unknown"
+    poll_round: PollRound = "unknown"
 
     @model_validator(mode="after")
     def coherent(self):
@@ -183,7 +190,11 @@ class ScenarioForecast(Contract):
     adjustment: float
     mean_margin: float
     sd: float
-    dem_win_probability: float
+    dem_win_probability: float = Field(
+        ge=0, le=1,
+        description="Probability of positive D-minus-R margin in a supported decisive-round comparison; "
+                    "other-candidate victories are not modeled.",
+    )
     p05: float
     p50: float
     p95: float
@@ -194,8 +205,11 @@ class ScenarioForecast(Contract):
 
 
 class ForecastReport(Contract):
+    probability_target: Literal["positive_d_minus_r_in_supported_decisive_round"] = (
+        "positive_d_minus_r_in_supported_decisive_round"
+    )
     recommended_scenario: Literal["baseline"] = "baseline"
-    model_version: str = "0.1.0"
+    model_version: str = "0.1.1"
     input_sha256: str | None = None
     configuration: ModelConfig | None = None
     data_origin: Literal["bundled_public", "user_supplied_unverified", "synthetic"] = "user_supplied_unverified"
@@ -244,7 +258,7 @@ class BacktestFold(Contract):
 
 
 class BacktestReport(Contract):
-    model_version: str = "0.1.0"
+    model_version: str = "0.1.1"
     input_sha256: str | None = None
     data_origin: Literal["bundled_public", "user_supplied_unverified", "synthetic"] = "user_supplied_unverified"
     as_of: date

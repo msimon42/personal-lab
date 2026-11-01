@@ -25,6 +25,16 @@ uv run --extra dev lab call election_forecast --profile election-research \
   --arguments '{"dataset_id":"us-2026-11-01","config":{"as_of":"2026-11-01"}}'
 ```
 
+The same status response advertises an opt-in provider dataset:22 polls across17
+races/15 firms after strict candidate-party and survey QA. Its numerical values,
+publication proxies and sample sizes retain provider caveats. Select up to ten
+IDs from `aggregator_race_ids`; no races are silently dropped:
+
+```sh
+uv run --extra dev lab call election_forecast --profile election-research \
+  --arguments '{"dataset_id":"votehub-2026-11-01","race_ids":["2026-NC-SEN","2026-OH-SEN"],"config":{"as_of":"2026-11-01"}}'
+```
+
 An empty inline-input request returns an explicit missing-data result. It does
 not silently select a current dataset or invent observations:
 
@@ -48,7 +58,9 @@ JSON and applies the same operation schema. File paths are not MCP arguments.
 
 An agent should inspect `election_status` and the concrete input schemas first,
 then supply up to ten aggregate races and their polls to `election_forecast` when
-actual usable observations are available. Every supplied poll must include its field
+actual usable observations are available. Each race must explicitly declare a supported voting system and decisive poll round.
+Unknown or unsupported eligibility produces no probabilities, and known jurisdiction
+rules override misleading labels. Every supplied poll must include its field
 dates, availability date, source ID and population/mode metadata. House races
 require a map vintage. Use the cutoff date applicable to the analysis, and mark
 synthetic fixtures with `synthetic=true`. Do not describe fixture output as a

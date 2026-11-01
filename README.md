@@ -41,6 +41,8 @@ profiles, limits and unavailable operations. Results share a typed envelope;
 inspect `data`, `limitations`, explicit continuations and artifact references.
 
 - `lab_*`: capabilities, persistent run status/events/cancellation, bounded artifacts.
+- `election_*`: aggregate public polling research, scenario margins and retrospective evaluation,
+  enabled only in the explicit `election-research` profile; see [election research](docs/elections/README.md).
 - `eu5_*`: scan, findings, source/definition/reference inspection, proposed intent,
   revisioned staging, validation, deployment-plan preparation and experimental ZIPs.
 - `ck3_*`: saved playset investigations, source policy, complete concern reviews,
@@ -51,14 +53,14 @@ work without scanning again. Game launch, normal-playset activation and live und
 remain unavailable. Prepared files and synthetic checks do not prove gameplay.
 
 MCP profiles are `personal` (core plus both games), `dev` (EU5 fixtures),
-`eu5-local`, `ck3-local`, and `core-only`. Core-only also works when the mod-engine
+`eu5-local`, `ck3-local`, `core-only`, and `election-research`. Core-only also works when the mod-engine
 package is not installed. The unrelated test toolset is disabled in production
 profiles. Copy [local configuration](config/profiles.example.toml) outside Git to
 register read-only roots; tool requests cannot edit policy or root configuration.
 
 ## Installed use and approvals
 
-Build all three distributions with `uv build --all-packages`; distribute the
+Build all four distributions with `uv build --all-packages`; distribute the
 matching wheels together. Install the toolkit wheel and its core/domain wheel
 dependencies into an environment outside the checkout. Run that environment's
 `lab install --profile personal --state-dir /absolute/local/personal-lab-state`

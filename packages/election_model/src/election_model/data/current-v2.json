@@ -1,0 +1,220 @@
+{
+  "metadata": {
+    "as_of": "2026-11-01",
+    "coverage": "3 Senate races,1 House district; not an exhaustive race or poll inventory",
+    "dataset_id": "us-2026-11-01",
+    "eligibility_finding": {
+      "facet": "Voting system and poll round",
+      "finding": "A D/R first-choice margin need not identify the final winner under ranked-choice or majority-runoff rules.",
+      "model_treatment": "Fail closed unless supported system and decisive poll round are explicit; exclude incompatible/unknown historical rounds before fitting.",
+      "source_ids": [
+        "maine-rcv-rules",
+        "maine-rcv-timeline",
+        "alaska-rcv-rules",
+        "georgia-runoff-rules",
+        "louisiana-election-types",
+        "mississippi-2018-runoff"
+      ],
+      "status": "methodological"
+    },
+    "eligibility_policy": "Explicit plurality/decisive D/R comparison for the four seed races; known RCV/runoff or unknown eligibility cannot yield win probabilities.",
+    "eligibility_sources": [
+      {
+        "coverage": "Federal RCV eligibility; 2018 start corroborated by official timeline.",
+        "limitations": [
+          "Policy-level rule evidence; no source document bytes redistributed.",
+          "FAQ text seen through search index; direct fetch returned403. Official timeline corroborates historical adoption."
+        ],
+        "published_date": null,
+        "publisher": "Maine Secretary of State",
+        "retrieved_at": "2026-11-01T20:59:25.793314+00:00",
+        "sha256": null,
+        "source_id": "maine-rcv-rules",
+        "title": "Maine ranked-choice voting FAQ",
+        "url": "https://www.maine.gov/sos/elections-voting/ranked-choice-voting-frequently-asked-questions"
+      },
+      {
+        "coverage": "Historical adoption of RCV for congressional general elections in 2018.",
+        "limitations": [
+          "Policy-level rule evidence; no source document bytes redistributed."
+        ],
+        "published_date": null,
+        "publisher": "Maine Secretary of State",
+        "retrieved_at": "2026-11-01T20:59:25.793314+00:00",
+        "sha256": null,
+        "source_id": "maine-rcv-timeline",
+        "title": "Maine ranked-choice voting timeline",
+        "url": "https://www.maine.gov/sos/sites/maine.gov.sos/files/content/assets/RCVpowerpointtimeline.UpdateJAN2021.pdf"
+      },
+      {
+        "coverage": "RCV implemented for the November2022 general election.",
+        "limitations": [
+          "Policy-level rule evidence; no source document bytes redistributed.",
+          "Official archival search result establishes2022 implementation; direct page fetch returned502."
+        ],
+        "published_date": null,
+        "publisher": "Alaska Division of Elections",
+        "retrieved_at": "2026-11-01T20:59:25.793314+00:00",
+        "sha256": null,
+        "source_id": "alaska-rcv-rules",
+        "title": "Alaska 2022 RCV implementation",
+        "url": "https://www.elections.alaska.gov/2021/03/"
+      },
+      {
+        "coverage": "Official acknowledgement of general-election runoff mechanism; November margins do not model a later runoff.",
+        "limitations": [
+          "Policy-level rule evidence; no source document bytes redistributed."
+        ],
+        "published_date": null,
+        "publisher": "Georgia Secretary of State",
+        "retrieved_at": "2026-11-01T20:59:25.793314+00:00",
+        "sha256": null,
+        "source_id": "georgia-runoff-rules",
+        "title": "General election runoffs",
+        "url": "https://sos.ga.gov/news/secretary-raffensperger-calls-general-assembly-put-georgia-voters-santas-nice-list-and-end"
+      },
+      {
+        "coverage": "Congressional rules vary historically; all Louisiana November archive races excluded conservatively until rounds are vetted.",
+        "limitations": [
+          "Policy-level rule evidence; no source document bytes redistributed."
+        ],
+        "published_date": null,
+        "publisher": "Louisiana Secretary of State",
+        "retrieved_at": "2026-11-01T20:59:25.793314+00:00",
+        "sha256": null,
+        "source_id": "louisiana-election-types",
+        "title": "Louisiana election types",
+        "url": "https://www.sos.la.gov/elections-voting/types-of-elections"
+      },
+      {
+        "coverage": "2018 Senate special required a runoff; archive regular/special eligibility is not independently identified.",
+        "limitations": [
+          "Policy-level rule evidence; no source document bytes redistributed."
+        ],
+        "published_date": null,
+        "publisher": "Mississippi Secretary of State",
+        "retrieved_at": "2026-11-01T20:59:25.793314+00:00",
+        "sha256": null,
+        "source_id": "mississippi-2018-runoff",
+        "title": "Official2018 general election runoff results",
+        "url": "https://www.sos.ms.gov/elections/electionresults_aspx/elections_results_2018_countyrunoff.aspx"
+      }
+    ],
+    "extraction": "Manually transcribed attributed primary release facts and methodology, checked with web reader2026-11-01",
+    "kind": "partial_public_race_poll_snapshot",
+    "limitations": [
+      "Partial research seed only:3 Senate races and1 House district, all from one polling firm; no chamber universe or control probabilities.",
+      "Probabilities are research scenarios with assumed uncertainty/correlation; they are not a validated complete2026 forecast.",
+      "Aggregate data cannot establish who changed votes, whether voters concealed preferences, or why polling errors occur.",
+      "D/R win comparisons require supported voting-system and decisive-round eligibility; independent other-candidate win outcomes are not modeled."
+    ],
+    "map_policy": "Current House poll district only; no transfer of previous-election margins or district baselines.",
+    "margin_basis": "Initial D share minus R share of full reported sample; undecideds/other retained; no two-party renormalization",
+    "retrieved_at": "2026-11-01T20:29:41+00:00",
+    "schema_version": "2.0"
+  },
+  "polls": [
+    {
+      "available_date": "2026-10-30",
+      "dem_pct": 49.0,
+      "end_date": "2026-10-28",
+      "mode": "MMS text-to-web + IVR + online panel",
+      "overlap_group": "emerson-ks-20261030",
+      "poll_id": "emerson-ks-20261030",
+      "pollster": "Emerson College Polling",
+      "population": "lv",
+      "race_id": "2026-KS-SEN",
+      "rep_pct": 45.0,
+      "sample_size": 800,
+      "source_id": "emerson-ks-20261030",
+      "start_date": "2026-10-26"
+    },
+    {
+      "available_date": "2026-10-22",
+      "dem_pct": 48.0,
+      "end_date": "2026-10-19",
+      "mode": "MMS text-to-web + IVR + online panel",
+      "overlap_group": "emerson-tx-20261022",
+      "poll_id": "emerson-tx-20261022",
+      "pollster": "Emerson College Polling",
+      "population": "lv",
+      "race_id": "2026-TX-SEN",
+      "rep_pct": 46.0,
+      "sample_size": 1000,
+      "source_id": "emerson-tx-20261022",
+      "start_date": "2026-10-17"
+    },
+    {
+      "available_date": "2026-10-09",
+      "dem_pct": 45.0,
+      "end_date": "2026-10-06",
+      "mode": "MMS text-to-web + online panel",
+      "overlap_group": "emerson-ia-20261009",
+      "poll_id": "emerson-ia-20261009",
+      "pollster": "Emerson College Polling",
+      "population": "lv",
+      "race_id": "2026-IA-SEN",
+      "rep_pct": 47.0,
+      "sample_size": 650,
+      "source_id": "emerson-ia-20261009",
+      "start_date": "2026-10-05"
+    },
+    {
+      "available_date": "2026-10-01",
+      "dem_pct": 48.0,
+      "end_date": "2026-09-29",
+      "mode": "MMS text-to-web + online panel",
+      "overlap_group": "emerson-ny17-20261001",
+      "poll_id": "emerson-ny17-20261001",
+      "pollster": "Emerson College Polling",
+      "population": "lv",
+      "race_id": "2026-NY-17",
+      "rep_pct": 46.0,
+      "sample_size": 400,
+      "source_id": "emerson-ny17-20261001",
+      "start_date": "2026-09-27"
+    }
+  ],
+  "races": [
+    {
+      "chamber": "senate",
+      "cycle": 2026,
+      "election_date": "2026-11-03",
+      "map_vintage": null,
+      "poll_round": "decisive",
+      "race_id": "2026-KS-SEN",
+      "state": "KS",
+      "voting_system": "plurality"
+    },
+    {
+      "chamber": "senate",
+      "cycle": 2026,
+      "election_date": "2026-11-03",
+      "map_vintage": null,
+      "poll_round": "decisive",
+      "race_id": "2026-TX-SEN",
+      "state": "TX",
+      "voting_system": "plurality"
+    },
+    {
+      "chamber": "senate",
+      "cycle": 2026,
+      "election_date": "2026-11-03",
+      "map_vintage": null,
+      "poll_round": "decisive",
+      "race_id": "2026-IA-SEN",
+      "state": "IA",
+      "voting_system": "plurality"
+    },
+    {
+      "chamber": "house",
+      "cycle": 2026,
+      "election_date": "2026-11-03",
+      "map_vintage": "2026 NY-17 election geography identified by publisher; no cross-map prior",
+      "poll_round": "decisive",
+      "race_id": "2026-NY-17",
+      "state": "NY",
+      "voting_system": "plurality"
+    }
+  ]
+}

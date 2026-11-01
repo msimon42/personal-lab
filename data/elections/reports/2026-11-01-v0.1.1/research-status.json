@@ -1,0 +1,562 @@
+{
+  "as_of": "2026-11-01",
+  "status": "partial_race_coverage",
+  "historical_races": 749,
+  "historical_cycles": [
+    1998,
+    2002,
+    2006,
+    2010,
+    2014,
+    2018,
+    2022
+  ],
+  "current_races": 4,
+  "current_polls": 4,
+  "sources": [
+    {
+      "source_id": "538-pollster-ratings-2023",
+      "title": "Pollster ratings raw polls archive",
+      "publisher": "FiveThirtyEight",
+      "url": "https://github.com/fivethirtyeight/data/tree/master/pollster-ratings",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": null,
+      "sha256": "9f0b185506e59117c150fb988e73b612346effe8e3a8f0d90fdafcad07f54756",
+      "coverage": "Raw archive 1998–2023; selected D/R midterms 1998–2022.",
+      "limitations": [
+        "Historical release dates absent; median field dates, retrospective top-two selection and provider-imputed sample sizes.",
+        "CC-BY-4.0; raw bytes, README, license and SHA256 manifest retained under data/elections/sources."
+      ]
+    },
+    {
+      "source_id": "aapor-2024",
+      "title": "2024 pre-election polling task force executive summary",
+      "publisher": "AAPOR",
+      "url": "https://aapor.org/wp-content/uploads/2025/10/Task-Force-on-2024-Pre-Election-Polling-Report-Executive-Summary.pdf",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": null,
+      "sha256": null,
+      "coverage": "Published October 2025; comparison of presidential and midterm polling errors.",
+      "limitations": [
+        "Summary statistics use a different sample/metric than this module; no AAPOR rows are imputed into training."
+      ]
+    },
+    {
+      "source_id": "pew-weighting-2026",
+      "title": "Why many polls need to weight on party affiliation or past vote",
+      "publisher": "Pew Research Center",
+      "url": "https://www.pewresearch.org/methods/2026/09/16/why-many-polls-need-to-weight-on-party-affiliation-or-past-vote/",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": "2026-09-16",
+      "sha256": null,
+      "coverage": "Current nonresponse and partisan/past-vote weighting methods.",
+      "limitations": []
+    },
+    {
+      "source_id": "emerson-national-20261030",
+      "title": "October national generic congressional ballot",
+      "publisher": "Emerson College Polling",
+      "url": "https://emersoncollegepolling.com/october-2026-national-poll-democrats-hold-10-point-midterm-advantage/",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": "2026-10-30",
+      "sha256": null,
+      "coverage": "Oct24–26;1000 likely voters; rounded release shares D52/R42.",
+      "limitations": [
+        "Generic ballot is contextual and is not a district-level margin."
+      ]
+    },
+    {
+      "source_id": "marist-national-20261027",
+      "title": "U.S. midterm elections, October 2026",
+      "publisher": "Marist Poll",
+      "url": "https://maristpoll.marist.edu/polls/u-s-midterm-elections-october-2026/",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": "2026-10-27",
+      "sha256": null,
+      "coverage": "Oct19–20; likely-voter generic ballot D52/R44.",
+      "limitations": [
+        "Likely-voter sample size not verified from the tables; total registered-voter sample must not be substituted."
+      ]
+    },
+    {
+      "source_id": "emerson-ks-20261030",
+      "title": "Kansas Senate poll",
+      "publisher": "Emerson College Polling",
+      "url": "https://emersoncollegepolling.com/october-2026-kansas-poll-hamilton-maintains-edge-over-marshall/",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": "2026-10-30",
+      "sha256": null,
+      "coverage": "Oct26–28;800 likely voters; Hamilton49/Marshall45; pre-leaner version.",
+      "limitations": []
+    },
+    {
+      "source_id": "emerson-tx-20261022",
+      "title": "Texas Senate poll",
+      "publisher": "Emerson College Polling/Nexstar",
+      "url": "https://emersoncollegepolling.com/texas-2026-poll-toss-up/",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": "2026-10-22",
+      "sha256": null,
+      "coverage": "Oct17–19;1000 likely voters; Talarico48/Paxton46; pre-leaner version.",
+      "limitations": []
+    },
+    {
+      "source_id": "emerson-ia-20261009",
+      "title": "Iowa Senate poll",
+      "publisher": "Emerson College Polling/Nexstar",
+      "url": "https://emersoncollegepolling.com/iowa-2026-poll-u-s-senate-race-tightens-sand-maintains-edge-for-governor/",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": "2026-10-09",
+      "sha256": null,
+      "coverage": "Oct5–6;650 likely voters; Turek45/Hinson47.",
+      "limitations": []
+    },
+    {
+      "source_id": "emerson-ny17-20261001",
+      "title": "NY-17 congressional poll",
+      "publisher": "Emerson College Polling/PIX11",
+      "url": "https://emersoncollegepolling.com/ny-17-2026-poll/",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": "2026-10-01",
+      "sha256": null,
+      "coverage": "Sep27–29;400 likely voters; Conley48/Lawler46.",
+      "limitations": [
+        "District identity follows the 2026 publisher release; no historical district baseline is transferred."
+      ]
+    },
+    {
+      "source_id": "census-districts-2026",
+      "title": "Congressional and state legislative districts",
+      "publisher": "U.S. Census Bureau",
+      "url": "https://www.census.gov/programs-surveys/decennial-census/about/rdo/congressional-districts.html",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": null,
+      "sha256": null,
+      "coverage": "2026 map changes and geography product corrections.",
+      "limitations": [
+        "Census notes Missouri replacement-map products require correction after the September23 ruling; product-specific vintage matters."
+      ]
+    },
+    {
+      "source_id": "bea-gdp-20261029",
+      "title": "GDP advance estimate, third quarter2026",
+      "publisher": "Bureau of Economic Analysis",
+      "url": "https://www.bea.gov/news/2026/gdp-advance-estimate-3rd-quarter-2026",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": "2026-10-29",
+      "sha256": null,
+      "coverage": "Q3 real GDP+3.4% SAAR; Q2+2.2%, as reported in the advance vintage.",
+      "limitations": []
+    },
+    {
+      "source_id": "bls-jobs-20261002",
+      "title": "Employment situation, September2026",
+      "publisher": "Bureau of Labor Statistics",
+      "url": "https://www.bls.gov/news.release/archives/empsit_10022026.htm",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": "2026-10-02",
+      "sha256": null,
+      "coverage": "September payroll+29,000; unemployment4.2%; release-vintage contextual observations.",
+      "limitations": [
+        "October employment report scheduled after the forecast cutoff; no future release is used."
+      ]
+    },
+    {
+      "source_id": "bls-cpi-20261014",
+      "title": "Consumer price index, September2026",
+      "publisher": "Bureau of Labor Statistics",
+      "url": "https://www.bls.gov/news.release/archives/cpi_10142026.htm",
+      "retrieved_at": "2026-11-01T20:29:41Z",
+      "published_date": "2026-10-14",
+      "sha256": null,
+      "coverage": "September CPI+0.6% monthly SA,+3.7% annual NSA; contextual observations.",
+      "limitations": []
+    },
+    {
+      "source_id": "maine-rcv-rules",
+      "title": "Maine ranked-choice voting FAQ",
+      "publisher": "Maine Secretary of State",
+      "url": "https://www.maine.gov/sos/elections-voting/ranked-choice-voting-frequently-asked-questions",
+      "retrieved_at": "2026-11-01T20:59:25.793314Z",
+      "published_date": null,
+      "sha256": null,
+      "coverage": "Federal RCV eligibility; 2018 start corroborated by official timeline.",
+      "limitations": [
+        "Policy-level rule evidence; no source document bytes redistributed.",
+        "FAQ text seen through search index; direct fetch returned403. Official timeline corroborates historical adoption."
+      ]
+    },
+    {
+      "source_id": "maine-rcv-timeline",
+      "title": "Maine ranked-choice voting timeline",
+      "publisher": "Maine Secretary of State",
+      "url": "https://www.maine.gov/sos/sites/maine.gov.sos/files/content/assets/RCVpowerpointtimeline.UpdateJAN2021.pdf",
+      "retrieved_at": "2026-11-01T20:59:25.793314Z",
+      "published_date": null,
+      "sha256": null,
+      "coverage": "Historical adoption of RCV for congressional general elections in 2018.",
+      "limitations": [
+        "Policy-level rule evidence; no source document bytes redistributed."
+      ]
+    },
+    {
+      "source_id": "alaska-rcv-rules",
+      "title": "Alaska 2022 RCV implementation",
+      "publisher": "Alaska Division of Elections",
+      "url": "https://www.elections.alaska.gov/2021/03/",
+      "retrieved_at": "2026-11-01T20:59:25.793314Z",
+      "published_date": null,
+      "sha256": null,
+      "coverage": "RCV implemented for the November2022 general election.",
+      "limitations": [
+        "Policy-level rule evidence; no source document bytes redistributed.",
+        "Official archival search result establishes2022 implementation; direct page fetch returned502."
+      ]
+    },
+    {
+      "source_id": "georgia-runoff-rules",
+      "title": "General election runoffs",
+      "publisher": "Georgia Secretary of State",
+      "url": "https://sos.ga.gov/news/secretary-raffensperger-calls-general-assembly-put-georgia-voters-santas-nice-list-and-end",
+      "retrieved_at": "2026-11-01T20:59:25.793314Z",
+      "published_date": null,
+      "sha256": null,
+      "coverage": "Official acknowledgement of general-election runoff mechanism; November margins do not model a later runoff.",
+      "limitations": [
+        "Policy-level rule evidence; no source document bytes redistributed."
+      ]
+    },
+    {
+      "source_id": "louisiana-election-types",
+      "title": "Louisiana election types",
+      "publisher": "Louisiana Secretary of State",
+      "url": "https://www.sos.la.gov/elections-voting/types-of-elections",
+      "retrieved_at": "2026-11-01T20:59:25.793314Z",
+      "published_date": null,
+      "sha256": null,
+      "coverage": "Congressional rules vary historically; all Louisiana November archive races excluded conservatively until rounds are vetted.",
+      "limitations": [
+        "Policy-level rule evidence; no source document bytes redistributed."
+      ]
+    },
+    {
+      "source_id": "mississippi-2018-runoff",
+      "title": "Official2018 general election runoff results",
+      "publisher": "Mississippi Secretary of State",
+      "url": "https://www.sos.ms.gov/elections/electionresults_aspx/elections_results_2018_countyrunoff.aspx",
+      "retrieved_at": "2026-11-01T20:59:25.793314Z",
+      "published_date": null,
+      "sha256": null,
+      "coverage": "2018 Senate special required a runoff; archive regular/special eligibility is not independently identified.",
+      "limitations": [
+        "Policy-level rule evidence; no source document bytes redistributed."
+      ]
+    },
+    {
+      "source_id": "votehub-2026-11-01",
+      "title": "VoteHub October 2026 public polling API snapshot",
+      "publisher": "VoteHub",
+      "url": "https://api.votehub.com/polls?from_date=2026-10-01&to_date=2026-11-01",
+      "retrieved_at": "2026-11-01T20:36:31.244162Z",
+      "published_date": null,
+      "sha256": "55e7060db4b8c4121a1229615daf12a5afa41e5fb3b7aaabf6b41e4848ceca24",
+      "coverage": "302 feed records; 178 House/Senate questions before conservative QA.",
+      "limitations": [
+        "CC-BY-4.0; API contains no per-answer party metadata.",
+        "created_at is a provider-added date, not a verified publisher release."
+      ]
+    },
+    {
+      "source_id": "fec-candidate-master-2026",
+      "title": "FEC 2026 candidate master snapshot",
+      "publisher": "Federal Election Commission",
+      "url": "https://www.fec.gov/files/bulk-downloads/2026/cn26.zip",
+      "retrieved_at": "2026-11-01T20:37:15.817397Z",
+      "published_date": null,
+      "sha256": "e931243f01510281ae17a0252c4c71c063b6a098a7f2170785ac018e338d9e34",
+      "coverage": "Exact full-name, office, state and district matches restricted to election year 2026.",
+      "limitations": [
+        "FEC affiliation is candidate-reported; FEC registration is not certification of nomination, current ballot access or general-election matchup.",
+        "Candidates with nicknames or omitted middle names remain unmatched even when a likely real-world match exists.",
+        "FEC file includes future/prior election years and non-nominees; matching restricts election_year2026 and race geography/office.",
+        "Only DEM and REP codes are usable as D/R labels; independent, DFL, OTH and other party codes are not automatically recoded.",
+        "Source ZIP contains public candidate-registration records, not voter-level data; normalized evidence excludes addresses.",
+        "ZIP modification date has no timezone; retrieval timestamp is authoritative snapshot time."
+      ]
+    },
+    {
+      "source_id": "votehub-api-documentation",
+      "title": "VoteHub public API documentation and license",
+      "publisher": "VoteHub",
+      "url": "https://votehub.com/polls/api/",
+      "retrieved_at": "2026-11-01T20:36:31.244162Z",
+      "published_date": null,
+      "sha256": null,
+      "coverage": "CC-BY-4.0 and end-date filter definitions verified with web retrieval.",
+      "limitations": [
+        "Direct shell HTML retrieval returned HTTP403; original documentation HTML not archived."
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "facet": "Polling-error reversal",
+      "finding": "AAPOR reports D-margin overstatement of2.7pp across offices in2024, but R overstatement0.6pp in2022 and D overstatement0.1pp in2018. These do not establish a2026 reversal.",
+      "model_treatment": "Baseline correction zero; estimate separate midterm/chamber error with shrinkage; explicit signed reversal stress only.",
+      "source_ids": [
+        "aapor-2024"
+      ],
+      "status": "observed"
+    },
+    {
+      "facet": "Turnout versus switching",
+      "finding": "Current likely-voter surveys show a Democratic generic-ballot advantage; surveys and aggregate outcomes cannot identify hidden voters or separate switching from composition.",
+      "model_treatment": "No voter-level or demographic inference; no turnout-to-vote conversion; preserve unknowns.",
+      "source_ids": [
+        "emerson-national-20261030",
+        "marist-national-20261027"
+      ],
+      "status": "observed"
+    },
+    {
+      "facet": "Presidential versus midterm",
+      "finding": "Recent midterm polling errors were smaller and less consistently directional than presidential-cycle errors.",
+      "model_treatment": "Fit only earlier midterm cycles and the same office, with matching two-day forecast horizon.",
+      "source_ids": [
+        "aapor-2024",
+        "538-pollster-ratings-2023"
+      ],
+      "status": "observed"
+    },
+    {
+      "facet": "Poll modes, house effects and likely voters",
+      "finding": "Pollsters use different modes, political weights and likely-voter definitions; low response alone does not determine bias direction.",
+      "model_treatment": "Retain mode/population metadata; cluster repeat firms/overlapping samples; do not add unsupported mode or house corrections.",
+      "source_ids": [
+        "pew-weighting-2026",
+        "emerson-ks-20261030",
+        "emerson-tx-20261022"
+      ],
+      "status": "observed"
+    },
+    {
+      "facet": "Correlated errors",
+      "finding": "Method changes do not guarantee accuracy and shared nonresponse can affect many polls together.",
+      "model_treatment": "Shared national/state shocks plus race residuals; pollster clustering and uncertainty floors remain explicit sensitivity assumptions.",
+      "source_ids": [
+        "aapor-2024",
+        "pew-weighting-2026"
+      ],
+      "status": "methodological"
+    },
+    {
+      "facet": "Incumbent backlash and macro environment",
+      "finding": "Marist reports presidential approval40% among likely voters. GDP growth, slower hiring and inflation provide mixed economic context.",
+      "model_treatment": "Context only: no sufficient matched vintage training series or validated coefficients, so no partisan macro adjustment.",
+      "source_ids": [
+        "marist-national-20261027",
+        "bea-gdp-20261029",
+        "bls-jobs-20261002",
+        "bls-cpi-20261014"
+      ],
+      "status": "observed"
+    },
+    {
+      "facet": "Candidate and local effects",
+      "finding": "Verified releases cover three Senate contests and NY-17. This small, single-firm seed is not a representative national sample.",
+      "model_treatment": "Use only direct race polls; no unsupported candidate-quality coefficient, prior district margin or chamber-control odds.",
+      "source_ids": [
+        "emerson-ks-20261030",
+        "emerson-tx-20261022",
+        "emerson-ia-20261009",
+        "emerson-ny17-20261001"
+      ],
+      "status": "observed"
+    },
+    {
+      "facet": "Redistricting",
+      "finding": "Several states changed2026 congressional boundaries, and some Census products require correction after court decisions.",
+      "model_treatment": "House inputs require an explicit map vintage. No historical district-number joins or cross-map fundamentals are used.",
+      "source_ids": [
+        "census-districts-2026"
+      ],
+      "status": "observed"
+    },
+    {
+      "facet": "Late movement and undecideds",
+      "finding": "Kansas and Texas releases provide both initial and leaner versions; these are the same interviews.",
+      "model_treatment": "Use the initial ballot once, retain undecideds, apply recency decay and shared uncertainty. No forced undecided allocation.",
+      "source_ids": [
+        "emerson-ks-20261030",
+        "emerson-tx-20261022"
+      ],
+      "status": "observed"
+    },
+    {
+      "facet": "Special elections and early turnout",
+      "finding": "No consistently verified numeric special-election swing or current early-turnout series is included in this snapshot.",
+      "model_treatment": "Explicitly missing; no zero imputation, preference inference from early turnout, or unrepresentative special-election boost.",
+      "source_ids": [],
+      "status": "missing"
+    },
+    {
+      "facet": "Historical validation",
+      "finding": "The archived pollster-evaluation file ends in2023 overall and selected midterms end in2022; original publication times are absent.",
+      "model_treatment": "Forward-cycle retrospective diagnostics only, with median-date+7day publication proxy; no claim of vintage replay or2024 validation.",
+      "source_ids": [
+        "538-pollster-ratings-2023"
+      ],
+      "status": "methodological"
+    },
+    {
+      "facet": "Voting system and poll round",
+      "finding": "A D/R first-choice margin need not identify the final winner under ranked-choice or majority-runoff rules.",
+      "model_treatment": "Fail closed unless supported system and decisive poll round are explicit; exclude incompatible/unknown historical rounds before fitting.",
+      "source_ids": [
+        "maine-rcv-rules",
+        "maine-rcv-timeline",
+        "alaska-rcv-rules",
+        "georgia-runoff-rules",
+        "louisiana-election-types",
+        "mississippi-2018-runoff"
+      ],
+      "status": "methodological"
+    }
+  ],
+  "limitations": [
+    "Partial research seed only:3 Senate races and1 House district, all from one polling firm; no chamber universe or control probabilities.",
+    "Probabilities are research scenarios with assumed uncertainty/correlation; they are not a validated complete2026 forecast.",
+    "Aggregate data cannot establish who changed votes, whether voters concealed preferences, or why polling errors occur.",
+    "No numeric special-election/early-turnout feed, validated macro/local-effect model, official returns reconciliation, or2024 row-level historical data.",
+    "Primary publisher facts are attributed extractions; whole copyrighted releases are not redistributed. Source-document SHA256 is unavailable where bytes were not retained.",
+    "This is an immutable November1 research snapshot, not a live updating feed."
+  ],
+  "context_observations": [
+    {
+      "source_id": "emerson-national-20261030",
+      "metric": "generic_ballot",
+      "value": null,
+      "unit": null,
+      "dem_pct": 52.0,
+      "rep_pct": 42.0,
+      "population": "lv",
+      "sample_size": 1000,
+      "field_start": "2026-10-24",
+      "field_end": "2026-10-26",
+      "precision": "rounded release text"
+    },
+    {
+      "source_id": "marist-national-20261027",
+      "metric": "generic_ballot",
+      "value": null,
+      "unit": null,
+      "dem_pct": 52.0,
+      "rep_pct": 44.0,
+      "population": "lv",
+      "sample_size": null,
+      "field_start": "2026-10-19",
+      "field_end": "2026-10-20",
+      "precision": "rounded release text"
+    },
+    {
+      "source_id": "marist-national-20261027",
+      "metric": "presidential_approval",
+      "value": 40.0,
+      "unit": null,
+      "dem_pct": null,
+      "rep_pct": null,
+      "population": "lv",
+      "sample_size": null,
+      "field_start": null,
+      "field_end": null,
+      "precision": null
+    },
+    {
+      "source_id": "bea-gdp-20261029",
+      "metric": "real_gdp_growth_q3_saar",
+      "value": 3.4,
+      "unit": "percent",
+      "dem_pct": null,
+      "rep_pct": null,
+      "population": null,
+      "sample_size": null,
+      "field_start": null,
+      "field_end": null,
+      "precision": null
+    },
+    {
+      "source_id": "bls-jobs-20261002",
+      "metric": "september_payroll_change",
+      "value": 29000.0,
+      "unit": "jobs",
+      "dem_pct": null,
+      "rep_pct": null,
+      "population": null,
+      "sample_size": null,
+      "field_start": null,
+      "field_end": null,
+      "precision": null
+    },
+    {
+      "source_id": "bls-jobs-20261002",
+      "metric": "september_unemployment",
+      "value": 4.2,
+      "unit": "percent",
+      "dem_pct": null,
+      "rep_pct": null,
+      "population": null,
+      "sample_size": null,
+      "field_start": null,
+      "field_end": null,
+      "precision": null
+    },
+    {
+      "source_id": "bls-cpi-20261014",
+      "metric": "september_cpi_monthly_sa",
+      "value": 0.6,
+      "unit": "percent",
+      "dem_pct": null,
+      "rep_pct": null,
+      "population": null,
+      "sample_size": null,
+      "field_start": null,
+      "field_end": null,
+      "precision": null
+    },
+    {
+      "source_id": "bls-cpi-20261014",
+      "metric": "september_cpi_annual_nsa",
+      "value": 3.7,
+      "unit": "percent",
+      "dem_pct": null,
+      "rep_pct": null,
+      "population": null,
+      "sample_size": null,
+      "field_start": null,
+      "field_end": null,
+      "precision": null
+    }
+  ],
+  "aggregator_races": 17,
+  "aggregator_polls": 22,
+  "aggregator_race_ids": [
+    "2026-CA-01",
+    "2026-CA-22",
+    "2026-CA-48",
+    "2026-FL-14",
+    "2026-IA-02",
+    "2026-IL-SEN",
+    "2026-MS-SEN",
+    "2026-NC-01",
+    "2026-NC-11",
+    "2026-NC-SEN",
+    "2026-NE-02",
+    "2026-NH-01",
+    "2026-NH-02",
+    "2026-NM-01",
+    "2026-OH-SEN",
+    "2026-PA-08",
+    "2026-TX-15"
+  ],
+  "aggregator_rejections": 280
+}

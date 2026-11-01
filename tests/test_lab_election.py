@@ -34,7 +34,8 @@ def _synthetic_request(race_count=1):
         # Long valid metadata exercises the transport result budget.
         race_id = f"2026-NC-SEN-{index}-" + "r" * 80
         races.append({"race_id": race_id, "chamber": "senate", "state": "NC",
-                      "election_date": "2026-11-03", "cycle": 2026})
+                      "election_date": "2026-11-03", "cycle": 2026,
+                      "voting_system": "plurality", "poll_round": "decisive"})
         for pollster in range(4):
             polls.append({"poll_id": f"fixture-{index}-{pollster}", "race_id": race_id,
                           "pollster": f"Synthetic firm {pollster}" + "p" * 150,
@@ -226,6 +227,7 @@ def test_election_workflow_over_real_mcp_subprocess(tmp_path):
             status = await call("election_status", {})
             assert status["sources"] and status["findings"]
             assert status["current_polls"] == 4 and status["current_races"] == 4
+            assert status["aggregator_races"] == 17 and len(status["aggregator_race_ids"]) == 17
             assert status["status"] == "partial_race_coverage"
             missing = await call("election_forecast", {"config": {"as_of": "2026-11-01"}})
             assert missing["status"] == "missing_data"
@@ -234,11 +236,31 @@ def test_election_workflow_over_real_mcp_subprocess(tmp_path):
                 "dataset_id": "us-2026-11-01", "config": {"as_of": "2026-11-01", "draws": 1000}})
             assert public["status"] == "partial" and public["modeled_race_count"] == 4
             assert public["synthetic"] is False
+            provider = await call("election_forecast", {
+                "dataset_id": "votehub-2026-11-01", "race_ids": status["aggregator_race_ids"][:10],
+                "config": {"as_of": "2026-11-01", "draws": 1000}})
+            assert provider["status"] == "partial" and provider["modeled_race_count"] == 10
+            assert len(provider["forecasts"]) == 30 and provider["synthetic"] is False
             request = _synthetic_request()
             first = await call("election_forecast", request)
             assert first == await call("election_forecast", request)
             assert first["synthetic"] and first["modeled_race_count"] == 1
             assert {row["scenario"] for row in first["forecasts"]} == {"baseline", "historical", "reversal"}
+            unknown = _synthetic_request()
+            unknown["races"][0].pop("voting_system")
+            unknown["races"][0].pop("poll_round")
+            unsupported_unknown = await call("election_forecast", unknown)
+            assert unsupported_unknown["status"] == "missing_data"
+            assert unsupported_unknown["modeled_race_count"] == 0 and not unsupported_unknown["forecasts"]
+            maine = _synthetic_request()
+            # Input labels cannot override known unsupported jurisdiction rules.
+            maine["races"][0].update(race_id="2026-ME-SEN", state="ME")
+            for poll in maine["polls"]:
+                poll["race_id"] = "2026-ME-SEN"
+            unsupported_maine = await call("election_forecast", maine)
+            assert unsupported_maine["status"] == "missing_data"
+            assert unsupported_maine["modeled_race_count"] == 0 and not unsupported_maine["forecasts"]
+            assert unsupported_maine["unmodeled_races"] == ["2026-ME-SEN"]
             evaluated = await call("election_backtest", {})
             assert evaluated["history_count"] == status["historical_races"]
             assert evaluated["synthetic"] is False

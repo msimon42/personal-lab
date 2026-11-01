@@ -66,6 +66,7 @@ SMOKE = r'''
 import builtins, hashlib, json, sys
 from pathlib import Path
 from datetime import date
+from importlib.metadata import version
 
 original_import = builtins.__import__
 forbidden = {'backend', 'personal_lab', 'toolkit_core', 'mcp', 'fastapi', 'uvicorn'}
@@ -79,6 +80,7 @@ from election_model.contracts import BacktestRequest, ForecastRequest, ModelConf
 from election_model.service import ElectionService
 
 assert Path(election_model.__file__).is_relative_to(Path(sys.prefix)), election_model.__file__
+assert version('election-model') == '0.1.1'
 assert Path(sys.argv[1]) not in [Path(value or '.').resolve() for value in sys.path]
 data = Path(election_model.__file__).parent / 'data'
 def hashes():
@@ -87,7 +89,8 @@ expected_hashes = json.loads(sys.argv[2])
 assert hashes() == expected_hashes
 service = ElectionService()
 status = service.status()
-assert status.historical_races == 771 and status.current_races == status.current_polls == 4
+assert status.historical_races == 749 and status.current_races == status.current_polls == 4
+assert status.aggregator_races == 17
 assert status.status == 'partial_race_coverage'
 forecast = service.forecast(ForecastRequest(dataset_id='us-2026-11-01',
     config=ModelConfig(as_of=date(2026, 11, 1), draws=1000)))
@@ -97,7 +100,7 @@ assert len(forecast.forecasts) == 12
 assert {row.scenario for row in forecast.forecasts} == {'baseline', 'historical', 'reversal'}
 assert all(0 <= row.dem_win_probability <= 1 for row in forecast.forecasts)
 backtest = service.backtest(BacktestRequest())
-assert backtest.evaluated_race_count == 647 and backtest.history_count == 771
+assert backtest.evaluated_race_count == 629 and backtest.history_count == 749
 assert backtest.data_origin == 'bundled_public' and backtest.synthetic is False
 assert hashes() == expected_hashes
 assert not forbidden & {name.split('.')[0] for name in sys.modules}
@@ -123,6 +126,6 @@ def test_election_installed_artifact_without_checkout(tmp_path, election_wheels,
         "import sys; sys.path.append(" + repr(sysconfig.get_path("purelib")) + ")\n", encoding="utf-8")
     _run([str(python), "-I", "-m", "installer", "--prefix", str(environment), str(wheels[artifact])], runtime)
     evidence = json.loads(_run([str(python), "-I", "-c", SMOKE, str(ROOT), json.dumps(expected_hashes)], runtime))
-    assert evidence == {"historical_races": 771, "current_races": 4, "scenario_rows": 12,
-                        "evaluated_races": 647, "immutable_data_files": len(expected_hashes),
+    assert evidence == {"historical_races": 749, "current_races": 4, "scenario_rows": 12,
+                        "evaluated_races": 629, "immutable_data_files": len(expected_hashes),
                         "host_or_game_imports": 0}

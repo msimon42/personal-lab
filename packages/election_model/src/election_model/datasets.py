@@ -10,7 +10,7 @@ from .contracts import HistoricalRace
 
 
 def load_document(name: str) -> dict[str, Any]:
-    if name not in {"history.json", "history-v2.json", "current.json", "research.json", "votehub.json"}:
+    if name not in {"history.json", "history-v2.json", "history-v3.json", "current.json", "current-v2.json", "research.json", "votehub.json", "votehub-v2.json"}:
         raise ValueError("Unknown trusted election dataset.")
     root = files("election_model").joinpath("data")
     manifest_bytes = root.joinpath("manifest.json").read_bytes()
@@ -27,7 +27,7 @@ def load_document(name: str) -> dict[str, Any]:
 
 
 def load_history() -> tuple[list[HistoricalRace], dict]:
-    document = load_document("history-v2.json")
+    document = load_document("history-v3.json")
     if not 1 <= len(document["races"]) <= 3000:
         raise ValueError("Packaged historical coverage exceeds its contract.")
     return [HistoricalRace.model_validate(row) for row in document["races"]], document["metadata"]

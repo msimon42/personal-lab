@@ -101,6 +101,8 @@ class VoteHubAuditRow(Contract):
     rep_pct: float | None = None
     sample_size_reported: int | None = None
     population_reported: str
+    verified_candidate_ids: list[str] = Field(default_factory=list, max_length=30)
+    unverified_choices: list[str] = Field(default_factory=list, max_length=30)
 
 
 class VoteHubAudit(Contract):
@@ -144,6 +146,9 @@ def audit_votehub(raw: bytes, *, as_of: date, candidate_evidence: list[Candidate
     """
     if not raw or len(raw) > 4 * 1024 * 1024:
         raise ValueError("VoteHub snapshot must contain 1 byte to 4 MiB.")
+    if (len(candidate_evidence) > 2000 or len(primary_reviews or []) > 5000
+            or len(existing_surveys or []) > 5000 or len(pollster_aliases or {}) > 1000):
+        raise ValueError("VoteHub QA support inputs exceed their declared bounds.")
     data = json.loads(raw)
     if not isinstance(data, list) or len(data) > 5000:
         raise ValueError("VoteHub snapshot must be an array with at most 5,000 records.")
@@ -177,6 +182,7 @@ def audit_votehub(raw: bytes, *, as_of: date, candidate_evidence: list[Candidate
         reasons: list[str] = []
         warnings: list[str] = []
         candidates: list[tuple[VoteHubAnswer, CandidateEvidence]] = []
+        unverified_choices: list[str] = []
         race_id: str | None = None
         review = reviews.get(record.id)
         status: Literal["reviewed", "candidate_verified", "rejected"]
@@ -205,6 +211,7 @@ def audit_votehub(raw: bytes, *, as_of: date, candidate_evidence: list[Candidate
                 item = evidence.get((record.subject, answer.choice))
                 if item is None:
                     reasons.append("candidate_party_not_verified")
+                    unverified_choices.append(answer.choice)
                     continue
                 if item.evidence_date > as_of:
                     reasons.append("candidate_evidence_after_cutoff")
@@ -222,7 +229,7 @@ def audit_votehub(raw: bytes, *, as_of: date, candidate_evidence: list[Candidate
         if record.poll_type in {"us-senator", "us-representative"} and (len(democrats) != 1 or len(republicans) != 1):
             reasons.append("requires_one_verified_democrat_and_republican")
         survey = (record.subject, _pollster_key(record.pollster, aliases), record.start_date, record.end_date)
-        if len(variants.get(survey, [])) > 1:
+        if record.poll_type in {"us-senator", "us-representative"} and len(variants.get(survey, [])) > 1:
             selected = [poll_id for poll_id in variants[survey] if poll_id in reviews]
             if selected != [record.id]:
                 reasons.append("ambiguous_same_survey_variant")
@@ -274,7 +281,9 @@ def audit_votehub(raw: bytes, *, as_of: date, candidate_evidence: list[Candidate
             status=status, race_id=race_id, reasons=sorted(set(reasons)), warnings=warnings,
             availability_basis=basis, internal=record.internal, partisan=record.partisan,
             sponsors=record.sponsors, dem_pct=dem, rep_pct=rep,
-            sample_size_reported=sample, population_reported=record.population))
+            sample_size_reported=sample, population_reported=record.population,
+            verified_candidate_ids=sorted({item.candidate_id for _, item in candidates}),
+            unverified_choices=unverified_choices))
     return VoteHubAudit(
         as_of=as_of, source_sha256=hashlib.sha256(raw).hexdigest(), source_records=len(records),
         target_records=len(target_records), reviewed_polls=reviewed_polls,

@@ -1,0 +1,299 @@
+{
+  "model_version": "0.1.0",
+  "input_sha256": "8bbd1d4c91e9c8f7f3a7cbb6e6257eb8fb4c32ba37f266575a79cebbe9c72741",
+  "data_origin": "bundled_public",
+  "as_of": "2026-11-01",
+  "synthetic": false,
+  "folds": [
+    {
+      "cycle": 2006,
+      "chamber": "house",
+      "training_cycles": [
+        1998,
+        2002
+      ],
+      "rows": 94,
+      "baseline": {
+        "race_count": 94,
+        "mae": 5.746021610082016,
+        "rmse": 7.156163379216726,
+        "brier": 0.1437734039192128,
+        "interval90_coverage": 0.9787234042553191,
+        "mean_interval90_width": 29.9109638175236
+      },
+      "historical": {
+        "race_count": 94,
+        "mae": 5.784103616522278,
+        "rmse": 7.189733152179608,
+        "brier": 0.14409402981371053,
+        "interval90_coverage": 0.9680851063829787,
+        "mean_interval90_width": 29.9109638175236
+      }
+    },
+    {
+      "cycle": 2006,
+      "chamber": "senate",
+      "training_cycles": [
+        1998,
+        2002
+      ],
+      "rows": 27,
+      "baseline": {
+        "race_count": 27,
+        "mae": 3.3787202901333657,
+        "rmse": 4.284249984125832,
+        "brier": 0.03172687658510908,
+        "interval90_coverage": 1.0,
+        "mean_interval90_width": 28.127721563587354
+      },
+      "historical": {
+        "race_count": 27,
+        "mae": 3.320305421940803,
+        "rmse": 4.163432178977078,
+        "brier": 0.030810535104579758,
+        "interval90_coverage": 1.0,
+        "mean_interval90_width": 28.127721563587354
+      }
+    },
+    {
+      "cycle": 2010,
+      "chamber": "house",
+      "training_cycles": [
+        1998,
+        2002,
+        2006
+      ],
+      "rows": 152,
+      "baseline": {
+        "race_count": 152,
+        "mae": 6.405418702940022,
+        "rmse": 8.582690702363939,
+        "brier": 0.10036359580500817,
+        "interval90_coverage": 0.8947368421052632,
+        "mean_interval90_width": 27.81208081954312
+      },
+      "historical": {
+        "race_count": 152,
+        "mae": 6.425670674288107,
+        "rmse": 8.597878448062646,
+        "brier": 0.10066812156500757,
+        "interval90_coverage": 0.8947368421052632,
+        "mean_interval90_width": 27.81208081954312
+      }
+    },
+    {
+      "cycle": 2010,
+      "chamber": "senate",
+      "training_cycles": [
+        1998,
+        2002,
+        2006
+      ],
+      "rows": 35,
+      "baseline": {
+        "race_count": 35,
+        "mae": 4.552918594408705,
+        "rmse": 6.469465125488304,
+        "brier": 0.03882325680087351,
+        "interval90_coverage": 0.9714285714285714,
+        "mean_interval90_width": 23.96216096812566
+      },
+      "historical": {
+        "race_count": 35,
+        "mae": 4.5922300996817444,
+        "rmse": 6.450507770077214,
+        "brier": 0.03793438057586666,
+        "interval90_coverage": 0.9714285714285714,
+        "mean_interval90_width": 23.96216096812566
+      }
+    },
+    {
+      "cycle": 2014,
+      "chamber": "house",
+      "training_cycles": [
+        1998,
+        2002,
+        2006,
+        2010
+      ],
+      "rows": 63,
+      "baseline": {
+        "race_count": 63,
+        "mae": 7.00802169031148,
+        "rmse": 9.945455187664903,
+        "brier": 0.127690834518657,
+        "interval90_coverage": 0.9523809523809523,
+        "mean_interval90_width": 27.876261984414235
+      },
+      "historical": {
+        "race_count": 63,
+        "mae": 7.088703458005251,
+        "rmse": 10.006557157194809,
+        "brier": 0.12863683648169866,
+        "interval90_coverage": 0.9523809523809523,
+        "mean_interval90_width": 27.876261984414235
+      }
+    },
+    {
+      "cycle": 2014,
+      "chamber": "senate",
+      "training_cycles": [
+        1998,
+        2002,
+        2006,
+        2010
+      ],
+      "rows": 33,
+      "baseline": {
+        "race_count": 33,
+        "mae": 4.575416579475666,
+        "rmse": 6.076414041937136,
+        "brier": 0.040921129373633826,
+        "interval90_coverage": 0.9090909090909091,
+        "mean_interval90_width": 23.254017431216113
+      },
+      "historical": {
+        "race_count": 33,
+        "mae": 4.89572203274356,
+        "rmse": 6.445086719508901,
+        "brier": 0.04555627272360812,
+        "interval90_coverage": 0.8787878787878788,
+        "mean_interval90_width": 23.254017431216113
+      }
+    },
+    {
+      "cycle": 2018,
+      "chamber": "house",
+      "training_cycles": [
+        1998,
+        2002,
+        2006,
+        2010,
+        2014
+      ],
+      "rows": 128,
+      "baseline": {
+        "race_count": 128,
+        "mae": 6.213784209326551,
+        "rmse": 8.265929194546267,
+        "brier": 0.14235816483049485,
+        "interval90_coverage": 0.921875,
+        "mean_interval90_width": 28.96026804072907
+      },
+      "historical": {
+        "race_count": 128,
+        "mae": 6.274752710738587,
+        "rmse": 8.340549004510185,
+        "brier": 0.1443569986915462,
+        "interval90_coverage": 0.9140625,
+        "mean_interval90_width": 28.96026804072907
+      }
+    },
+    {
+      "cycle": 2018,
+      "chamber": "senate",
+      "training_cycles": [
+        1998,
+        2002,
+        2006,
+        2010,
+        2014
+      ],
+      "rows": 28,
+      "baseline": {
+        "race_count": 28,
+        "mae": 3.260578765606747,
+        "rmse": 3.8425356519512794,
+        "brier": 0.0514330663086122,
+        "interval90_coverage": 1.0,
+        "mean_interval90_width": 23.008984208491317
+      },
+      "historical": {
+        "race_count": 28,
+        "mae": 3.257932863457298,
+        "rmse": 3.840408619398672,
+        "brier": 0.05145889447320563,
+        "interval90_coverage": 1.0,
+        "mean_interval90_width": 23.008984208491317
+      }
+    },
+    {
+      "cycle": 2022,
+      "chamber": "house",
+      "training_cycles": [
+        1998,
+        2002,
+        2006,
+        2010,
+        2014,
+        2018
+      ],
+      "rows": 60,
+      "baseline": {
+        "race_count": 60,
+        "mae": 5.906749156070655,
+        "rmse": 7.98577298263007,
+        "brier": 0.16283932400540815,
+        "interval90_coverage": 0.9666666666666667,
+        "mean_interval90_width": 28.700835971748123
+      },
+      "historical": {
+        "race_count": 60,
+        "mae": 5.913818721099257,
+        "rmse": 7.978442620435358,
+        "brier": 0.16418724312416413,
+        "interval90_coverage": 0.9666666666666667,
+        "mean_interval90_width": 28.700835971748123
+      }
+    },
+    {
+      "cycle": 2022,
+      "chamber": "senate",
+      "training_cycles": [
+        1998,
+        2002,
+        2006,
+        2010,
+        2014,
+        2018
+      ],
+      "rows": 27,
+      "baseline": {
+        "race_count": 27,
+        "mae": 5.370098316230646,
+        "rmse": 7.426635619181884,
+        "brier": 0.058422548475686405,
+        "interval90_coverage": 0.8518518518518519,
+        "mean_interval90_width": 21.57215930878004
+      },
+      "historical": {
+        "race_count": 27,
+        "mae": 5.382415088162386,
+        "rmse": 7.450216933181081,
+        "brier": 0.05825531090914738,
+        "interval90_coverage": 0.8518518518518519,
+        "mean_interval90_width": 21.57215930878004
+      }
+    }
+  ],
+  "warnings": [
+    "Research scenarios only: probabilities are not a calibrated complete election forecast. No chamber-control probability is produced; the requested race list is incomplete.",
+    "Uncertainty floors and national/state correlation components are configurable sensitivity assumptions, not fitted 2026 parameters. More polls do not remove common polling error.",
+    "Bundled archive evaluation is a retrospective diagnostic, not an exact as-of replay: original publication availability is proxied and the historical archive selects eventual top-two candidates. Bundled historical coverage ends in 2022; it does not establish 2026 calibration.",
+    "Forward-cycle folds use only earlier midterm cycles with outcomes available before the held-out snapshot; historical and baseline models share the same uncertainty assumptions. Races within a cycle are correlated, so row count is not independent cycle count.",
+    "No hypothetical reversal scenario is scored as a trained model; this diagnostic tests only the zero-bias baseline and prior-cycle signed-error estimate.",
+    "Skipped 124 eligible rows without the required prior-cycle training history.",
+    "Archive available now is not a vintage dataset; historical publication dates are unknown.",
+    "Observation dates are median field dates, not publication dates or field end dates.",
+    "Candidates are the retrospectively selected top two election finishers; selection bias remains.",
+    "The provider has already imputed some sample sizes without a row-level imputation flag.",
+    "Historical actual margins are the archive's values; independent official-return reconciliation is not supplied.",
+    "This snapshot has no 2024 or 2026 election observations.",
+    "Publication lag and outcome availability lag are declared proxies, not observed release dates.",
+    "Archive map vintage is unknown; no district baseline or cross-map transfer is modeled.",
+    "November specials sharing the federal general-election date may remain as distinct race IDs.",
+    "Historical selection favors polled competitive D/R races and is not a representative chamber slate."
+  ],
+  "history_count": 771,
+  "evaluated_race_count": 647
+}

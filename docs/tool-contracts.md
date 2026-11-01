@@ -10195,6 +10195,28 @@ Input schema:
           "format": "date",
           "title": "Outcome Available Date",
           "type": "string"
+        },
+        "voting_system": {
+          "default": "unknown",
+          "enum": [
+            "plurality",
+            "two_candidate_runoff",
+            "ranked_choice",
+            "majority_runoff",
+            "unknown"
+          ],
+          "title": "Voting System",
+          "type": "string"
+        },
+        "poll_round": {
+          "default": "unknown",
+          "enum": [
+            "decisive",
+            "first_choice",
+            "unknown"
+          ],
+          "title": "Poll Round",
+          "type": "string"
         }
       },
       "required": [
@@ -10343,7 +10365,7 @@ Output schema:
       "additionalProperties": false,
       "properties": {
         "model_version": {
-          "default": "0.1.0",
+          "default": "0.1.1",
           "title": "Model Version",
           "type": "string"
         },
@@ -10661,6 +10683,28 @@ Input schema:
           "format": "date",
           "title": "Outcome Available Date",
           "type": "string"
+        },
+        "voting_system": {
+          "default": "unknown",
+          "enum": [
+            "plurality",
+            "two_candidate_runoff",
+            "ranked_choice",
+            "majority_runoff",
+            "unknown"
+          ],
+          "title": "Voting System",
+          "type": "string"
+        },
+        "poll_round": {
+          "default": "unknown",
+          "enum": [
+            "decisive",
+            "first_choice",
+            "unknown"
+          ],
+          "title": "Poll Round",
+          "type": "string"
         }
       },
       "required": [
@@ -10976,6 +11020,28 @@ Input schema:
           ],
           "default": null,
           "title": "Map Vintage"
+        },
+        "voting_system": {
+          "default": "unknown",
+          "enum": [
+            "plurality",
+            "two_candidate_runoff",
+            "ranked_choice",
+            "majority_runoff",
+            "unknown"
+          ],
+          "title": "Voting System",
+          "type": "string"
+        },
+        "poll_round": {
+          "default": "unknown",
+          "enum": [
+            "decisive",
+            "first_choice",
+            "unknown"
+          ],
+          "title": "Poll Round",
+          "type": "string"
         }
       },
       "required": [
@@ -11196,6 +11262,12 @@ Output schema:
     "ForecastReport": {
       "additionalProperties": false,
       "properties": {
+        "probability_target": {
+          "const": "positive_d_minus_r_in_supported_decisive_round",
+          "default": "positive_d_minus_r_in_supported_decisive_round",
+          "title": "Probability Target",
+          "type": "string"
+        },
         "recommended_scenario": {
           "const": "baseline",
           "default": "baseline",
@@ -11203,7 +11275,7 @@ Output schema:
           "type": "string"
         },
         "model_version": {
-          "default": "0.1.0",
+          "default": "0.1.1",
           "title": "Model Version",
           "type": "string"
         },
@@ -11532,6 +11604,9 @@ Output schema:
           "type": "number"
         },
         "dem_win_probability": {
+          "description": "Probability of positive D-minus-R margin in a supported decisive-round comparison; other-candidate victories are not modeled.",
+          "maximum": 1,
+          "minimum": 0,
           "title": "Dem Win Probability",
           "type": "number"
         },

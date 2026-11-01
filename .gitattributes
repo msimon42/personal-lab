@@ -1,0 +1,3 @@
+# Preserve immutable election evidence exactly across Git checkouts.
+data/elections/** -text
+packages/election_model/src/election_model/data/** -text

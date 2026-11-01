@@ -1,0 +1,106 @@
+{
+  "recorded_at": "2026-11-01T20:51:54.026402+00:00",
+  "scope": "Local aggregate election module; real public source snapshots plus synthetic software tests. No game launch or deployment.",
+  "checks": [
+    {
+      "command": "UV_CACHE_DIR=/tmp/personal-lab-uv-cache /tmp/personal-lab-tools/uv run --offline --extra dev pytest",
+      "execution_boundary": "approved process-inspection access",
+      "result": "passed",
+      "tests": 917,
+      "seconds": 78.22
+    },
+    {
+      "command": "UV_CACHE_DIR=/tmp/personal-lab-uv-cache /tmp/personal-lab-tools/uv run --offline --extra dev ruff check backend packages apps tests scripts",
+      "result": "passed"
+    },
+    {
+      "command": "UV_CACHE_DIR=/tmp/personal-lab-uv-cache /tmp/personal-lab-tools/uv run --offline --extra dev mypy",
+      "result": "passed",
+      "source_files": 11
+    },
+    {
+      "command": "UV_CACHE_DIR=/tmp/personal-lab-uv-cache /tmp/personal-lab-tools/uv run --offline python scripts/check.py",
+      "execution_boundary": "approved process-inspection access",
+      "result": "passed",
+      "tests_at_this_stage": 911,
+      "pytest_seconds": 78.13,
+      "other_checks": [
+        "Ruff",
+        "mypy",
+        "generated contracts",
+        "20 synthetic fixtures"
+      ],
+      "note": "Six FEC evidence tests were added afterward; final917-test run and updated typing/lint/schema checks also passed."
+    },
+    {
+      "command": ".venv/bin/python scripts/generate_contracts.py --check",
+      "result": "passed"
+    },
+    {
+      "command": ".venv/bin/python scripts/election_verify_candidate_evidence.py --check",
+      "result": "passed",
+      "verified_mappings": 108,
+      "usable_dem_rep_labels": 92,
+      "unmatched_answers": 80
+    },
+    {
+      "command": ".venv/bin/python scripts/election_import_history.py --source data/elections/sources/538-raw-polls.csv",
+      "result": "passed",
+      "reproduced_existing_bytes": true,
+      "races": 771
+    },
+    {
+      "command": ".venv/bin/python scripts/election_import_votehub.py",
+      "result": "passed",
+      "reproduced_existing_bytes": true,
+      "polls": 22,
+      "races": 17
+    },
+    {
+      "command": ".venv/bin/python scripts/election_research_report.py --include-provider --output-dir data/elections/reports/2026-11-01",
+      "result": "passed",
+      "repeated_identical_runs": 2,
+      "manifest_verified_files": 8
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --exit-code 7eeaca3 -- specs schemas/ck3",
+      "result": "passed"
+    }
+  ],
+  "initial_sandboxed_regression": {
+    "command": "UV_CACHE_DIR=/tmp/personal-lab-uv-cache /tmp/personal-lab-tools/uv run --offline --extra dev pytest",
+    "passed": 895,
+    "failed": 4,
+    "seconds": 89.78,
+    "errors": [
+      {
+        "test": "tests/test_agent_test_setup.py::test_native_os_write_boundary_uses_only_temporary_data",
+        "error": "ValueError: The process write boundary was not established. CK3 was not launched."
+      },
+      {
+        "test": "tests/test_ck3_probe_lifecycle.py::test_real_disposable_process_exit_is_observed_and_stopping_is_honest[False]",
+        "error": "AssertionError: assert 'unknown' == 'running'"
+      },
+      {
+        "test": "tests/test_ck3_probe_lifecycle.py::test_real_disposable_process_exit_is_observed_and_stopping_is_honest[True]",
+        "error": "AssertionError: assert 'unknown' == 'running'"
+      },
+      {
+        "test": "tests/test_ck3_probe_lifecycle.py::test_leader_exit_does_not_hide_live_descendant",
+        "error": "KeyError: 'live_group_members'"
+      }
+    ],
+    "resolution": "All four passed in2.51s with explicitly approved native process-inspection access; full pipeline and final full suite passed with that access. They launch only temporary disposable processes.",
+    "interpretation": "Verified execution-boundary sensitivity. No failing-before-change baseline was established, so these are not claimed as pre-existing failures. No denied operation was bypassed."
+  },
+  "coverage_limits": [
+    "917 tests establish software/integration/preservation behavior, not election accuracy or game qualification.",
+    "647 actual historical held-out race snapshots across2006/2010/2014/2018/2022 support retrospective diagnostics only; the source has no true publication-date vintage or2024 row-level data.",
+    "Current outputs cover4 primary-release races and17 separate provider-sensitivity races; no chamber-control probabilities.",
+    "Native Windows deployment and actual-game observations remain unrun."
+  ]
+}
