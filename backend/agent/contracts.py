@@ -95,6 +95,15 @@ class Related(Index):
     limit: int = Field(default=20, ge=1, le=50)
 
 
+class DefinitionContributions(Index):
+    target: str = Field(min_length=1, max_length=4096)
+    offset: int = Field(default=0, ge=0)
+    limit: int = Field(default=20, ge=1, le=50)
+    path_prefix: str | None = Field(default=None, max_length=500)
+    owner: str | None = Field(default=None, max_length=500)
+    continuation: str | None = Field(default=None, max_length=4096)
+
+
 class Brief(Index):
     issue_id: str
 
@@ -182,7 +191,8 @@ MODELS = {"status": StrictModel, "release": StrictModel, "session": Workspace, "
           "apply": Proposal, "test": Proposal, "enable": Proposal, "undo": Proposal,
           "context": Context, "check": Check, "remember": Remember, "capabilities": StrictModel, "missing_mods": MissingMods,
           "search_knowledge": KnowledgeSearch, "read_knowledge": KnowledgeRead,
-          "search_sources": SourceSearch, "read_source": SourceRead, "related_definitions": Related, "brief": Brief,
+          "search_sources": SourceSearch, "read_source": SourceRead, "related_definitions": Related,
+          "definition_contributions": DefinitionContributions, "brief": Brief,
           "read_sources": SourcesRead, "concerns": Concerns, "concern_evidence": ConcernEvidence,
           "record_review": Review, "investigation_report": InvestigationReport,
           "missing_candidates": MissingMods, "inspect_candidate": CandidateInspection,
@@ -192,7 +202,8 @@ MODELS = {"status": StrictModel, "release": StrictModel, "session": Workspace, "
 class AgentRequest(StrictModel):
     operation: Literal["status", "release", "session", "issues", "inspect", "proposal", "challenge", "answer",
                        "apply", "test", "enable", "undo", "context", "check", "remember", "capabilities",
-                       "search_knowledge", "read_knowledge", "search_sources", "read_source", "related_definitions", "brief", "missing_mods",
+                       "search_knowledge", "read_knowledge", "search_sources", "read_source", "related_definitions",
+                       "definition_contributions", "brief", "missing_mods",
                        "read_sources", "concerns", "concern_evidence", "record_review", "investigation_report",
                        "missing_candidates", "inspect_candidate", "version_preference"]
     payload: dict = Field(default_factory=dict)

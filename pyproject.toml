@@ -5,24 +5,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "eu5-mod-engine"
 version = "0.1.0"
-description = "Local, evidence-scoped EU5 mod analysis and managed repair workbench"
+description = "Evidence-scoped EU5 and CK3 libraries for headless personal tools"
 requires-python = ">=3.12"
 dependencies = [
-  "fastapi>=0.115,<1",
-  "uvicorn>=0.30,<1",
   "pydantic>=2.8,<3",
-  "httpx>=0.27,<1",
   "jsonschema>=4.23,<5",
-  "mcp>=1.20,<2",
-  "tomlkit>=0.13,<1",
+  "toolkit-core",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8,<10", "hypothesis>=6,<7", "ruff>=0.9,<1", "build>=1,<2"]
-
-[project.scripts]
-eu5 = "backend.cli:main"
-mod-engine = "backend.cli:main"
+dev = ["pytest>=8,<10", "hypothesis>=6,<7", "ruff>=0.9,<1", "build>=1,<2", "setuptools>=75", "installer>=0.7,<1", "mypy>=1.15,<2", "personal-lab-toolkit[mod-engine,election-model]"]
 
 [tool.setuptools.packages.find]
 include = ["backend*"]
@@ -37,7 +29,7 @@ include = ["backend*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = [".", "packages/toolkit_core/src", "apps/toolkit/src", "packages/election_model/src"]
 addopts = "-q"
 
 [tool.ruff]
@@ -46,3 +38,16 @@ line-length = 110
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F"]
+
+[tool.uv.workspace]
+members = ["apps/toolkit", "packages/toolkit_core", "packages/election_model"]
+
+[tool.uv.sources]
+toolkit-core = { workspace = true }
+personal-lab-toolkit = { workspace = true }
+election-model = { workspace = true }
+
+[tool.mypy]
+python_version = "3.12"
+follow_imports = "silent"
+files = ["packages/toolkit_core/src/toolkit_core/contracts.py", "apps/toolkit/src/personal_lab/profiles.py", "apps/toolkit/src/personal_lab/toolsets/ck3_models.py", "packages/election_model/src/election_model"]

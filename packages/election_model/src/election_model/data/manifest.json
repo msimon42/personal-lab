@@ -1,0 +1,21 @@
+{
+  "files": {
+    "current.json": {
+      "bytes": 3783,
+      "sha256": "6715f9e9ff8e3b7db2ac8287890551f47bb8ecbd5001a8c433e8ea766f0818b5"
+    },
+    "history-v2.json": {
+      "bytes": 309454,
+      "sha256": "a9c75e1f8cdd5712cc2831e46e754e13d1a399531e36247f09171cce156558bc"
+    },
+    "history.json": {
+      "bytes": 311376,
+      "sha256": "d9f12e567b339207dd8928d766b5032ed19459852d56d37541ed0870ab41bcb2"
+    },
+    "research.json": {
+      "bytes": 14731,
+      "sha256": "b81e4d5ef12eb3dfecce5dab7a15a8e84c6f8ce58fa283367ec06800a1ff3e10"
+    }
+  },
+  "schema_version": "1.0"
+}

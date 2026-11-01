@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-01",
+  "user_authorized": true,
+  "instances_separate": true,
+  "checkout_runtime_state_removed": true,
+  "backup_base": "~/Library/Application Support/personal-lab/backups/pre-monorepo-20261101",
+  "retired_source_base": "~/Library/Application Support/personal-lab/retired-sources/pre-monorepo-20261101",
+  "libraries": [
+    {
+      "instance": "eu5-legacy",
+      "backup_name": "eu5-workbench",
+      "record_counts": {
+        "workspace": 1,
+        "scan": 2,
+        "candidate": 2,
+        "artifact": 1,
+        "job": 8
+      },
+      "immutable_files_verified": 8,
+      "candidates_require_revalidation": 2,
+      "rebased_artifacts": 1,
+      "previous_root_mapping_verified": true
+    },
+    {
+      "instance": "ck3-test-qualification",
+      "backup_name": "ck3-test-qualification",
+      "record_counts": {
+        "agent_isolation": 1
+      },
+      "immutable_files_verified": 5,
+      "historical_probes": 1,
+      "execution_eligible": false
+    }
+  ],
+  "complete_backups_verified": true,
+  "original_database_bytes_unchanged": true,
+  "record_ids_preserved": true,
+  "saved_events_preserved": true,
+  "retired_originals_verified": true,
+  "game_launched": false,
+  "verification": {
+    "pytest_passed": 839,
+    "synthetic_fixtures_passed": 20,
+    "ruff": "passed",
+    "contract_types": "passed",
+    "contract_drift": "passed",
+    "installed_release": "ready",
+    "fingerprint": "3038575d76148be6a900eb60de418d8c7c49a5e9c5c0dba63b34ae9465175c5b"
+  }
+}

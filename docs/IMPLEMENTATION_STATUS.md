@@ -1,6 +1,195 @@
+# Personal Lab architecture delivery snapshot — 1 November 2026
+
+This record captures the completed architecture migration and local cutover before subsequent toolsets and publication. Its test counts and release fingerprint describe that verified checkpoint.
+
+The headless foundation is implemented. The existing EU5/CK3 engine remains the first toolset; no additional daily-life product was introduced.
+
+- Workspace packages: retained `eu5-mod-engine`/`backend`, extracted `toolkit-core`, and `personal-lab-toolkit` version 1.0.0. Python 3.12.16 and MCP SDK 2.3.0 are pinned with the shared lockfile.
+- Unified `personal_lab` stdio host exposes **54 concrete tools**: 5 core, 17 EU5 and 32 supported CK3 operations. The former HTTP hop, web frontend, browser build/CI and obsolete launchers are removed. Unsupported game-test/activation operations remain unregistered.
+- Both transports and CLI share strict application contracts, bounded outputs/artifacts, persistent bounded runs, revision/idempotency checks, policy-aware source disclosure, exact native questions, terminal fallback and immutable external-action grants. Restore now creates a distinct instance and invalidates prior authority while retaining investigations.
+- Actual Codex CLI 0.164.0-alpha.11.1 called `lab_capabilities` once against disposable core-only state and exited successfully. SDK tests cover actual stdio workflows, legacy/modern native-choice paths, malicious/stale inputs, installed wheels/sdists and domain-free core-only installation. See `verification/` for the sanitized client evidence.
+
+## Checks actually executed
+
+From the renamed checkout `/Users/matthewsimon/projects/personal-lab`:
+
+`UV_CACHE_DIR=/private/tmp/eu5-uv-cache /private/tmp/eu5-ck3-tooling/bin/uv run --extra dev python scripts/check.py`
+
+**839 pytest tests passed in 72.89 seconds**, Ruff passed, public-contract mypy checks passed, generated schemas/docs matched, and **all 20 synthetic fixture contracts passed**. Source checks `git diff --check` and `git diff --exit-code -- specs schemas/ck3` passed. The old checkout's baseline was 689 backend tests plus 14 frontend unit tests; relevant browser/domain assertions now have headless coverage.
+
+Matching wheels and source distributions for all three packages were built and tested. Build output excludes deleted transports, including when an old build directory contains stale files. The installed environment is outside the checkout and uses the exact exported runtime constraints. At cutover, source, installed modules and workflow receipt matched fingerprint `3038575d76148be6a900eb60de418d8c7c49a5e9c5c0dba63b34ae9465175c5b` (see live receipt for the authoritative value).
+
+## Live cutover and renames
+
+The verified idle legacy engine PID 23984 was gracefully stopped after exact HTTP/native identity and idle-state checks. Its two approved libraries were completely backed up, migrated and verified under `~/Library/Application Support/personal-lab/instances/`. Retired original copies and complete backups are retained outside the checkout.
+
+- `personal`: 57,042 immutable files preserved; the original 80 records were unchanged by relocation. Fresh stdio resumed the same CK3 workspace with **5 scans, 2 indexes and 29 jobs**, without a new scan or game launch. One new briefing and instance configuration are expected operational metadata.
+- `ck3-isolation-qualification`: immutable plan/policy/review files preserved; its single unlaunched probe is historical and execution-ineligible. Fresh preparation and approval are required before any future qualification.
+- `eu5-legacy`: separately authorized on 1 November; 1 workspace, 2 scans, 8 completed jobs and all saved events preserved. Its artifact link was mapped from the absent former checkout root using verified backup membership; 2 candidates require revalidation. All 8 immutable files and the original database were verified unchanged.
+- `ck3-test-qualification`: separately authorized on 1 November; all 5 immutable files preserved and its single prepared/unlaunched probe made historical and execution-ineligible.
+
+The additional libraries have separate complete backups and unchanged retired originals under `backups/pre-monorepo-20261101/` and `retired-sources/pre-monorepo-20261101/` in the same OS-local Personal Lab directory. The nested CK3 library was migrated and archived before the remaining EU5 root. The checkout now contains no `.workspace` state. See `verification/additional-library-relocation.json`; full local receipts are under `migration-reports/2026-11-01/` outside Git.
+
+The owned connector/skill/receipt now use `personal_lab` and `ck3_` names, preserving unrelated settings and existing stricter policies. Checkout renamed to `personal-lab`; GitHub renamed to `msimon42/personal-lab` with the same repository ID 1436266773 and updated origin. The existing project policy was moved to the new checkout path without changing its values. The renamed folder was reopened through the installed Codex CLI and registered as the Personal Lab project. This existing chat still references the old project and loaded tool definitions; use the renamed project and reconnect tools to load the new interface.
+
+The migration was verified locally before publication. Git history and the pre-migration dirty-tree checkpoint were retained.
+
+## Remaining boundaries
+
+Native Windows deployment/game qualification and real-game repair/activation/live undo remain unavailable. No game was launched and no conformed game rules were added. The original specification package and advisory schema source bytes remain unchanged.
+
+
+---
+
+# Historical implementation ledger
+
+The following entries document earlier increments and their contemporaneous coverage. The accepted headless amendment supersedes historical UI and HTTP product requirements.
+
 # Implementation status
 
 30 October 2026. This is a working local implementation with an executable EU5 synthetic workflow and CK3 playset inspection. The complete research plan also includes Windows/game qualification that cannot be completed on this macOS host. **No EU5/CK3 conformance or universal compatibility is claimed.**
+
+## Complete contributor retrieval and protected discussion, 30 October
+
+Assistant version **3.1.0** adds `get_definition_contributions`, the connector's
+34th tool. Previously a symbol could report more than eight contributors while
+exposing only its first eight, with no declaration continuation; an owner filter
+could return other owners' declarations. Symbol/related previews now provide
+complete next-request arguments, and the new tool pages every matching indexed
+occurrence within 50 records and 128 KiB. Target, filters, offset/limit, saved
+identity and policy are bound into continuations; changed inputs require a fresh
+page. Counts describe captured metadata, not game-selected winners.
+
+Same-file script and localization repeats retain their exact captured coordinates.
+Deferred localization reuses hash-bound index coordinates without rereading
+originals. Missing coordinates remain explicit provenance-only gaps. Projection
+format 2 retains earlier artifacts and rebuilds from saved scans without a new
+source scan.
+
+Saved goals, notes and next steps now carry separate policy, value and source
+bindings. Public context, session, remember and resume responses withhold prose
+whose policy/scope no longer matches while retaining the managed original.
+Goal-only updates cannot authorize old notes, and next-step-only updates cannot
+relabel old notes as current. Concurrent progress/field saves retain unrelated
+updates. Legacy unbound text is labeled and remains readable with no exclusions;
+it is withheld when exclusions exist. Excluded saved choices produce a generic
+fresh-review marker so other resumable progress remains available.
+
+Validation: **689 backend tests passed in one full run**, including 34 new
+contribution cases, 31 saved-context cases and two MCP-to-authenticated-HTTP
+integration cases. Installed direct-wheel and source-distribution smoke tests
+exercise the new tool. Ruff, generated contracts, skill validation and original
+specification/schema preservation checks passed. The existing Starlette warning
+remains. No frontend changes/checks or native Windows/game qualification occurred.
+The separate isolation launch remains pending explicit user approval.
+
+Installed the owned 3.1 update and restarted only the verified idle engine.
+Current source, receipt, engine and fresh connector match. A saved real-installation
+symbol preview showed eight of nine captured declarations; the new tool returned
+the remaining declaration with nine unique identities across both pages. Owner
+filters returned only the selected owner's declaration. Public context/session
+disclosure metadata was checked without logging saved prose. The library retained
+5 scans, 2 indexes and 29 jobs, with no new scan/check job. Projection format 2
+was prepared while retaining the earlier projection. Existing settings/policies
+were preserved; the new read-only tool received its narrow default policy.
+Managed reports are under
+`.workspace/ck3-verification/reports/owned-connection-update-3.1-*`.
+The host's already-loaded connector still requires reconnection.
+
+## Installed update and prepared isolation check, 30 October
+
+Updated the owned Codex installation through its recoverable installer and
+gracefully restarted only its verified idle headless engine. Current source,
+installed receipt, fresh stdio connector and loaded engine now match. Fresh
+context/resume calls exposed all 33 tools and retained the same investigation.
+The library kept its 5 scans, 2 indexes and 29 jobs; no scan/check job was added.
+Unrelated settings and every existing per-tool policy were preserved. The current
+host's already-loaded connector still requires reconnection. Managed audit
+reports are under `.workspace/ck3-verification/reports/owned-connection-update-*`.
+
+Prepared a fresh immutable Mac isolation plan against the identified CK3
+1.19.0.4 installation in `.workspace/ck3-isolation-qualification`. Its private
+profile requests no mods; actual loaded content remains unobserved. Candidate
+argument strings were found in the executable, which does not qualify their
+behavior. The native disposable-Python write control passed: a private-profile
+write succeeded and an outside write was denied. Launch preconditions still
+matched afterward, including the normal-data metadata inventory. No game was
+launched, no normal playset was edited and no gameplay capability was enabled.
+
+The reviewed next action is a bounded 90-second operator isolation launch.
+Computer-use inventory reports the Mac locked, preventing direct window
+observation. Manual unlock and explicit consent for that concrete launch remain
+required. The plan, control result and launch review are archived in the private
+managed qualification root; they establish preparation, not game conformance.
+
+## Agent consistency and isolation lifecycle, 30 October
+
+The assistant's release fingerprint now covers every backend Python module and
+the exact advisory schema/manifest bytes. Core-only updates therefore block
+mixed-release preparation, native approval prompts and writes. Saved inspection
+reports remain readable for core-only changes when their own scan/schema scope
+is still valid. Installed direct-wheel and source-distribution smoke tests verify
+the same release fingerprint as the source checkout.
+
+Legacy list/excerpt tools now enforce the current source policy through return,
+redact complete comparisons with an excluded contribution, and preserve explicit
+excluded-group accounting. Excluded names/targets are removed before searching.
+Changed policy/scope/revisions refuse stale content and new preparations; pending
+choices and file writes are blocked after exclusion. Signed native undo still
+retires an inactive artifact without disclosing excluded source labels, while
+retaining its exact recovery files and intervening-edit checks.
+
+Operator-only Mac isolation probes now bind a versioned launch plan, arguments,
+executable, policy and exact empty-mod profile. Source separation and inventory
+errors are checked before profile creation. Launch intent is durable and
+serialized across SQLite connections; ambiguous interrupted launches cannot be
+retried automatically. Status observes microsecond process creation identity,
+zombies and process-group descendants. Stop remains pending until observed exit;
+uncertain ownership never authorizes a signal. These observations do not establish
+game initialization or byte preservation of the normal data directory.
+
+Validation: **622 backend tests passed in one full run**, including 20 isolation
+setup/lifecycle cases, 28 new legacy-policy regressions, core/schema-only release
+regressions and installed-package MCP checks. Native controls used disposable
+Python processes, including ignored termination and surviving descendants. Ruff,
+generated contracts and original-specification/schema preservation checks passed.
+The existing Starlette test-client deprecation warning remains. No frontend code
+changed or frontend checks ran in this increment. No CK3 game launch, native
+Windows qualification, activation or gameplay conformance was performed.
+
+Existing installations must reinstall their owned workflow and restart/reconnect
+to load the expanded release fingerprint. Legacy unbound isolation plans require
+fresh preparation; existing scans and inactive recovery artifacts are retained.
+
+## Installed headless assistant increment, 30 October
+
+The headless CK3 assistant now runs from an installed wheel independently of the
+application source checkout. The build copies the original advisory schemas into
+package resources without changing their bytes or hashes. Source distributions
+retain those originals and the build hook. The source-and-built-UI ZIP now also
+includes the agent skill, references and build inputs.
+
+Two new integration cases build a direct wheel and a wheel from a source
+distribution, install each in a temporary environment, and exercise the installed
+CLI, packaged knowledge/workflow, physical synthetic-source scan, investigation
+index, and actual stdio MCP source reads/report. Both passed on macOS. All 24
+schemas and their manifest match the original bytes; all four synthetic source
+files remain unchanged per case. Temporary headless engines are stopped after
+the checks. Game-test and activation tools retain their unavailable results.
+
+All **569 existing backend tests** passed across the main run and targeted
+process-permission reruns; the **two new installed-package tests** also passed.
+The initial restricted run passed 567 cases but could not bind localhost or run
+the native Mac isolation control; the affected tests passed with those process
+permissions. Ruff and generated-contract checks passed. Frontend code was not
+changed or retested for this packaging increment.
+
+The wheel, source distribution and source-and-built-UI ZIP were built locally;
+the wheel's 25 schema resource files match the originals, and the ZIP's 172 file
+hashes verified. This qualifies the tested headless package path on macOS with
+locked dependencies. The wheel excludes the optional dashboard. Native Windows
+delivery, CK3 gameplay testing, activation and live undo remain unfinished.
+Earlier package limitations below describe historical increments before this fix.
 
 ## Complete investigation increment, 30 October
 

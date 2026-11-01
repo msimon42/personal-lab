@@ -7,6 +7,7 @@ import pytest
 
 from backend.app.service import Service
 from backend.app.store import Conflict
+from backend.app.eu5_operations import EU5Operations, IntentInput, accept_trusted_decision
 
 
 def noop_checkpoint(*_args):
@@ -31,16 +32,12 @@ def approved_conflict(service):
 
 
 def change_choice(service, workspace, scan_id, choice):
-    return service.command({
-        "command": "decision",
-        "workspace_id": workspace["id"],
-        "payload": {
-            "scan_id": scan_id,
-            "choice": choice,
-            "reason": f"Retain {choice}'s exact value and narrowly waive the competing value.",
-        },
-        "idempotency_key": uuid.uuid4().hex,
-    })
+    scan = service.store.get("scan", scan_id)
+    finding = next(row for row in scan["analysis"]["findings"] if row["kind"] == "contradictory_intents")
+    proposed = EU5Operations(service).intent_record(IntentInput(snapshot_id=scan_id,
+        finding_ids=[scan_id + "/" + finding["id"]], selected_outcome="choose_owner", choice=choice,
+        reason=f"Retain {choice}'s exact value and narrowly waive the competing value.", idempotency_key=uuid.uuid4().hex))
+    return accept_trusted_decision(service, proposed.question_id, choice)
 
 
 def barrier_at(phase):

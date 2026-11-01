@@ -14,7 +14,7 @@ import time
 from backend.app.store import Conflict, canonical, digest
 from backend.engine.parser import PARSER_VERSION
 
-PROJECTION_VERSION = "ck3-investigation-projection-1"
+PROJECTION_VERSION = "ck3-investigation-projection-2"
 MAX_ENTRIES = 4
 MAX_CACHE_BYTES = 256 * 1024 * 1024
 MAX_HEADER_BYTES = 1024 * 1024

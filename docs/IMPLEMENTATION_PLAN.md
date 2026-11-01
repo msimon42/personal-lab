@@ -1,6 +1,30 @@
+# Current implementation direction: Personal Lab
+
+The accepted headless monorepo decision is `decisions/0006-headless-monorepo.md`.
+Follow `architecture.md`, the architecture amendments and `migration-inventory.md`.
+The reviewed migration delivers a unified tool host, preserves the existing mod
+engine, retires the web shell, migrates state safely, and renames the repository.
+Windows/game production qualification remains separate. The historical plan
+below records earlier work and does not require restoring the superseded UI.
+
+---
+
 # EU5 Mod Compatibility Engine — implementation plan
 
 Plan date: **27 October 2026**. Status: **proposed implementation plan (P)**, ready to execute in work packages. This plan is derived from specification revision 2.0; it does not establish new EU5 behavior or passing application tests.
+
+**Repository direction, 30 October 2026:** the mod engine is the first tool in
+the user's eventual monolith of personal software, primarily operated by agents.
+Continue developing this existing tool and grow from its working infrastructure
+as further needs arise. The CK3 conversation workflow already implements the
+intended agent interface; completing its remaining delivery and game-acceptance
+work is the current focus.
+
+**CK3 contributor retrieval, 30 October 2026:** version 3.1 adds complete bounded
+definition-contribution paging, filter-respecting symbol previews and explicit
+script/localization occurrence coordinates. Conversation prose now retains
+per-field disclosure and source provenance. These extend the existing agent tool;
+game qualification and the pending operator isolation launch remain separate.
 
 **CK3 complete investigations, 30 October 2026:** the accepted
 [investigation decision](decisions/0005-complete-ck3-investigations.md) adds bounded

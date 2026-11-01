@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "personal_lab": {
+      "command": "/absolute/path/to/installed/lab",
+      "args": ["mcp", "--profile", "personal", "--state-dir", "/absolute/local/personal-lab-state", "--config", "/absolute/local/profiles.toml"]
+    }
+  }
+}

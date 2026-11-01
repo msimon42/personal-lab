@@ -7,9 +7,11 @@ checked against the saved hash before any excerpt is exposed.
 """
 from __future__ import annotations
 
+import base64
 from collections import Counter, defaultdict
 import fnmatch
 from functools import wraps
+import json
 from pathlib import PurePosixPath
 import re
 
@@ -21,6 +23,8 @@ from backend.engine.safety import validate_relative_path
 MAX_FILE_BYTES = 8_000_000
 MAX_SEARCH_BYTES = 24_000_000
 MAX_SEARCH_FILES = 256
+MAX_DEFINITION_RESPONSE_BYTES = 128 * 1024
+DEFINITION_CURSOR_VERSION = "definition-contributions-1"
 TEXT_EXTENSIONS = {".txt", ".yml", ".yaml", ".gui", ".info", ".mod", ".json", ".csv", ".asset", ".gfx", ".md"}
 REFERENCE_LIMITATION = (
     "These are only the references recognized by the current advisory fields. "
@@ -39,6 +43,40 @@ def _query(query, *, empty=False):
     if not isinstance(query, str) or len(query) > 500 or (not empty and not query):
         raise ValueError("Use a short, nonempty search phrase.")
     return query
+
+
+def _definition_filters(path_prefix, owner):
+    for value in (path_prefix, owner):
+        if value is not None and (not isinstance(value, str) or len(value) > 500):
+            raise ValueError("Use a short source filter.")
+
+
+def _definition_token(identity, offset, limit):
+    raw = canonical({"version": DEFINITION_CURSOR_VERSION, "identity": identity,
+                     "offset": offset, "limit": limit})
+    return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+
+def _definition_cursor(value):
+    try:
+        if not isinstance(value, str) or not 1 <= len(value) <= 512:
+            raise ValueError
+        raw = base64.b64decode(value + "=" * (-len(value) % 4), altchars=b"-_", validate=True)
+        cursor = json.loads(raw)
+        if (not isinstance(cursor, dict) or set(cursor) != {"version", "identity", "offset", "limit"}
+                or cursor["version"] != DEFINITION_CURSOR_VERSION
+                or type(cursor["offset"]) is not int or cursor["offset"] < 0
+                or type(cursor["limit"]) is not int or not 1 <= cursor["limit"] <= 50):
+            raise ValueError
+        return cursor
+    except (ValueError, TypeError, UnicodeError) as exc:
+        raise ValueError("Use the complete continuation returned by the definition page.") from exc
+
+
+def _definition_response_size(result):
+    # Bound even the expanded, ASCII-escaped JSON text representation used by
+    # tool hosts, rather than only the smaller canonical UTF-8 representation.
+    return len(json.dumps(result, ensure_ascii=True, indent=2).encode("utf-8"))
 
 
 def _guard_request(method):
@@ -60,6 +98,7 @@ def _guard_request(method):
 class _Snapshot:
     def __init__(self, service, workspace_id, index_id):
         from .projection import get_projection
+        self.service = service
         self.store = service.store
         self.__dict__.update(get_projection(service, workspace_id, index_id,
                                             lambda: self._build(service, workspace_id, index_id)))
@@ -101,20 +140,65 @@ class _Snapshot:
             source = self.by_file_id.get(definition["file_id"])
             if source:
                 self.definition_sources[definition["key"]].append((source, definition))
-        # Localization has source provenance but no script declaration record.
-        for definition in self.scan["analysis"].get("definitions", []):
-            if definition["key"] in self.definition_sources:
+        # Localization is not a script declaration, but parsed entries retain
+        # exact byte coordinates and repeated-key identities of their own.
+        localization_positions = set()
+        for file in self.scan["analysis"].get("files", []):
+            source = self.by_file_id.get(file["id"])
+            if source is None or file.get("kind") != "localization":
                 continue
-            for file_id in definition.get("provenance", []):
-                if source := self.by_file_id.get(file_id):
-                    self.definition_sources[definition["key"]].append((source, {"key": definition["key"]}))
+            for ordinal, entry in enumerate(file.get("entries", [])):
+                target = f"game/localization/{entry['language']}:{entry['key']}"
+                if len(entry["key"]) > 4096:
+                    continue  # Match the analyzer's explicit symbol-coverage boundary.
+                record = {"key": target, "span": entry["span"], "ordinal": ordinal,
+                          "ordinal_scope": "file_localization_entry_order", "key_ordinal": entry.get("ordinal"),
+                          "identity_state": "captured_localization_entry", "coordinate_state": "exact"}
+                self.definition_sources[target].append((source, record))
+                localization_positions.add((target, source["source_id"], tuple(entry["span"])))
+        # The issue index also captures localization text deferred by the initial
+        # scan budget. Merge only exact matching source identities, without
+        # duplicating entries already represented by parsed-file coordinates.
+        by_path = {(source["owner"], source["path"]): source for source in self.files}
+        for issue in self.index["issues"]:
+            if issue.get("kind") != "localization_overlap":
+                continue
+            target = issue["target"]
+            for occurrence in issue["sources"]:
+                source = by_path.get((occurrence["owner"], occurrence["path"]))
+                span = occurrence.get("span")
+                if (source is None or occurrence.get("sha256") != source["sha256"] or
+                        not isinstance(span, list) or len(span) != 2 or
+                        any(type(value) is not int for value in span) or
+                        not 0 <= span[0] <= span[1] <= source["size"]):
+                    raise Conflict("A captured localization occurrence has an invalid source identity or byte span.")
+                position = target, source["source_id"], tuple(span)
+                if position in localization_positions:
+                    continue
+                record = {"key": target, "span": span, "identity_state": "captured_localization_entry",
+                          "coordinate_state": "exact", "ordinal_scope": "file_localization_entry_order"}
+                if type(occurrence.get("ordinal")) is int and occurrence["ordinal"] >= 0:
+                    record["ordinal"] = occurrence["ordinal"]
+                self.definition_sources[target].append((source, record))
+                localization_positions.add(position)
+        # Preserve provenance-only legacy/partial entries when exact coordinates
+        # were not captured. An unknown coordinate is not an invented occurrence.
+        for definition in self.scan["analysis"].get("definitions", []):
+            target = definition["key"]
+            known = Counter(source["id"] for source, _ in self.definition_sources.get(target, []))
+            for file_id, count in Counter(definition.get("provenance", [])).items():
+                source = self.by_file_id.get(file_id)
+                if source is not None:
+                    for _ in range(max(0, count - known[file_id])):
+                        self.definition_sources[target].append((source, {"key": target,
+                            "identity_state": "source_provenance_only", "coordinate_state": "unknown"}))
 
         # Persist only the lookup data used by inspection, not parser trees or
         # full semantic records. Source identity and ordered occurrence spans remain.
         source_fields = {"id", "source_id", "owner", "path", "sha256", "size", "kind", "family", "active",
                          "origin", "descriptor_path", "payload_status", "selection_scope", "diagnostics"}
         files = [{key: value for key, value in source.items() if key in source_fields} for source in self.files]
-        definition_fields = {"key", "span", "ordinal", "identity_state"}
+        definition_fields = {"key", "span", "ordinal", "identity_state", "coordinate_state", "ordinal_scope", "key_ordinal"}
         definitions = {key: [[source["source_id"], {
             **{field: value for field, value in record.items() if field in definition_fields},
             "cst_reference": {"recovered": record.get("cst_reference", {}).get("recovered")}}]
@@ -218,17 +302,73 @@ class _Snapshot:
         self._raw_cache[cache_key] = raw
         return raw, None
 
-    def definition(self, target, *, occurrence_limit=8):
+    def definition_scope(self, target, path_prefix, owner):
+        from .projection import _identity
+        if not hasattr(self, "_definition_request_identity"):
+            self._definition_request_identity = _identity(
+                self.service, self.scan["workspace_id"], self.index["id"])
+        return digest(canonical([DEFINITION_CURSOR_VERSION, self._definition_request_identity,
+                                 self.patterns, target, path_prefix, owner]))
+
+    def definition_page(self, target, offset, limit, path_prefix=None, owner=None):
+        """Page declaration metadata without reading or claiming source bodies."""
         if self.definition_excluded(target):
+            return {**self.context(), "excluded": True}
+        all_occurrences = self.definition_sources.get(target, [])
+        occurrences = [(source, record) for source, record in all_occurrences
+                       if (owner is None or source["owner"] == owner) and
+                       (path_prefix is None or source["path"].startswith(path_prefix))]
+        total = len(occurrences)
+        if offset > total:
+            raise ValueError("The occurrence offset is outside this definition. Start again at zero.")
+        identity = self.definition_scope(target, path_prefix, owner)
+
+        def response(rows):
+            end = offset + len(rows)
+            next_offset = end if end < total else None
+            token = _definition_token(identity, next_offset, limit) if next_offset is not None else None
+            next_request = {"workspace_id": self.scan["workspace_id"], "index_id": self.index["id"],
+                            "target": target, "offset": next_offset, "limit": limit,
+                            "path_prefix": path_prefix, "owner": owner, "continuation": token}
+            return {**self.context(), "target": target, "occurrence_count": total, "occurrences": list(rows),
+                "offset": offset, "next_offset": next_offset, "continuation": token,
+                "occurrences_continuation": next_request if next_offset is not None else None,
+                "status": ("indexed" if total else "no_matching_contributions" if all_occurrences
+                           else "not_in_available_index"),
+                "coverage": {"scope": "matching declarations in the available saved index",
+                    "indexed_occurrence_count": len(all_occurrences), "owner": owner, "path_prefix": path_prefix,
+                    "source_bytes": "not_read_metadata_only", "response_byte_limit": MAX_DEFINITION_RESPONSE_BYTES,
+                    "occurrences_on_page": len(rows), "all_matching_occurrences_returned": offset == 0 and next_offset is None,
+                    "unknown_coordinate_count": sum("span" not in record for _, record in occurrences),
+                    "unsupported_or_deferred_definitions": "may_be_absent"},
+                "meaning": "Captured declarations; no game-selected winner has been established."}
+
+        rows = []
+        for source, record in occurrences[offset:offset + limit]:
+            row = {**self.public(source),
+                   **{key: record[key] for key in ("span", "ordinal", "identity_state", "coordinate_state",
+                                                 "ordinal_scope", "key_ordinal") if key in record},
+                   "recovered": record.get("cst_reference", {}).get("recovered")}
+            candidate = response([*rows, row])
+            if _definition_response_size(candidate) > MAX_DEFINITION_RESPONSE_BYTES:
+                break
+            rows.append(row)
+        if not rows and offset < total:
+            raise ValueError("One declaration exceeds the response budget; use bounded source inspection.")
+        result = response(rows)
+        if _definition_response_size(result) > MAX_DEFINITION_RESPONSE_BYTES:
+            raise ValueError("Definition metadata exceeds the response budget.")
+        return result
+
+    def definition(self, target, *, occurrence_limit=8, path_prefix=None, owner=None):
+        page = self.definition_page(target, 0, occurrence_limit, path_prefix, owner)
+        if page.get("excluded"):
             return {"excluded": True}
-        occurrences = self.definition_sources.get(target, [])
-        return {"target": target, "occurrence_count": len(occurrences),
-            "occurrences": [{**self.public(source),
-                **{key: record[key] for key in ("span", "ordinal", "identity_state") if key in record},
-                "recovered": record.get("cst_reference", {}).get("recovered")}
-                for source, record in occurrences[:occurrence_limit]],
-            "occurrences_truncated": len(occurrences) > occurrence_limit,
-            "meaning": "Captured declarations; no game-selected winner has been established."}
+        return {"target": target, "occurrence_count": page["occurrence_count"], "occurrences": page["occurrences"],
+                "occurrences_truncated": page["next_offset"] is not None,
+                "occurrences_offset": page["offset"], "occurrences_next_offset": page["next_offset"],
+                "occurrences_continuation": page["occurrences_continuation"],
+                "status": page["status"], "coverage": page["coverage"], "meaning": page["meaning"]}
 
 
 class Investigation:
@@ -243,9 +383,7 @@ class Investigation:
         _query(query, empty=kind == "path")
         if kind not in {"text", "path", "symbol"}:
             raise ValueError("Search captured text, paths, or definition names.")
-        for value in (path_prefix, owner):
-            if value is not None and (not isinstance(value, str) or len(value) > 500):
-                raise ValueError("Use a short source filter.")
+        _definition_filters(path_prefix, owner)
         view = _Snapshot(self.service, workspace_id, index_id)
         files = [source for source in view.files if not view.excluded(source) and
                  (owner is None or source["owner"] == owner) and
@@ -255,7 +393,7 @@ class Investigation:
             keys = sorted(target for target, occurrences in view.definition_sources.items()
                           if query.casefold() in target.casefold() and not view.definition_excluded(target) and
                           any(source["source_id"] in allowed for source, _ in occurrences))
-            results = [view.definition(target) for target in keys[offset:offset + limit]]
+            results = [view.definition(target, path_prefix=path_prefix, owner=owner) for target in keys[offset:offset + limit]]
             return {**view.context(), "kind": kind, "results": results, "total": len(keys),
                 "offset": offset, "next_offset": offset + limit if offset + limit < len(keys) else None,
                 "coverage": "All matches in the available definition index; unsupported and deferred definitions may be absent."}
@@ -295,6 +433,22 @@ class Investigation:
                 "all_eligible_sources_searched": complete, "search_exhausted": next_offset is None,
                 "bytes_read": byte_count, "gaps": gaps,
                 "note": "Continue with next_offset and the same query and filters. This page is not a full-collection total. Text searches do not analyze binary assets."}}
+
+    @_guard_request
+    def definition_contributions(self, workspace_id, index_id, target, offset=0, limit=20,
+                                 path_prefix=None, owner=None, continuation=None):
+        """Enumerate every matching saved declaration, including same-file repeats."""
+        _page(offset, limit)
+        if not isinstance(target, str) or not 1 <= len(target) <= 4096:
+            raise ValueError("Choose an indexed definition name.")
+        _definition_filters(path_prefix, owner)
+        view = _Snapshot(self.service, workspace_id, index_id)
+        identity = view.definition_scope(target, path_prefix, owner)
+        if continuation is not None:
+            cursor = _definition_cursor(continuation)
+            if cursor["identity"] != identity or cursor["offset"] != offset or cursor["limit"] != limit:
+                raise Conflict("This definition continuation belongs to different inputs, filters or source permissions. Start again.")
+        return view.definition_page(target, offset, limit, path_prefix, owner)
 
     @_guard_request
     def read_source(self, workspace_id, index_id, source_id, offset=0, limit=8192):

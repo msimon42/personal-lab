@@ -22,3 +22,5 @@ coverage.xml
 .coverage
 dist/
 build/
+
+.mypy_cache/

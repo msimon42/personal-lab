@@ -13,13 +13,17 @@ import json
 import re
 from collections import defaultdict
 from graphlib import CycleError, TopologicalSorter
+from importlib import resources
 from pathlib import Path, PurePosixPath
 
 from .formats import BINARY_EXTENSIONS, parse_localization, path_risks, windows_key
 from .parser import PARSER_VERSION, digest, parse
 
 ADAPTER_VERSION = "ck3-inspection-2"
-SCHEMA_ROOT = Path(__file__).resolve().parents[2] / "schemas" / "ck3"
+# Wheels carry a byte-exact copy; editable development uses the original source.
+SCHEMA_ROOT = resources.files("backend.engine").joinpath("data", "ck3")
+if not SCHEMA_ROOT.is_dir():
+    SCHEMA_ROOT = Path(__file__).resolve().parents[2] / "schemas" / "ck3"
 BASE_OWNERS = {"V", "base", "vanilla"}
 DESCRIPTOR_SCALARS = {"name", "version", "supported_version", "path", "archive", "picture", "remote_file_id"}
 DESCRIPTOR_LISTS = {"tags", "dependencies"}
@@ -56,8 +60,8 @@ def schema_manifest() -> dict:
     manifest = json.loads(manifest_raw)
     schemas, originals, changed = {}, [], []
     expected = {entry["path"]: entry["sha256"] for entry in manifest["originals"]}
-    for path in sorted(SCHEMA_ROOT.glob("*.json")):
-        if path.name.startswith("_"):
+    for path in sorted(SCHEMA_ROOT.iterdir(), key=lambda entry: entry.name):
+        if not path.is_file() or not path.name.endswith(".json") or path.name.startswith("_"):
             continue
         raw = path.read_bytes()
         original = json.loads(raw)

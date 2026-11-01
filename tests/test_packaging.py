@@ -1,32 +1,29 @@
+"""The headless source bundle contains workspace closure and no private state."""
 import hashlib
 import json
-import zipfile
 from pathlib import Path
+import zipfile
 
 from scripts import package
 
 
-def test_release_archive_contains_launcher_and_browser_test_dependency_closure(tmp_path, monkeypatch):
+def test_release_archive_is_headless_and_preserves_dependency_closure(tmp_path, monkeypatch):
     source = tmp_path / "source"
-    required = {"Start-EU5.cmd", "scripts/start.ps1", "pyproject.toml", "uv.lock", ".python-version",
-                "README.md", "backend/cli.py", "backend/app/main.py", "frontend/dist/index.html",
-                "frontend/package.json", "frontend/package-lock.json", "frontend/tsconfig.json",
-                "frontend/vite.config.ts", "frontend/index.html", "frontend/src/main.tsx",
-                "frontend/playwright.config.ts", "frontend/tsconfig.e2e.json", "scripts/test_e2e.py",
-                "frontend/e2e/run.mjs", "frontend/e2e/server.py", "frontend/e2e/fixture_tool.py",
-                "frontend/e2e/fixtures.ts", "frontend/e2e/workflow.spec.ts"}
-    for name in required | {"frontend/node_modules/private", ".workspace/private", "backend/__pycache__/cache.pyc"}:
+    required = {"AGENTS.md", "README.md", "pyproject.toml", "setup.py", "MANIFEST.in", "uv.lock", ".python-version", ".gitignore",
+        "backend/app/service.py", "packages/toolkit_core/pyproject.toml", "packages/toolkit_core/src/toolkit_core/storage.py",
+        "apps/toolkit/pyproject.toml", "apps/toolkit/src/personal_lab/mcp_server.py", "apps/toolkit/src/personal_lab/cli.py",
+        "schemas/ck3/_manifest.json", "skills/ck3-mod-agent/SKILL.md", "config/profiles.example.toml"}
+    private = {"apps/toolkit/.venv/private", "packages/toolkit_core/build/private", ".workspace/private", "backend/__pycache__/private.pyc"}
+    for name in required | private:
         path = source / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(name.encode())
     monkeypatch.setattr(package, "ROOT", source)
-    archive = package.build(tmp_path / "application.zip")
-    with zipfile.ZipFile(archive) as bundle:
+    with zipfile.ZipFile(package.build(tmp_path / "source.zip")) as bundle:
         names = set(bundle.namelist())
-        assert required <= names
-        assert not any(set(Path(name).parts) & {"node_modules", ".workspace", ".tools", "__pycache__", ".git"}
-                       for name in names)
+        assert required <= names and not names & private
+        assert not any(part in package.EXCLUDED for name in names for part in Path(name).parts)
         manifest = json.loads(bundle.read("release-manifest.json"))
-        assert {item["path"] for item in manifest["files"]} == names - {"release-manifest.json"}
-        for item in manifest["files"]:
-            assert hashlib.sha256(bundle.read(item["path"])).hexdigest() == item["sha256"]
+        assert manifest["kind"] == "headless_workspace_source"
+        assert {row["path"] for row in manifest["files"]} == names - {"release-manifest.json"}
+        assert all(hashlib.sha256(bundle.read(row["path"])).hexdigest() == row["sha256"] for row in manifest["files"])

@@ -4,6 +4,7 @@ from __future__ import annotations
 import base64
 from collections import Counter
 import copy
+import fnmatch
 import secrets
 import time
 
@@ -12,6 +13,7 @@ from backend.engine.ck3 import _scalar
 from backend.engine.ck3_writer import ck3_bundle_files
 from backend.engine.parser import parse
 from .approvals import signing_key, verify
+from .investigation import _guard_request
 from .issues import CapturedSources, build_index, query_index
 
 REPAIR_VERSION = "call-allies-draft-2"
@@ -28,6 +30,38 @@ def check_proposal(proposal, *, require_current=False):
     supported = {REPAIR_VERSION} if require_current else {"call-allies-draft-1", REPAIR_VERSION}
     if proposal.get("repair_version") not in supported or content_hash(proposal) != proposal.get("content_hash"):
         raise Conflict("The proposed changes changed. Please review fresh choices.")
+
+
+def _excluded_issue(issue, patterns):
+    return any(fnmatch.fnmatchcase(source["path"], pattern)
+               for source in issue["sources"] for pattern in patterns)
+
+
+def _require_source_policy(service, item):
+    patterns = list(service.inference_policy()["excluded_patterns"])
+    if _excluded_issue(item, patterns):
+        raise ValueError("The source policy excludes content needed for these choices.")
+    return patterns
+
+
+def _check_inspection(service, workspace_id, index_id, identity, patterns):
+    from .projection import _identity
+    if patterns != service.inference_policy()["excluded_patterns"]:
+        raise Conflict("Source permissions changed during inspection. No content was returned; please retry.")
+    if identity != _identity(service, workspace_id, index_id):
+        raise Conflict("The selected inspection changed while reading evidence. Please retry.")
+
+
+def _excluded_placeholder(issue):
+    # Keep an observation to account for without disclosing source identities,
+    # inferred comparisons, mod names or content-family details.
+    return {"id": issue["id"], "kind": "excluded_content", "target": "",
+        "area": "Content excluded from inspection", "title": "Content excluded from inspection",
+        "what_is_known": "The source policy excludes content needed to inspect this observation.",
+        "what_is_unknown": "The excluded content has not been reviewed.", "comparison": "unknown",
+        "internal": False, "metadata_only": False, "mods": [], "sources": [], "language": None,
+        "current_game_comparison": [], "repair_available": False, "gameplay_effect": "unconfirmed",
+        "excluded": True}
 
 
 class AgentWorkflow:
@@ -52,8 +86,17 @@ class AgentWorkflow:
                                 "enable_after_checks": True, "offer_separate_test": True}})
 
     def progress(self, workspace_id, state, **values):
+        with self.service.command_lock, self.store.atomic():
+            session = self.session(workspace_id)
+            return self.store.put("agent_session", {**session, **values, "state": state}, expected_revision=session["revision"])
+
+    def public_session(self, workspace_id):
+        from .session_projection import SessionProjection
+        disclosure = SessionProjection(self.service, self.ck3(workspace_id))
         session = self.session(workspace_id)
-        return self.store.put("agent_session", {**session, **values, "state": state})
+        result = disclosure.project(session)
+        disclosure.validate()
+        return result
 
     def index(self, workspace, payload, checkpoint, verified_scan=None):
         scan = verified_scan if verified_scan is not None else self.service._current_scan(workspace, payload["scan_id"], checkpoint=checkpoint)
@@ -65,9 +108,11 @@ class AgentWorkflow:
         prepare_projection(self.service, workspace["id"], saved["id"])
         from .reviews import ReviewWorkflow
         ReviewWorkflow(self.service).initialize(workspace["id"], saved["id"])
-        session = self.session(workspace["id"])
-        self.store.put("agent_session", {**session, "scan_id": scan["id"], "index_id": saved["id"], "state": "reviewing",
-            "reviewed_issue_ids": session.get("reviewed_issue_ids", []) if session.get("scan_id") == scan["id"] else []})
+        with self.service.command_lock, self.store.atomic():
+            session = self.session(workspace["id"])
+            self.store.put("agent_session", {**session, "scan_id": scan["id"], "index_id": saved["id"], "state": "reviewing",
+                "reviewed_issue_ids": session.get("reviewed_issue_ids", []) if session.get("scan_id") == scan["id"] else []},
+                expected_revision=session["revision"])
         return {"index_id": saved["id"], "summary": saved["summary"],
                 "message": "I checked the available mods. Some shared changes still need a closer look."}
 
@@ -82,9 +127,25 @@ class AgentWorkflow:
             raise Conflict("The inspection tools changed. Please examine the saved scan again.")
         return workspace, index
 
+    @_guard_request
     def issues(self, workspace_id, index_id, **query):
         _, index = self.current_index(workspace_id, index_id)
-        return query_index(index, **query)
+        patterns = self.service.inference_policy()["excluded_patterns"]
+        excluded = {issue["id"] for issue in index["issues"] if _excluded_issue(issue, patterns)}
+        if not excluded:
+            return query_index(index, **query)
+        visible = [issue for issue in index["issues"] if issue["id"] not in excluded]
+        safe_index = {**index,
+            "issues": [_excluded_placeholder(issue) if issue["id"] in excluded else issue for issue in index["issues"]],
+            "summary": {**index["summary"], "excluded_groups": len(excluded),
+                "differing_cross_mod_groups": sum(issue["comparison"] == "different" and
+                    not issue["metadata_only"] and not issue["internal"] for issue in visible),
+                "differing_internal_groups": sum(issue["internal"] and issue["comparison"] == "different"
+                                                for issue in visible)}}
+        result = query_index(safe_index, **query)
+        result["coverage"] = {**result["coverage"], "excluded_groups": len(excluded),
+            "source_policy": "Excluded observations remain visible as placeholders; their comparisons and identities are withheld."}
+        return result
 
     def issue(self, workspace_id, index_id, issue_id):
         workspace, index = self.current_index(workspace_id, index_id)
@@ -93,8 +154,14 @@ class AgentWorkflow:
             raise ValueError("That problem does not belong to this scan.")
         return workspace, index, issue
 
+    @_guard_request
     def inspect(self, workspace_id, index_id, issue_id, source_number=None, offset=0, limit=8192):
         _, index, issue = self.issue(workspace_id, index_id, issue_id)
+        patterns = self.service.inference_policy()["excluded_patterns"]
+        # The issue includes comparison metadata derived from every contributor,
+        # even when no excerpt or a different contributor was requested.
+        if _excluded_issue(issue, patterns):
+            return {"issue_id": issue_id, "excluded": True}
         result = copy.deepcopy(issue)
         if source_number is None:
             return result
@@ -102,9 +169,6 @@ class AgentWorkflow:
                 type(offset) is not int or offset < 0 or type(limit) is not int or not 1 <= limit <= 8192):
             raise ValueError("Choose a valid source and a short excerpt.")
         source = issue["sources"][source_number]
-        import fnmatch
-        if any(fnmatch.fnmatchcase(source["path"], pattern) for pattern in self.service.inference_policy()["excluded_patterns"]):
-            return {"issue_id": issue_id, "excluded": True}
         scan = self.store.get("scan", index["scan_id"])
         raw = CapturedSources(self.store, scan).raw(source["owner"], source["path"])
         start, end = source.get("span", [0, len(raw)])
@@ -117,7 +181,14 @@ class AgentWorkflow:
         return result
 
     def prepare(self, workspace, payload, checkpoint):
+        return self._prepare(workspace["id"], payload["index_id"], workspace, payload, checkpoint)
+
+    @_guard_request
+    def _prepare(self, workspace_id, index_id, workspace, payload, checkpoint):
+        from .projection import _identity
         _, index, issue = self.issue(workspace["id"], payload["index_id"], payload["issue_id"])
+        patterns = _require_source_policy(self.service, issue)
+        identity = _identity(self.service, workspace_id, index_id)
         scan = self.service._current_scan(workspace, index["scan_id"])
         if issue["kind"] != "duplicate_definition" or issue["target"] != "game/character_interaction/call_ally_interaction":
             raise ValueError("This repair path currently prepares the shared call-allies action. Other changes need their own checked repair path.")
@@ -164,7 +235,9 @@ class AgentWorkflow:
         proposal["content_hash"] = content_hash(proposal)
         checkpoint("saving the proposed choices")
         self.service._current_scan(workspace, scan["id"])
-        saved = self.store.put("agent_proposal", proposal)
+        with self.store.atomic():
+            _check_inspection(self.service, workspace_id, index_id, identity, patterns)
+            saved = self.store.put("agent_proposal", proposal)
         self.progress(workspace["id"], "awaiting_choice", proposal_id=saved["id"])
         return self.proposal(workspace["id"], saved["id"])
 
@@ -182,36 +255,78 @@ class AgentWorkflow:
         proposal = self.store.get("agent_proposal", proposal_id)
         self.service._owns(workspace, proposal)
         check_proposal(proposal)
+        patterns = _require_source_policy(self.service, proposal)
         result = {key: ([{k: v for k, v in option.items() if k != "bytes_base64"} for option in value]
                       if key == "options" else value) for key, value in proposal.items()}
-        return {**result, "requires_fresh_choices": proposal["repair_version"] != REPAIR_VERSION}
+        # Historical proposals stay readable; current policy, ownership and the
+        # exact saved generation must still survive construction of this view.
+        with self.store.lock:
+            current_workspace = self.ck3(workspace_id)
+            current = self.store.get("agent_proposal", proposal_id)
+            self.service._owns(current_workspace, current)
+            if patterns != self.service.inference_policy()["excluded_patterns"]:
+                raise Conflict("Source permissions changed while reading these choices. No content was returned.")
+            if (current["revision"] != proposal["revision"] or
+                    any(current_workspace.get(key) != workspace.get(key) for key in ("game_id", "target_platform"))):
+                raise Conflict("The saved choices or their scope changed. Please retry.")
+        return {**result, "requires_fresh_choices": proposal["repair_version"] != REPAIR_VERSION
+                or bool(proposal.get("relocation_requires_fresh_review"))}
 
     def challenge(self, workspace_id, proposal_id, purpose="choose"):
-        proposal = self.proposal(workspace_id, proposal_id)
         if purpose not in {"choose", "test", "enable", "undo"}:
             raise ValueError("Unknown approval purpose.")
+        if purpose == "undo":
+            workspace = self.ck3(workspace_id)
+            proposal = self.store.get("agent_proposal", proposal_id)
+            self.service._owns(workspace, proposal)
+            check_proposal(proposal)
+        else:
+            proposal = self.proposal(workspace_id, proposal_id)
+        patterns = list(self.service.inference_policy()["excluded_patterns"])
         if purpose == "choose" and proposal["requires_fresh_choices"]:
             raise Conflict("The available choices changed. Prepare fresh choices before asking for approval.")
         challenge = {"id": uid("question"), "workspace_id": workspace_id, "proposal_id": proposal_id,
             "proposal_hash": proposal["content_hash"], "purpose": purpose, "nonce": secrets.token_urlsafe(24),
             "expires_at": time.time() + 3600, "state": "pending"}
-        return self.store.put("agent_question", challenge)
+        with self.store.atomic():
+            current = self.store.get("agent_proposal", proposal_id)
+            self.service._owns(self.ck3(workspace_id), current)
+            if current["revision"] != proposal["revision"]:
+                raise Conflict("The saved choices changed before approval. Please retry.")
+            if purpose != "undo":
+                if patterns != self.service.inference_policy()["excluded_patterns"]:
+                    raise Conflict("Source permissions changed before approval. No question was created.")
+                _require_source_policy(self.service, current)
+            return self.store.put("agent_question", challenge)
+
+    def _answer_result(self, question, proposal):
+        if question["purpose"] == "undo":
+            # Retiring an inactive artifact needs no source text or derived
+            # labels, including when its sources are now excluded.
+            return {"proposal_id": proposal["id"], "state": proposal["state"],
+                    "enabled": proposal.get("enabled", False)}
+        return self.proposal(question["workspace_id"], proposal["id"])
 
     def answer(self, answer, signature):
         verify(signing_key(self.store), answer, signature)
         with self.service.command_lock, self.store.atomic():
             question = self.store.get("agent_question", answer.get("question_id", ""))
+            if question.get("state") not in {"pending", "answered"}:
+                raise Conflict("This question is no longer pending. Prepare a fresh review before approving changes.")
             proposal = self.store.get("agent_proposal", question["proposal_id"])
             check_proposal(proposal, require_current=question["purpose"] == "choose")
+            workspace = self.ck3(question["workspace_id"])
+            self.service._owns(workspace, proposal)
+            if question["purpose"] != "undo":
+                _require_source_policy(self.service, proposal)
             if question["state"] == "answered":
                 if question["answer"] != answer:
                     raise Conflict("That question has already been answered differently.")
-                return self.proposal(question["workspace_id"], proposal["id"])
+                return self._answer_result(question, proposal)
             if (question["expires_at"] < time.time() or answer.get("nonce") != question["nonce"] or
                     answer.get("proposal_hash") != question["proposal_hash"] or
                     proposal["content_hash"] != question["proposal_hash"]):
                 raise Conflict("The proposed changes or question changed. Please review the choices again.")
-            workspace = self.ck3(question["workspace_id"])
             if workspace.get("generation") != proposal["scan_id"]:
                 raise Conflict("The scan changed. Please review a fresh proposal.")
             if answer.get("action") not in {"accept", "decline", "cancel"}:
@@ -229,7 +344,7 @@ class AgentWorkflow:
             self.store.put("agent_question", {**question, "state": "answered", "answer": answer})
             self.store.put("agent_proposal", proposal)
             self.progress(workspace["id"], proposal["state"], proposal_id=proposal["id"])
-            return self.proposal(workspace["id"], proposal["id"])
+            return self._answer_result(question, proposal)
 
     def apply(self, workspace_id, proposal_id):
         with self.service.command_lock:
@@ -237,6 +352,7 @@ class AgentWorkflow:
             proposal = self.store.get("agent_proposal", proposal_id)
             self.service._owns(workspace, proposal)
             check_proposal(proposal, require_current=True)
+            patterns = _require_source_policy(self.service, proposal)
             if proposal["state"] not in {"approved", "prepared"} or not proposal.get("approval_id"):
                 raise ValueError("Please choose a proposed change before making it.")
             self.service._current_scan(workspace, proposal["scan_id"])
@@ -255,6 +371,8 @@ class AgentWorkflow:
             files = ck3_bundle_files([{**option, "path": path}], mod_directory="mod_agent_" + proposal_id[-12:],
                 name="Approved fixes — calling allies", supported_version=version)
             prefix = f"agent/changes/{proposal_id}/{option['sha256']}"
+            if patterns != self.service.inference_policy()["excluded_patterns"]:
+                raise Conflict("Source permissions changed while preparing files. No files were written.")
             for file in files:
                 target = prefix + "/" + file["path"]
                 raw = base64.b64decode(file["bytes_base64"], validate=True)

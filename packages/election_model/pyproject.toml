@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "election-model"
+version = "0.1.0"
+description = "Aggregate election research, polling error evaluation, and sensitivity models"
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2.8,<3"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+election_model = ["data/*.json"]

@@ -13,7 +13,7 @@ investigation when asked to continue; use the active launcher selection for a
 new check. If those differ, name the selection being discussed.
 
 Read saved results immediately when useful, with their date/scope clear. Run
-`check_playset` to establish that current files still match before recommending
+`ck3_check_playset` to establish that current files still match before recommending
 an actionable change. Let the engine reuse valid snapshots; a timestamp or a
 displayed version is not evidence of unchanged bytes. If a new scan invalidates
 an old proposal, prepare fresh choices rather than reusing its approval.
@@ -29,6 +29,10 @@ an old proposal, prepare fresh choices rather than reusing its approval.
    Search and inspect referenced helpers, localization, conditions, callbacks
    or interface pieces. Repeat entries and statement order matter. Report search
    gaps instead of claiming completeness.
+   Definition previews have their own declaration continuations. Use
+   `ck3_get_definition_contributions` with `occurrences_continuation` until it ends,
+   retaining the returned filters. Each source ID/hash/span identifies a captured
+   occurrence, including repeated declarations within the same file.
 4. Describe an effect only when supported by those sources or a direct game
    observation. If source inspection suggests a risk, describe it as a possibility.
 5. Offer only actions the engine supports. Recommend a concrete choice only when

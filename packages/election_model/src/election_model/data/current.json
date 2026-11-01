@@ -1,0 +1,113 @@
+{
+  "metadata": {
+    "as_of": "2026-11-01",
+    "coverage": "3 Senate races,1 House district; not an exhaustive race or poll inventory",
+    "dataset_id": "us-2026-11-01",
+    "extraction": "Manually transcribed attributed primary release facts and methodology, checked with web reader2026-11-01",
+    "kind": "partial_public_race_poll_snapshot",
+    "limitations": [
+      "Partial research seed only:3 Senate races and1 House district, all from one polling firm; no chamber universe or control probabilities.",
+      "Probabilities are research scenarios with assumed uncertainty/correlation; they are not a validated complete2026 forecast.",
+      "Aggregate data cannot establish who changed votes, whether voters concealed preferences, or why polling errors occur."
+    ],
+    "map_policy": "Current House poll district only; no transfer of previous-election margins or district baselines.",
+    "margin_basis": "Initial D share minus R share of full reported sample; undecideds/other retained; no two-party renormalization",
+    "retrieved_at": "2026-11-01T20:29:41+00:00"
+  },
+  "polls": [
+    {
+      "available_date": "2026-10-30",
+      "dem_pct": 49.0,
+      "end_date": "2026-10-28",
+      "mode": "MMS text-to-web + IVR + online panel",
+      "overlap_group": "emerson-ks-20261030",
+      "poll_id": "emerson-ks-20261030",
+      "pollster": "Emerson College Polling",
+      "population": "lv",
+      "race_id": "2026-KS-SEN",
+      "rep_pct": 45.0,
+      "sample_size": 800,
+      "source_id": "emerson-ks-20261030",
+      "start_date": "2026-10-26"
+    },
+    {
+      "available_date": "2026-10-22",
+      "dem_pct": 48.0,
+      "end_date": "2026-10-19",
+      "mode": "MMS text-to-web + IVR + online panel",
+      "overlap_group": "emerson-tx-20261022",
+      "poll_id": "emerson-tx-20261022",
+      "pollster": "Emerson College Polling",
+      "population": "lv",
+      "race_id": "2026-TX-SEN",
+      "rep_pct": 46.0,
+      "sample_size": 1000,
+      "source_id": "emerson-tx-20261022",
+      "start_date": "2026-10-17"
+    },
+    {
+      "available_date": "2026-10-09",
+      "dem_pct": 45.0,
+      "end_date": "2026-10-06",
+      "mode": "MMS text-to-web + online panel",
+      "overlap_group": "emerson-ia-20261009",
+      "poll_id": "emerson-ia-20261009",
+      "pollster": "Emerson College Polling",
+      "population": "lv",
+      "race_id": "2026-IA-SEN",
+      "rep_pct": 47.0,
+      "sample_size": 650,
+      "source_id": "emerson-ia-20261009",
+      "start_date": "2026-10-05"
+    },
+    {
+      "available_date": "2026-10-01",
+      "dem_pct": 48.0,
+      "end_date": "2026-09-29",
+      "mode": "MMS text-to-web + online panel",
+      "overlap_group": "emerson-ny17-20261001",
+      "poll_id": "emerson-ny17-20261001",
+      "pollster": "Emerson College Polling",
+      "population": "lv",
+      "race_id": "2026-NY-17",
+      "rep_pct": 46.0,
+      "sample_size": 400,
+      "source_id": "emerson-ny17-20261001",
+      "start_date": "2026-09-27"
+    }
+  ],
+  "races": [
+    {
+      "chamber": "senate",
+      "cycle": 2026,
+      "election_date": "2026-11-03",
+      "map_vintage": null,
+      "race_id": "2026-KS-SEN",
+      "state": "KS"
+    },
+    {
+      "chamber": "senate",
+      "cycle": 2026,
+      "election_date": "2026-11-03",
+      "map_vintage": null,
+      "race_id": "2026-TX-SEN",
+      "state": "TX"
+    },
+    {
+      "chamber": "senate",
+      "cycle": 2026,
+      "election_date": "2026-11-03",
+      "map_vintage": null,
+      "race_id": "2026-IA-SEN",
+      "state": "IA"
+    },
+    {
+      "chamber": "house",
+      "cycle": 2026,
+      "election_date": "2026-11-03",
+      "map_vintage": "2026 NY-17 election geography identified by publisher; no cross-map prior",
+      "race_id": "2026-NY-17",
+      "state": "NY"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "snapshot_id": "538-pollster-ratings-2026-11-01",
+  "records": [
+    {
+      "path": "538-raw-polls.csv",
+      "url": "https://raw.githubusercontent.com/fivethirtyeight/data/master/pollster-ratings/raw_polls.csv",
+      "retrieved_at": "2026-11-01T20:27:07.691240+00:00",
+      "bytes": 4961378,
+      "sha256": "9f0b185506e59117c150fb988e73b612346effe8e3a8f0d90fdafcad07f54756",
+      "license": "CC-BY-4.0",
+      "attribution": "FiveThirtyEight, data/pollster-ratings (GitHub archive)"
+    },
+    {
+      "path": "538-pollster-ratings-README.md",
+      "url": "https://raw.githubusercontent.com/fivethirtyeight/data/master/pollster-ratings/README.md",
+      "retrieved_at": "2026-11-01T20:27:15.477957+00:00",
+      "bytes": 8311,
+      "sha256": "10e7554d27e241a96f6c9f00de21c5ac00d0229e58808a79f30649824f56ac5b",
+      "license": "CC-BY-4.0",
+      "attribution": "FiveThirtyEight, data/pollster-ratings (GitHub archive)"
+    },
+    {
+      "path": "538-LICENSE",
+      "url": "https://raw.githubusercontent.com/fivethirtyeight/data/master/LICENSE",
+      "retrieved_at": "2026-11-01T20:27:15.921037+00:00",
+      "bytes": 18650,
+      "sha256": "7e7170e3cebf88a9f60c7b8421418323c09304da1af4d5e90f4da1dc1c8a2661",
+      "license": "CC-BY-4.0",
+      "attribution": "FiveThirtyEight, data/pollster-ratings (GitHub archive)"
+    }
+  ],
+  "coverage": {
+    "raw_rows": 20466,
+    "all_cycles": [
+      1998,
+      2023
+    ],
+    "dr_house_senate_rows": 7846,
+    "dr_house_senate_last_cycle": 2022
+  },
+  "limitations": [
+    "Archived dataset has no 2024 or 2026 election observations.",
+    "polldate is median field date, not publication date or field end.",
+    "Provider retrospectively chooses top-two election finishers, which creates selection bias.",
+    "samplesize includes provider-imputed values with no row-level imputation flag.",
+    "No pollster ratings, transparency scores, ranks or retrospective grades are used.",
+    "Archive available today is not a vintage dataset; prospective publication-date availability is unknown."
+  ]
+}

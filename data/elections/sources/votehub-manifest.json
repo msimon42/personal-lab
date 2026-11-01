@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "snapshot_id": "votehub-2026-11-01",
+  "records": [
+    {
+      "path": "votehub-2026-10-01_to_2026-11-01.json",
+      "url": "https://api.votehub.com/polls?from_date=2026-10-01&to_date=2026-11-01",
+      "retrieved_at": "2026-11-01T20:36:31.244162+00:00",
+      "bytes": 152138,
+      "sha256": "55e7060db4b8c4121a1229615daf12a5afa41e5fb3b7aaabf6b41e4848ceca24",
+      "license": "CC-BY-4.0",
+      "license_evidence": "https://votehub.com/polls/api/",
+      "attribution": "VoteHub Polling API"
+    }
+  ],
+  "coverage": {
+    "all_records": 302,
+    "senate_records": 113,
+    "house_records": 65,
+    "all_types": {
+      "us-senator": 113,
+      "governor": 119,
+      "us-representative": 65,
+      "generic-ballot": 2,
+      "approval": 3
+    }
+  },
+  "limitations": [
+    "API filters apply to end_date, not release date.",
+    "Candidate party is absent from answer objects and must be verified independently.",
+    "created_at is provider metadata and is not documented as primary release date.",
+    "Sample sizes and population metadata require source verification.",
+    "Internal, partisan and sponsor flags are source metadata, not independent verification.",
+    "Overlapping questions, duplicate syndications and leaned-voter variants require survey clustering.",
+    "Feed snapshot is not a comprehensive ballot roster and does not justify chamber-control forecasts.",
+    "API documentation was readable through web retrieval; direct shell retrieval returned HTTP403, so no raw documentation HTML was archived."
+  ]
+}

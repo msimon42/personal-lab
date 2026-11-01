@@ -1,0 +1,11 @@
+# Trusted local configuration. Copy outside Git and pass --config to lab.
+# Source paths remain read-only. No tool request can change these roots.
+# Empty configuration is sufficient for dev fixtures and core-only.
+# The explicit election-research profile also needs no source roots or credentials;
+# its reviewed operations use bundled public aggregate data and bounded inputs.
+installations = []
+
+[ck3_locations]
+# installation_path = "/operator-configured/Crusader Kings III"
+# user_data_path = "/operator-configured/CK3 user data"
+# steam_roots = ["/operator-configured/Steam"]

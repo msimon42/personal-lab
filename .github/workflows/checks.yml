@@ -1,4 +1,4 @@
-name: Application contracts
+name: Headless application contracts
 on: [push, pull_request]
 permissions:
   contents: read
@@ -15,35 +15,7 @@ jobs:
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           version: '0.13.6'
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '22.22.0'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: uv sync --frozen --extra dev
-      - run: uv run --extra dev ruff check backend tests scripts frontend/e2e
-      - run: uv run --extra dev python scripts/generate_contracts.py --check
-      - run: uv run --extra dev pytest
-      - run: uv run eu5 fixtures
-      - run: npm ci
-        working-directory: frontend
-      - run: npm test
-        working-directory: frontend
-      - run: npm run build
-        working-directory: frontend
-      - run: npm run test:e2e:install
-        working-directory: frontend
-      - run: npm run test:e2e:types
-        working-directory: frontend
-      - run: npm run test:e2e
-        working-directory: frontend
+      - run: uv sync --locked --all-packages --extra dev
+      - run: uv run --extra dev python scripts/check.py
+      - run: uv build --all-packages
       - run: uv run python scripts/package.py
-      - uses: actions/upload-artifact@v7
-        if: failure()
-        with:
-          name: browser-diagnostics-${{ matrix.os }}
-          path: |
-            frontend/playwright-report/
-            frontend/test-results/
-          if-no-files-found: ignore
-          retention-days: 7

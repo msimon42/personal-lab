@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import base64
 import copy
-from concurrent.futures import ThreadPoolExecutor
 import os
 from pathlib import Path
 import secrets
@@ -14,6 +13,8 @@ from typing import Callable
 
 from backend.app.store import Conflict, Store, canonical, digest, uid
 from backend.app.contracts import InferencePolicy
+from toolkit_core.contracts import LabError, ensure_instance
+from toolkit_core.jobs import BoundedExecutor, record_submission_failure, run_projection
 
 
 TEXT_CAPTURE_BUDGET = 120_000_000
@@ -24,7 +25,7 @@ class Cancelled(Exception):
 
 
 class Service:
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, *, profile: str = "dev", initialize_default: bool = True):
         from backend.engine.safety import ManagedLock, reject_link_components
         reject_link_components(Path(root))
         Path(root).mkdir(parents=True, exist_ok=True)
@@ -32,11 +33,12 @@ class Service:
         self.coordinator_lock.__enter__()
         self.store = Store(root)
         self.root = self.store.root
+        self.instance_id, self.profile = ensure_instance(self.store), profile
         from backend.agent.release import release_info
         self.agent_release = release_info()
         from backend.agent.approvals import signing_key
         signing_key(self.store)
-        self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="eu5-worker")
+        self.executor = BoundedExecutor(pending=16)
         self.cancelled: set[str] = set()
         self._snapshot_progress: tuple[str, float] | None = None
         self.command_lock = threading.RLock()
@@ -51,17 +53,13 @@ class Service:
             self.recovery = ReleaseManager(self.root / "managed", evidence_root=self.root / "evidence-registry").recover()
         except (ValueError, KeyError, OSError) as exc:
             self.recovery = [{"state": "recovery_required", "reason": str(exc)}]
-        for job in self.store.list("job", limit=1000):
+        for job in self.store.iter_records("job"):
             if job["state"] in {"queued", "running"}:
                 job.update(state="failed", phase="interrupted", error="Application restarted before this job completed. Retained evidence is incomplete; rerun explicitly.")
                 self.store.put("job", job)
-        # Legacy records belong to the EU5 Windows target; retain historical scans.
-        for workspace in self.store.list("workspace", limit=1000):
-            if "game_id" not in workspace or "target_platform" not in workspace:
-                workspace.setdefault("game_id", "eu5")
-                workspace.setdefault("target_platform", "windows")
-                self.store.put("workspace", workspace, expected_revision=workspace["revision"])
-        if not self.store.list("workspace"):
+        # Historical records are interpreted by their domain adapters. Startup
+        # must not rewrite them merely because the package structure changed.
+        if initialize_default and not self.store.list("workspace"):
             self.create_workspace({"name": "Synthetic laboratory", "mode": "synthetic"})
 
     def bootstrap(self) -> dict:
@@ -97,6 +95,8 @@ class Service:
         from backend.app.projections import discovery_projection
         result = {"workspace": self.store.get("workspace", identifier)}
         workspace = result["workspace"]
+        workspace.setdefault("game_id", "eu5")
+        workspace.setdefault("target_platform", "windows")
         result["capabilities"] = game_capabilities(workspace.get("game_id", "eu5"), workspace.get("target_platform"))
         result["discoveries"] = [discovery_projection(entry) for entry in self.store.list("discovery", identifier, limit=10)]
         for kind in ["scan", "candidate", "release", "job", "decision"]:
@@ -163,51 +163,79 @@ class Service:
             "generation": None, "fingerprints": {}, "status": "configured"})
 
     def command(self, request: dict) -> dict:
+        from backend.app.operations import Command
+        request = Command.model_validate(request).model_dump(exclude_none=True)
         name = request["command"]
         payload = request.get("payload", {})
-        key = request["idempotency_key"]
+        key = f"{self.instance_id}:{name}:{request['idempotency_key']}"
         request_hash = digest(canonical({k: v for k, v in request.items() if k != "idempotency_key"}))
         with self.command_lock:
             cached = self.store.cached_request(key, request_hash)
             if cached is not None:
                 return cached
+            if getattr(self, "_closing", False):
+                raise LabError("BUSY", "The execution owner is shutting down.", True)
             if name == "create_workspace":
-                workspace = self.create_workspace(payload)
-                response = {"workspace_id": workspace["id"], "workspace": workspace}
+                with self.store.atomic():
+                    workspace = self.create_workspace(payload)
+                    response = {"workspace_id": workspace["id"], "workspace": workspace}
+                    self.store.cache_request(key, request_hash, response)
             else:
                 workspace = self.store.get("workspace", request["workspace_id"])
                 revision = request.get("expected_revision")
                 if revision is not None and workspace["revision"] != revision:
                     raise Conflict("Workspace changed; refresh before retrying")
                 if name == "cancel":
-                    job = self.store.get("job", payload["job_id"])
-                    self._owns(workspace, job)
-                    terminal = job["state"] in {"completed", "failed", "cancelled"}
+                    with self.store.atomic():
+                        job = self.store.get("job", payload["job_id"])
+                        self._owns(workspace, job)
+                        terminal = job["state"] in {"completed", "failed", "cancelled", "interrupted"}
+                        if not terminal:
+                            job.update(cancel_requested=True)
+                            self.store.put("job", job, expected_revision=job["revision"])
+                        response = {"job_id": job["id"], "cancellation_requested": not terminal}
+                        self.store.cache_request(key, request_hash, response)
                     if not terminal:
                         self.cancelled.add(job["id"])
-                    response = {"job_id": job["id"], "cancellation_requested": not terminal}
                 elif name == "decision":
-                    response = self.decide(workspace, payload)
+                    raise LabError("APPROVAL_REQUIRED", "Design choices require a trusted native response or lab decide; command arguments cannot issue operator authority.")
                 elif name == "import_ck3":
-                    response = self._import_ck3(workspace, payload)
+                    with self.store.atomic():
+                        response = self._import_ck3(workspace, payload)
+                        self.store.cache_request(key, request_hash, response)
                 elif name == "configure_inference":
                     policy = InferencePolicy.model_validate(payload).model_dump()
                     if policy["enabled"] and (not policy["model"] or not policy["allowed_providers"] or not all(policy[key] for key in ["tools_supported", "source_policy_confirmed", "provider_policy_confirmed"])):
                         raise ValueError("Live inference requires an explicit model, provider allowlist, tool support and confirmed source/provider policies")
-                    self.store.put("configuration", {"id": "inference-policy", "policy": policy})
-                    response = {"inference": self.inference_policy()}
+                    with self.store.atomic():
+                        self.store.put("configuration", {"id": "inference-policy", "policy": policy})
+                        response = {"inference": self.inference_policy()}
+                        self.store.cache_request(key, request_hash, response)
                 elif name in {"discover_ck3", "scan", "stage", "validate", "export", "rollback", "investigate", "backup", "runtime_probe", "agent_index", "agent_prepare", "agent_apply", "agent_test", "agent_undo", "agent_check"}:
-                    job = self.store.put("job", {"id": uid("job"), "workspace_id": workspace["id"], "command": name,
-                        "game_id": workspace.get("game_id", "eu5"), "target_platform": workspace.get("target_platform", "windows"),
-                        "state": "queued", "phase": "queued", "progress": {"completed": 0, "total": None}, "result": None, "error": None})
-                    response = {"job_id": job["id"]}
-                    self.store.cache_request(key, request_hash, response)
-                    self.store.append_event(job["id"], job)
-                    self.executor.submit(self._run, job, workspace, payload)
+                    self.executor.reserve()
+                    try:
+                        with self.store.atomic():
+                            job = self.store.put("job", {"id": uid("job"), "workspace_id": workspace["id"], "command": name,
+                                "game_id": workspace.get("game_id", "eu5"), "target_platform": workspace.get("target_platform", "windows"),
+                                "instance_id": self.instance_id, "profile": self.profile, "contract_version": "1.0",
+                                "input_digest": request_hash, "cancel_requested": False,
+                                "source_policy_hash": digest(canonical({k: v for k, v in self.inference_policy().items() if k != "key_configured"})),
+                                "state": "queued", "phase": "queued", "progress": {"completed": 0, "total": None}, "result": None, "error": None})
+                            response = {"job_id": job["id"]}
+                            self.store.cache_request(key, request_hash, response)
+                            self.store.append_event(job["id"], job)
+                    except BaseException:
+                        self.executor.slots.release()
+                        raise
+                    try:
+                        self.executor.submit_reserved(self._run, job, workspace, payload)
+                    except BaseException as exc:
+                        record_submission_failure(self.store, "job", job["id"])
+                        raise LabError("RECOVERY_REQUIRED", "The accepted run could not be scheduled; no automatic retry is permitted.",
+                                       details={"run_id": job["id"]}) from exc
                     return response
                 else:
                     raise ValueError(f"Unsupported command: {name}")
-            self.store.cache_request(key, request_hash, response)
             return response
 
     def _owns(self, workspace: dict, record: dict):
@@ -341,7 +369,7 @@ class Service:
         if operation in {"search_knowledge", "read_knowledge"}:
             from backend.agent.knowledge import search_knowledge, read_knowledge
             return {"search_knowledge": search_knowledge, "read_knowledge": read_knowledge}[operation](**payload)
-        if operation in {"search_sources", "read_source", "read_sources", "related_definitions", "brief", "concern_evidence"}:
+        if operation in {"search_sources", "read_source", "read_sources", "related_definitions", "definition_contributions", "brief", "concern_evidence"}:
             from backend.agent.investigation import Investigation
             return getattr(Investigation(self), operation)(**payload)
         if operation in {"concerns", "record_review", "investigation_report"}:
@@ -363,7 +391,7 @@ class Service:
             return self.command({"command": "agent_" + operation, "workspace_id": payload["workspace_id"],
                 "payload": {"proposal_id": payload["proposal_id"]}, "idempotency_key": uid("agent_request")})
         workflow = AgentWorkflow(self)
-        method = {"session": workflow.session, "issues": workflow.issues, "inspect": workflow.inspect,
+        method = {"session": workflow.public_session, "issues": workflow.issues, "inspect": workflow.inspect,
                   "proposal": workflow.proposal, "challenge": workflow.challenge, "answer": workflow.answer,
                   "apply": workflow.apply, "test": workflow.test, "enable": workflow.enable, "undo": workflow.undo}[operation]
         return method(**payload)
@@ -396,22 +424,22 @@ class Service:
         return AgentWorkflow(self).undo(workspace["id"], payload["proposal_id"])
 
     def _checkpoint(self, job: dict, phase: str, completed: int = 0, total: int | None = None):
-        if job["id"] in self.cancelled:
-            raise Cancelled()
-        job.update(state="running", phase=phase, progress={"completed": completed, "total": total})
-        snapshot_phase = phase in {"snapshotting sources", "snapshotting opaque bytes"}
-        now = time.monotonic()
-        previous = self._snapshot_progress
-        if snapshot_phase and previous and previous[0] == job["id"] and now - previous[1] < 0.25:
-            return
-        # Both snapshot labels belong to one sampling group: a file followed
-        # by its chunks must not bypass the limit by alternating phase names.
-        # The one supervised worker retains exact current progress in `job`;
-        # every other phase and _run's terminal update persist immediately.
-        self._snapshot_progress = (job["id"], now) if snapshot_phase else None
-        updated = self.store.put("job", job)
-        job.update(updated)
-        self.store.append_event(job["id"], job)
+        with self.store.atomic():
+            current = self.store.get("job", job["id"])
+            if job["id"] in self.cancelled or current.get("cancel_requested"):
+                raise Cancelled()
+            current.update(state="running", phase=phase, progress={"completed": completed, "total": total})
+            job.update(current)
+            snapshot_phase = phase in {"snapshotting sources", "snapshotting opaque bytes"}
+            now = time.monotonic()
+            previous = self._snapshot_progress
+            if snapshot_phase and previous and previous[0] == job["id"] and now - previous[1] < 0.25:
+                return
+            # Source progress is sampled; every control transition is durable.
+            self._snapshot_progress = (job["id"], now) if snapshot_phase else None
+            updated = self.store.put("job", current, expected_revision=current["revision"])
+            job.update(updated)
+            self.store.append_event(job["id"], updated)
 
     def _run(self, job: dict, workspace: dict, payload: dict):
         try:
@@ -424,8 +452,11 @@ class Service:
         except Exception as exc:
             job.update(state="failed", phase="failed", error=str(exc), error_type=type(exc).__name__)
         finally:
-            self.store.put("job", job)
-            self.store.append_event(job["id"], job)
+            with self.store.atomic():
+                current = self.store.get("job", job["id"])
+                current.update({key: job[key] for key in ("state", "phase", "progress", "result", "error", "error_type") if key in job})
+                current = self.store.put("job", current, expected_revision=current["revision"])
+                self.store.append_event(job["id"], current)
             self.cancelled.discard(job["id"])
 
     def _snapshot_sources(self, workspace: dict, checkpoint: Callable) -> list[dict]:
@@ -1072,8 +1103,34 @@ class Service:
         if workspace.get("game_id", "eu5") == "ck3":
             raise ValueError("CK3 automatic repairs are unavailable until family loading, readers and preservation are qualified")
 
+    def run_get(self, run_id):
+        result = run_projection(self.store, run_id, self.instance_id)
+        if isinstance(result.get("result"), dict) and result["result"].get("scan_id"):
+            result["result"] = {**result["result"], "snapshot_id": result["result"]["scan_id"]}
+        return result
+
+    def run_events(self, run_id, cursor=0, limit=50):
+        self.run_get(run_id)
+        if type(cursor) is not int or cursor < 0 or type(limit) is not int or not 1 <= limit <= 200:
+            raise ValueError("Invalid event range")
+        entries = self.store.events(run_id, cursor)[:limit]
+        return {"events": entries, "next_cursor": entries[-1]["sequence"] if len(entries) == limit else None}
+
+    def cancel_run(self, run_id):
+        job = self.store.get("job", run_id)
+        return self.command({"command": "cancel", "workspace_id": job["workspace_id"],
+            "payload": {"job_id": run_id}, "idempotency_key": uid("cancel")})
+
     def close(self):
-        self.executor.shutdown(wait=True, cancel_futures=True)
+        with self.command_lock:
+            self._closing = True
+            with self.store.atomic():
+                for job in self.store.iter_records("job"):
+                    if job["state"] in {"queued", "running"}:
+                        self.cancelled.add(job["id"])
+                        job["cancel_requested"] = True
+                        self.store.put("job", job, expected_revision=job["revision"])
+        self.executor.shutdown(wait=True, cancel_futures=False)
         from backend.agent.projection import clear_projection_cache
         clear_projection_cache(self)
         self.store.close()

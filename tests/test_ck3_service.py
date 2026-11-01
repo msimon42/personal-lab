@@ -6,10 +6,8 @@ import shutil
 import time
 import uuid
 
-from fastapi.testclient import TestClient
 import pytest
 
-from backend.app.main import create_app
 from backend.app.service import Service
 from backend.app.store import Conflict
 from backend.engine.games import analyze_for_game
@@ -41,15 +39,13 @@ def installation(tmp_path, platform):
     return {"platform": platform, "steam_roots": [str(steam)], "user_data_path": str(user)}, user
 
 
-def execute(client, workspace, command, payload):
-    response = client.post("/api/commands", json={"command": command, "workspace_id": workspace,
+def execute(service, workspace, command, payload):
+    value = service.command({"command": command, "workspace_id": workspace,
         "payload": payload, "idempotency_key": uuid.uuid4().hex})
-    assert response.status_code == 202, response.text
-    value = response.json()
     if "job_id" not in value:
         return value
     for _ in range(500):
-        job = client.get(f"/api/jobs/{value['job_id']}").json()
+        job = service.store.get("job", value["job_id"])
         if job["state"] in {"completed", "failed", "cancelled"}:
             assert job["state"] == "completed", job
             return job["result"]
@@ -58,28 +54,28 @@ def execute(client, workspace, command, payload):
 
 
 @pytest.mark.parametrize("platform", ["macos", "windows"])
-def test_ck3_api_discovery_import_scan_preserves_originals_and_blocks_repairs(tmp_path, platform):
+def test_ck3_application_discovery_import_scan_preserves_originals_and_blocks_repairs(tmp_path, platform):
     options, user = installation(tmp_path / "sources", platform)
     source_root = tmp_path / "sources"
     before = {str(path.relative_to(source_root)): path.read_bytes() for path in source_root.rglob("*") if path.is_file()}
-    with TestClient(create_app(tmp_path / "managed", testing=True)) as client:
-        bootstrap = client.get("/api/bootstrap").json()
-        client.headers["X-Session-Token"] = bootstrap["session_token"]
+    service = Service(tmp_path / "managed")
+    try:
+        bootstrap = service.bootstrap()
         assert all(entry["status"] == "proposed_not_run" for entry in bootstrap["ck3_experiments"])
-        evidence = client.get("/api/evidence/CK3-FILES-01").json()
-        assert evidence["game_id"] == "ck3" and evidence["label"] == "P"
-        assert client.get("/api/evidence/ck3-advisory-v1").json()["conformed_rules"] == 0
-        workspace = execute(client, None, "create_workspace", {
+        experiment = next(row for row in bootstrap["ck3_experiments"] if row.get("id") == "CK3-FILES-01")
+        assert experiment["game_id"] == "ck3" and experiment["label"] == "P"
+        assert bootstrap["game_capabilities"]["ck3"]["production_rules"] == 0
+        workspace = execute(service, None, "create_workspace", {
             "game_id": "ck3", "target_platform": platform, "mode": "game", "name": "CK3 fixture"})["workspace_id"]
-        discovery = execute(client, workspace, "discover_ck3", options)
-        discovery_record = client.get(f"/api/ck3/discoveries/{discovery['discovery_id']}").json()
+        discovery = execute(service, workspace, "discover_ck3", options)
+        discovery_record = service.store.get("discovery", discovery["discovery_id"])
         assert discovery_record["game_id"] == "ck3"
         assert all("bytes_base64" not in item for item in discovery_record["metadata_inputs"])
-        execute(client, workspace, "import_ck3", {"discovery_id": discovery["discovery_id"]})
-        imported = client.get(f"/api/workspaces/{workspace}").json()
+        execute(service, workspace, "import_ck3", {"discovery_id": discovery["discovery_id"]})
+        imported = service.workspace(workspace)
         assert imported["workspace"]["default_playset"] == ["ck3:mod/one.mod", "ck3:mod/two.mod"]
-        result = execute(client, workspace, "scan", {})
-        scan = client.get(f"/api/scans/{result['scan_id']}").json()
+        result = execute(service, workspace, "scan", {})
+        scan = service.store.get("scan", result["scan_id"])
         assert scan["game_id"] == "ck3" and scan["target_platform"] == platform
         assert scan["analysis"]["profile"]["game_id"] == "ck3"
         assert scan["analysis"]["profile"]["target_platform"] == platform
@@ -90,14 +86,13 @@ def test_ck3_api_discovery_import_scan_preserves_originals_and_blocks_repairs(tm
         assert not scan["analysis"]["graphs"]["operation"]
         assert len(scan["package_metadata"]) == 2
         assert all("bytes_base64" not in entry for entry in scan["package_metadata"])
-        service = client.app.state.service
         scope = service.store.get("workspace", workspace)
         for operation, payload in ((service._stage, {"scan_id": result["scan_id"]}),
                                    (service._validate, {"candidate_id": "untrusted"}),
                                    (service._export, {"candidate_id": "untrusted"})):
             with pytest.raises(ValueError, match="CK3 automatic repairs"):
                 operation(scope, payload, lambda *args: None)
-        runtime = execute(client, workspace, "runtime_probe", {})
+        runtime = execute(service, workspace, "runtime_probe", {})
         assert runtime["outcome"] == "not_run" and runtime["game_id"] == "ck3"
         assert not service.store.list("candidate", workspace)
         assert not (service.root / "managed/active-release.json").exists()
@@ -105,6 +100,8 @@ def test_ck3_api_discovery_import_scan_preserves_originals_and_blocks_repairs(tm
         with pytest.raises(Conflict, match="rediscover"):
             service._current_scan(scope, result["scan_id"])
         (user / "mod/one.mod").write_bytes(before["user/mod/one.mod"])
+    finally:
+        service.close()
     assert {str(path.relative_to(source_root)): path.read_bytes() for path in source_root.rglob("*") if path.is_file()} == before
 
 
@@ -117,7 +114,11 @@ def test_migration_and_ck3_synthetic_cannot_invoke_eu5_contracts(tmp_path):
     service.close()
     service = Service(tmp_path / "managed")
     try:
-        migrated = service.store.get("workspace", legacy["id"])
+        # Legacy interpretation is a read projection; startup must not rewrite
+        # historical state without an explicit backed-up migration.
+        historical = service.store.get("workspace", legacy["id"])
+        assert "game_id" not in historical and "target_platform" not in historical
+        migrated = service.workspace(legacy["id"])["workspace"]
         assert (migrated["game_id"], migrated["target_platform"]) == ("eu5", "windows")
         ck3 = service.create_workspace({"game_id": "ck3", "mode": "synthetic", "target_platform": "macos"})
         with pytest.raises(ValueError, match="EU5 fixtures"):

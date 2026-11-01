@@ -12,11 +12,15 @@ def prepare(tmp_path):
     normal = tmp_path / "normal"
     normal.mkdir()
     (normal / "save").write_bytes(b"untouched")
-    executable = tmp_path / "fake-game"
+    installation = tmp_path / "installation"
+    executable = installation / "binaries/fake.app/Contents/MacOS/fake-game"
+    executable.parent.mkdir(parents=True)
     executable.write_bytes(b"not executable, must not launch")
+    content = installation / "game"
+    content.mkdir()
     store = Store(tmp_path / "managed")
     discovery = {"workspace_id": "synthetic", "platform": "macos", "user_data": str(normal),
-                 "installation": {"executable": str(executable), "content_root": str(tmp_path)}}
+                 "installation": {"executable": str(executable), "content_root": str(content)}}
     return store, discovery, normal
 
 

@@ -26,6 +26,7 @@
           "search_sources",
           "read_source",
           "related_definitions",
+          "definition_contributions",
           "brief",
           "missing_mods",
           "read_sources",
@@ -839,6 +840,84 @@
         "target"
       ],
       "title": "Related",
+      "type": "object"
+    },
+    "definition_contributions": {
+      "additionalProperties": false,
+      "properties": {
+        "workspace_id": {
+          "title": "Workspace Id",
+          "type": "string"
+        },
+        "index_id": {
+          "title": "Index Id",
+          "type": "string"
+        },
+        "target": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Target",
+          "type": "string"
+        },
+        "offset": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Offset",
+          "type": "integer"
+        },
+        "limit": {
+          "default": 20,
+          "maximum": 50,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "path_prefix": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path Prefix"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Owner"
+        },
+        "continuation": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Continuation"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "index_id",
+        "target"
+      ],
+      "title": "DefinitionContributions",
       "type": "object"
     },
     "brief": {

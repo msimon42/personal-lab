@@ -1,0 +1,25 @@
+{
+  "observed_date": "2026-10-31",
+  "host": "Codex CLI",
+  "host_version": "0.164.0-alpha.11.1",
+  "sdk_version": "2.3.0",
+  "platform": "Darwin",
+  "architecture": "arm64",
+  "profile": "core-only",
+  "observed_toolsets": [
+    "core"
+  ],
+  "observed_tool_calls": [
+    {
+      "server": "personal_lab",
+      "tool": "lab_capabilities",
+      "status": "completed"
+    }
+  ],
+  "exit_code": 0,
+  "protocol_revision": "not captured by this host smoke",
+  "raw_events_sha256": "072b0db49267be2a0061dff68bccf3af1b09cab91c881a2467f2efd082ea0597",
+  "game_launched": false,
+  "live_state_used": false,
+  "native_confirmation": "tested separately with SDK clients; not requested in live host smoke"
+}

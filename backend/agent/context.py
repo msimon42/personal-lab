@@ -7,6 +7,7 @@ import time
 
 from backend.app.store import Conflict, uid
 from .issues import INDEX_VERSION
+from .session_projection import BINDINGS_KEY, SessionProjection
 
 
 def capabilities():
@@ -49,14 +50,17 @@ def selection_identity(discovery):
             installation.get("path") or installation.get("content_root"))
 
 
-def public_context(context):
+def public_context(context, service, *, projection=None):
+    view = projection or SessionProjection(service)
+    if context.get("workspace_id") and view.workspace is None:
+        view.watch_workspace(service.store.get("workspace", context["workspace_id"]))
     missing = context["source_status"]["missing_enabled_mods"]
     from collections import Counter
     preflight = context.get("preflight", {})
     versions = preflight.get("versions", {})
     mods = versions.get("mods", [])
     ordered = sorted(mods, key=lambda mod: (mod["relation"] != "version_question", mod.get("owner", "")))
-    return {**context, "preflight": {
+    result = {**context, "preflight": {
         "versions": {**versions, "mods": ordered[:20], "total": len(mods),
                      "counts": dict(Counter(mod["relation"] for mod in mods)), "truncated": len(mods) > 20,
                      "follow_up": "Read captured descriptors in concern evidence for full per-mod declarations."},
@@ -64,6 +68,18 @@ def public_context(context):
         "scope": preflight.get("scope"), "version": preflight.get("version")},
         "source_status": {**context["source_status"], "missing_enabled_mods": missing[:5],
         "missing_enabled_mods_total": len(missing), "missing_mods_next_offset": 5 if len(missing) > 5 else None}}
+    if context.get("conversation"):
+        result["conversation"] = view.project({"workspace_id": context.get("workspace_id"),
+            "game_id": context.get("game_id"), "target_platform": context.get("target_platform"),
+            **context["conversation"]})
+        notes = result["conversation"]
+        notes["applies_to_current_scan"] = bool(notes.get("notes") and
+            notes["text_disclosure"]["fields"].get("notes", {}).get("state") == "available")
+    captured_policy = result.pop("_disclosure_policy_hash", None)
+    if result.get("proposal") and captured_policy != view.policy_hash:
+        result["proposal"] = {"state": "requires_fresh_review"}
+    view.validate()
+    return result
 
 
 class AssistantContext:
@@ -73,6 +89,7 @@ class AssistantContext:
     def get(self, selection="current", workspace_id=None, playset_id=None, locations=None):
         from .knowledge import knowledge_manifest
         from .preflight import briefing_preflight, version_preference, candidate_search_summary
+        disclosure = SessionProjection(self.service)
         locations = locations or {}
         if playset_id and locations.get("playset_id") and playset_id != locations["playset_id"]:
             raise ValueError("Two different playsets were requested. Select one playset.")
@@ -123,6 +140,8 @@ class AssistantContext:
                         selected = workspace
                         break
         session = (self.store.list("agent_session", selected["id"], limit=1) or [None])[0] if selected else None
+        if selected:
+            disclosure.watch_workspace(selected)
         scan = headers(self.store, "scan", ("created_at", "discovery_id", "schema_hash", "parser_version"),
                        identifier=selected["generation"], limit=1) if selected and selected.get("generation") else []
         indexes = headers(self.store, "agent_index", ("scan_id", "version", "summary", "updated_at"),
@@ -144,7 +163,8 @@ class AssistantContext:
         state = "ready" if ready else "needs_selection" if discovery and playsets else "setup_needed"
         previous_notes = None
         if session:
-            previous_notes = {k: session.get(k) for k in ("goal", "notes", "next_step", "reviewed_issue_ids", "index_id", "proposal_id", "state")}
+            previous_notes = {k: session.get(k) for k in ("goal", "notes", "next_step", "reviewed_issue_ids", "index_id", "proposal_id", "state",
+                "workspace_id", "game_id", "target_platform", "notes_scan_id", "notes_index_id", BINDINGS_KEY)}
             previous_notes["trust"] = "Conversation notes are context, not approval or game evidence."
             previous_notes["applies_to_current_scan"] = bool(scan and session.get("notes_scan_id") == scan[0]["id"])
         proposal = None
@@ -157,6 +177,7 @@ class AssistantContext:
             except (ValueError, KeyError):
                 proposal = {"state": "requires_fresh_review"}
         result = {"id": uid("context"), "workspace_id": selected["id"] if selected else None,
+            "_disclosure_policy_hash": disclosure.policy_hash,
             "game_id": "ck3", "target_platform": platform, "state": state, "selection": selection,
             "mission": "Help the player understand their CK3 mods, investigate meaningful clashes, and make only reviewed, supported changes.",
             "playset": playset or ({"id": None, "name": selected["name"]} if selected else None),
@@ -198,7 +219,7 @@ class AssistantContext:
             result["investigation"] = ReviewWorkflow(self.service).context_summary(selected["id"], index["id"])
         # A context record is a lightweight managed receipt, never an approval.
         saved = self.store.put("agent_context", result)
-        return public_context(saved)
+        return public_context(saved, self.service, projection=disclosure)
 
     def missing_mods(self, context_id, offset=0, limit=20):
         context = self.store.get("agent_context", context_id)
@@ -210,33 +231,42 @@ class AssistantContext:
 
     def remember(self, context_id, goal=None, notes=None, next_step=None, reviewed_issue_ids=None):
         from .workflow import AgentWorkflow
-        context = self.store.get("agent_context", context_id)
-        if not context.get("workspace_id"):
-            raise ValueError("Select and check a playset before saving its discussion.")
-        flow = AgentWorkflow(self.service)
-        session = flow.session(context["workspace_id"])
-        values = {k: v for k, v in {"goal": goal, "notes": notes, "next_step": next_step}.items() if v is not None}
-        if notes is not None or next_step is not None:
-            values.update(notes_scan_id=(context.get("saved_scan") or {}).get("id"),
-                          notes_index_id=(context.get("saved_index") or {}).get("id"))
-        if reviewed_issue_ids is not None:
-            if not session.get("index_id"):
-                raise ValueError("No checked issue list is available yet.")
-            if (context.get("saved_index") or {}).get("id") != session["index_id"]:
-                raise Conflict("The discussion refers to an older check. Get fresh context before marking current issues reviewed.")
-            _, index = flow.current_index(context["workspace_id"], session["index_id"])
-            if not set(reviewed_issue_ids) <= {item["id"] for item in index["issues"]}:
-                raise ValueError("A reviewed issue does not belong to this checked playset.")
-            values["reviewed_issue_ids"] = list(dict.fromkeys([*session.get("reviewed_issue_ids", []), *reviewed_issue_ids]))[:500]
-        return self.store.put("agent_session", {**session, **values,
-            "notes_trust": "assistant_recorded_context_not_approval_or_evidence"})
+        with self.service.command_lock, self.store.atomic():
+            context = self.store.get("agent_context", context_id)
+            if not context.get("workspace_id"):
+                raise ValueError("Select and check a playset before saving its discussion.")
+            flow = AgentWorkflow(self.service)
+            session = flow.session(context["workspace_id"])
+            disclosure = SessionProjection(self.service, self.store.get("workspace", context["workspace_id"]))
+            values = {k: v for k, v in {"goal": goal, "notes": notes, "next_step": next_step}.items() if v is not None}
+            if notes is not None:
+                values.update(notes_scan_id=(context.get("saved_scan") or {}).get("id"),
+                              notes_index_id=(context.get("saved_index") or {}).get("id"))
+            if reviewed_issue_ids is not None:
+                if not session.get("index_id"):
+                    raise ValueError("No checked issue list is available yet.")
+                if (context.get("saved_index") or {}).get("id") != session["index_id"]:
+                    raise Conflict("The discussion refers to an older check. Get fresh context before marking current issues reviewed.")
+                _, index = flow.current_index(context["workspace_id"], session["index_id"])
+                if not set(reviewed_issue_ids) <= {item["id"] for item in index["issues"]}:
+                    raise ValueError("A reviewed issue does not belong to this checked playset.")
+                values["reviewed_issue_ids"] = list(dict.fromkeys([*session.get("reviewed_issue_ids", []), *reviewed_issue_ids]))[:500]
+            updated = disclosure.bind_updates(session, values,
+                scan_id=(context.get("saved_scan") or {}).get("id"),
+                index_id=(context.get("saved_index") or {}).get("id"))
+            disclosure.validate()
+            saved = self.store.put("agent_session", {**updated,
+                "notes_trust": "assistant_recorded_context_not_approval_or_evidence"}, expected_revision=session["revision"])
+            result = disclosure.project(saved)
+            disclosure.validate()
+            return result
 
     def request_check(self, context_id, goal=None):
         from .workflow import AgentWorkflow
         with self.service.command_lock:
             context = self.store.get("agent_context", context_id)
             if context["state"] != "ready":
-                return {"state": context["state"], "context": public_context(context)}
+                return {"state": context["state"], "context": public_context(context, self.service)}
             if not context.get("workspace_id"):
                 # Another conversation may have started this selection since
                 # the briefing. Reuse its workspace under the coordinator lock.
@@ -255,8 +285,14 @@ class AssistantContext:
                     return {"job_id": job["id"], "workspace_id": workspace_id, "context_id": context_id,
                             "already_running": True, "message": "The current work is still running. Follow its progress first."}
             flow = AgentWorkflow(self.service)
-            session = flow.session(workspace_id)
-            self.store.put("agent_session", {**session, **({"goal": goal} if goal is not None else {}), "context_id": context_id})
+            with self.store.atomic():
+                session = flow.session(workspace_id)
+                disclosure = SessionProjection(self.service, self.store.get("workspace", workspace_id))
+                updated = disclosure.bind_updates(session, {"goal": goal} if goal is not None else {},
+                    scan_id=(context.get("saved_scan") or {}).get("id"),
+                    index_id=(context.get("saved_index") or {}).get("id"))
+                disclosure.validate()
+                self.store.put("agent_session", {**updated, "context_id": context_id}, expected_revision=session["revision"])
             result = self.service.command({"command": "agent_check", "workspace_id": workspace_id,
                 "payload": {"context_id": context_id}, "idempotency_key": uid("check")})
             return {**result, "context_id": context_id, "workspace_id": workspace_id}
@@ -306,12 +342,13 @@ class AssistantContext:
             result = {"index_id": index["id"], "summary": index["summary"]}
             from .reviews import ReviewWorkflow
             ReviewWorkflow(self.service).initialize(workspace["id"], index["id"])
-        session = flow.session(workspace["id"])
-        same_scan = previous_session.get("scan_id") == scan["id"]
-        self.store.put("agent_session", {**session, "scan_id": scan["id"], "index_id": result["index_id"],
-            "state": previous_session["state"] if same_scan else "reviewing", "last_checked_at": time.time(),
-            "reviewed_issue_ids": session.get("reviewed_issue_ids", []) if same_scan else [],
-            "context_id": context["id"]})
+        with self.service.command_lock, self.store.atomic():
+            session = flow.session(workspace["id"])
+            same_scan = previous_session.get("scan_id") == scan["id"]
+            self.store.put("agent_session", {**session, "scan_id": scan["id"], "index_id": result["index_id"],
+                "state": session["state"] if same_scan else "reviewing", "last_checked_at": time.time(),
+                "reviewed_issue_ids": session.get("reviewed_issue_ids", []) if same_scan else [],
+                "context_id": context["id"]}, expected_revision=session["revision"])
         self.store.put("agent_context", {**self.store.get("agent_context", context["id"]),
             "saved_scan": {k: scan.get(k) for k in ("id", "created_at", "discovery_id", "schema_hash", "parser_version")},
             "saved_index": {"id": result["index_id"], "scan_id": scan["id"], "version": INDEX_VERSION,

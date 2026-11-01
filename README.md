@@ -1,138 +1,95 @@
-# EU5 Mod Engine
+# Personal Lab
 
-A local engine for inspecting mod collections, preserving their original files,
-and preparing reviewed changes. **For CK3, the conversation in Codex is the
-interface.** Ask it to check your mods, explain overlapping changes, and walk
-through a small group of choices. No dashboard or separate AI account is needed.
+Headless personal tools operated by an external agent through one MCP connection.
+The existing EU5/CK3 mod engine is the first toolset. The repository supplies typed
+operations, deterministic checks, evidence and controlled effects; your agent
+supplies the conversation and investigation strategy.
 
-One-time setup from this checkout, with Codex and uv installed:
+The supported runtime requires Python, with no browser, Node, HTTP server or model
+API key. Game/mod source files remain read-only. New projects join through their
+own services and trusted toolset registration.
 
-```sh
-uv sync --extra dev
-uv run mod-engine install-agent --data-dir .workspace/ck3
-```
+## Development
 
-Reconnect local tools or reopen Codex after setup. Then say “Check my current CK3
-playset.” The assistant starts its local engine as needed and remembers progress.
-Say “Continue reviewing my mods” to resume the previous investigation. It now
-receives a current briefing and can search a sourced CK3 reference library and
-related scripts without requiring you to supply internal IDs or past messages.
-This path does not require Node or a browser. See [agent setup and current
-limits](docs/operations/AGENT.md).
-
-CK3 inspection supports macOS and Windows source layouts. Approved changes can
-currently be prepared in a separate, inactive fixes mod for the call-allies
-action. Actual game testing and normal-playset activation remain unavailable
-until their separate checks are established; this is **not yet the complete
-fix/test/enable release**. The existing EU5 workbench and optional developer
-dashboard remain available below.
-
-## Test on macOS before using the VM
-
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and Node **20.19+ or 22.12+** with npm, then run from the repository root:
+Install uv, then:
 
 ```sh
-uv run python scripts/test_e2e.py
-# To watch Chromium perform the same tests:
-uv run python scripts/test_e2e.py --headed
+uv sync --locked --all-packages --extra dev
+uv run --extra dev python scripts/check.py
+uv run --package personal-lab-toolkit lab fixtures
 ```
 
-uv supplies the pinned Python 3.12 runtime. On first use, the runner installs locked frontend dependencies and Chromium into the project cache, builds the UI, and starts the actual application for each test. No EU5 installation, Windows VM, OpenRouter account, or API key is needed.
+Python 3.12.16 and the tested dependency lock are pinned. Checks use temporary
+synthetic sources; they do not establish game conformance. macOS development and
+Windows CI contracts are separate from native Windows deployment and game tests.
 
-The six browser tests read physical synthetic files and exercise EU5 repair/export, explicit conflict decisions, malformed input, unknown preservation obligations, stale-source rejection, and CK3 discovery/import/inspection. They use real HTTP requests and SQLite state, check output and original byte hashes, and verify that no playset is activated. Each test gets temporary state and a separate local port, so an existing preview can stay open. **All six passed on macOS.** GitHub Actions is configured to run the suite on macOS and Windows; native Windows and game checks remain separate.
-
-Open `frontend/playwright-report/index.html` after a run. Failure reports include screenshots, traces, and backend logs. See [testing operations](docs/operations/TESTING.md) for coverage and debugging commands.
-
-## Windows 11: clone and launch
-
-1. Clone [this repository](https://github.com/msimon42/eu5-validation-engine) into a writable local folder in the VM.
-2. Double-click **`Start-EU5.cmd`**.
-3. The first launch downloads checksum-verified, pinned local tools, installs locked dependencies, builds the UI, and opens **http://127.0.0.1:8765**.
-
-No administrator access, preinstalled Python/Node, global PATH change, or global PowerShell execution-policy change is required. First setup needs internet; installed deterministic analysis runs locally. Keep the console open while using the app; press Ctrl+C to stop. App state is in `.workspace/`, separate from game/mod content. Do not put live SQLite state on a VM shared/network folder unless that filesystem has been qualified.
-
-Alternatively, from PowerShell:
-
-```powershell
-.\Start-EU5.cmd
-# Optional arguments:
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start.ps1 -Port 8766 -NoBrowser
-```
-
-The launcher supports x64 and ARM64 Windows tool downloads. **Actual Windows launcher and EU5 VM execution have not been performed in this macOS development session.** The CI workflow includes Windows contract checks; that is separate from game feasibility in your particular VM.
-
-## Start with a working synthetic case
-
-Choose **Scan playset → Disjoint properties**. The baseline has `x=1,y=1`; A changes x to 2, B changes y to 3. Investigation shows why the original stack loses A's change. **Stage proposal → Validate full playset → Export experimental bundle** produces the combined `x=2,y=3` review artifact.
-
-Other executable cases cover contradictory values, repeated commands, missing references, malformed input, Windows path hazards, invalid proposals, stale sources, and opaque assets. Design choices are never preselected. Unknown/unwaived obligations block readiness. Experimental export never activates a playset or release pointer.
-
-To try the same physical input path manually after building the UI:
+Start a fixture-backed MCP server using an explicit local state directory:
 
 ```sh
-uv run eu5 materialize F03 .fixtures/F03
-uv run eu5 serve
+uv run --package personal-lab-toolkit lab mcp --profile dev --state-dir /absolute/local/lab-dev
 ```
 
-Create a workspace, choose **Synthetic**, and paste the printed absolute `fixture_path` into **Synthetic fixture folder (optional)**. Capture and scan reads the actual files under that folder. The materializer accepts only a new or empty destination; it never overwrites source files. Changing a file after capture makes the workspace stale. Materialize a fresh folder to start another pristine case.
+The client launches that command over stdio. Protocol messages are on stdout and
+logs are on stderr. Do not run it as a web server or put live SQLite/staging state
+on a VM shared folder. Production startup uses an already installed environment;
+no tool call installs or upgrades dependencies.
 
-For private game content, create a **Game** workspace and register explicit read-only source roots and owner IDs. Use each mod's root (containing resource stages and `.metadata`) and vanilla's `game` root. Run against a disposable profile for eventual runtime experiments. Originals are never the application's write target.
+## Agent interface
 
-## Any EU5 version
+Use the single `personal_lab` connection. `lab_capabilities` reports enabled
+profiles, limits and unavailable operations. Results share a typed envelope;
+inspect `data`, `limitations`, explicit continuations and artifact references.
 
-The app has no EU5 version whitelist. Inventory and byte preservation accept arbitrary installed builds. The Windows adapter discovers Steam libraries/Workshop/known-folder sources and captures the actual executable, content, documentation, and DLC fingerprints; historical version labels are never treated as your installation.
+- `lab_*`: capabilities, persistent run status/events/cancellation, bounded artifacts.
+- `eu5_*`: scan, findings, source/definition/reference inspection, proposed intent,
+  revisioned staging, validation, deployment-plan preparation and experimental ZIPs.
+- `ck3_*`: saved playset investigations, source policy, complete concern reviews,
+  contributor paging, sourced guidance and reviewed inactive call-allies changes.
 
-Loading and gameplay rules can change between versions and families. Current real-game predictions remain conditional/unknown, and **zero conformed production rules are shipped**. Safe game-directed automatic promotion stays disabled until relevant scoped observations exist. The implemented synthetic profiles are explicit application contracts, not proof of EU5 behavior. Unknown files remain preserved and visible.
+For CK3, start with `ck3_get_context`; use `selection="resume"` to continue saved
+work without scanning again. Game launch, normal-playset activation and live undo
+remain unavailable. Prepared files and synthetic checks do not prove gameplay.
 
-Windows probe scaffolding accepts an explicitly selected installation of any version:
+MCP profiles are `personal` (core plus both games), `dev` (EU5 fixtures),
+`eu5-local`, `ck3-local`, and `core-only`. Core-only also works when the mod-engine
+package is not installed. The unrelated test toolset is disabled in production
+profiles. Copy [local configuration](config/profiles.example.toml) outside Git to
+register read-only roots; tool requests cannot edit policy or root configuration.
 
-```powershell
-uv run python scripts/windows_probe.py --help
-```
+## Installed use and approvals
 
-When using the one-click install's project-local tools, substitute `.tools\uv\uv.exe` for `uv`. See [runtime operations](docs/operations/RUNTIME.md) for target selection, controlled recipes, and manual observation limits.
+Build all three distributions with `uv build --all-packages`; distribute the
+matching wheels together. Install the toolkit wheel and its core/domain wheel
+dependencies into an environment outside the checkout. Run that environment's
+`lab install --profile personal --state-dir /absolute/local/personal-lab-state`
+to update the owned Codex connection and CK3 operating instructions. Reconnect the
+client after an interface update. Unrelated settings and stricter policies are
+preserved.
 
-## macOS development
+Native trusted responses collect exact operator choices. Hosts without that
+channel return a `lab decide <question-id>` terminal route. External actions
+require an immutable eligible plan and `lab approve <plan-id>` confirmation.
+Neither terminal command is a model-callable approval tool. Intent is separate
+from external-action authorization; `approved=true` is never authority.
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and a supported [Node runtime](https://vite.dev/guide/), then:
+CLI diagnostics and recovery include `lab doctor`, `lab runs inspect`,
+`lab runs events`, `lab backup`, `lab restore`, `lab recover-restore`, and backed-up `lab migrate`.
+Restores create a separate instance, preserve investigations, and invalidate old
+authority. Backups with unresolved external-write journals require recovery before
+restoring; effects are never replayed automatically. The CLI shares the application
+boundary and does not start a competing writer.
+New state defaults to OS-local `personal-lab/instances/` directories. Relocation
+preserves immutable evidence and invalidates old pending write/launch authority.
 
-```sh
-uv sync --frozen --extra dev
-cd frontend
-npm ci
-npm run build
-cd ..
-uv run eu5 serve
-```
+## Architecture and current limits
 
-Open [the local workbench](http://127.0.0.1:8765). For frontend hot reload, run `npm run dev` in `frontend/` alongside the backend; Vite proxies `/api` to port 8765.
+Read [architecture](docs/architecture.md), [generated tool contracts](docs/tool-contracts.md),
+[adding a toolset](docs/adding-a-toolset.md), [migration inventory](docs/migration-inventory.md),
+and [implementation status](docs/IMPLEMENTATION_STATUS.md).
 
-```sh
-uv run --extra dev pytest
-uv run --extra dev ruff check backend tests scripts
-uv run python scripts/generate_contracts.py --check
-uv run eu5 fixtures
-uv run eu5 scan F03
-cd frontend && npm test
-```
-
-The repository locks Python dependencies in `uv.lock` and frontend dependencies in `frontend/package-lock.json`. The HTTP interface uses one strict command endpoint and bounded read projections; commands are introduced with their workflows. Transport request types and schemas are generated from Python definitions.
-
-## State, backup, and release artifacts
-
-`.workspace/` contains the local SQLite index, immutable blobs, snapshots, evidence, jobs, staging/release journals, and exported review artifacts. SQLite stores metadata/relationships/jobs; original bytes remain in managed content-addressed files. Back up consistently:
-
-```sh
-uv run eu5 backup /absolute/path/to/new-backup-folder
-uv run eu5 restore /absolute/path/to/backup /absolute/path/to/new-managed-folder
-```
-
-Backups contain a consistent database, immutable blobs, evidence, journals, managed releases, artifacts, and a hash manifest. Restore verifies all hashes and accepts only a new/empty target. Restored decisions/candidates are marked stale; incomplete journals require recovery, and no playset is activated. Start the restored copy with `eu5 serve --data-dir PATH`; preserve the original state until the restored copy is verified. Session capabilities and lock files are regenerated.
-
-Build a source-and-compiled-UI transfer archive after the frontend build:
-
-```sh
-uv run python scripts/package.py
-```
-
-The implementation/release boundaries and work remaining are recorded in [implementation status](docs/IMPLEMENTATION_STATUS.md). The full governing design remains in [specs](specs/README.md); [implementation plan](docs/IMPLEMENTATION_PLAN.md) retains the original work breakdown.
+The supplied [headless amendment](docs/architecture-amendments/HEADLESS_MCP_MONOREPO_SPEC.md)
+supersedes the former web shell; the original specification package remains
+preserved as historical source. All 20 EU5 fixture families and the CK3
+preservation/disclosure protections remain required. Zero production game rules
+have been conformed. Windows deployment, broader game repairs and runtime
+qualification remain separate evidence-backed milestones.
