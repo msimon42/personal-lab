@@ -2,13 +2,14 @@
 
 **Research date:** 2026-11-02 UTC  
 **Status:** Research and proposed architecture, not an implementation or measured benchmark  
-**Target:** Personal Lab, with guidance applicable to an existing HTTP backend
+**Primary use case:** An MCP interface over an existing backend API  
+**Repository case study:** Personal Lab
 
 ## Executive recommendation
 
 Build an **agent-friendly capability layer**, not a second backend and not a mandatory agent runtime. Keep authoritative domain operations and permissions in the backend. Expose the same operations through a typed SDK, machine-readable CLI, MCP, and optional provider-specific function adapters. Generate repetitive transport code, but curate the operations, descriptions, result shapes, and recovery behavior that agents actually use.
 
-For Personal Lab, this is an evolution of the existing architecture, not a rewrite. Its public main branch already documents typed operations, bounded results, a single stdio MCP connection, and trusted approval paths. The biggest opportunities are measured tool usability, contract compatibility, and recovery—not adding a chat loop or HTTP service simply to follow a trend.
+For an existing enterprise backend, put a thin MCP adapter in front of approved application operations. Preserve the backend’s authentication, object-level permissions, validation, and auditing. Start with a narrow read-only pilot before introducing writes. The Personal Lab case study later in this report illustrates transport-independent contracts; its local stdio deployment is not a prescription for enterprise hosting.
 
 ### The five most useful developments
 
@@ -118,7 +119,45 @@ HTTP APIs can use RFC 9457 Problem Details, while MCP adapters preserve protocol
 
 OpenTelemetry's GenAI documentation now points to a dedicated official repository. Pin the conventions you use and verify their stability rather than assuming all agent telemetry is standardized. Never log secrets merely to obtain a complete trace. [Migration notice](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/), [current repository](https://github.com/open-telemetry/semantic-conventions-genai)
 
-## 4. Concrete fit for Personal Lab
+## 4. Practical pilot: MCP over an existing backend
+
+This is a proposed generic pilot, not a description of a particular employer or an authorization to deploy. Keep internal endpoints, identifiers, credentials, schemas, and records out of a public research repository.
+
+### Architecture
+
+Agent host → MCP adapter → approved backend API → existing application services and data.
+
+The adapter should translate and constrain operations, not bypass the API by reaching directly into its database. It can use an existing internal SDK or a generated HTTP client; a new standalone SDK package is optional. Keep domain rules in their current owner so ordinary API callers and agents receive consistent validation.
+
+### Start with one useful workflow
+
+Choose a workflow with a verifiable answer and low operational risk: for example, investigating the status of a synthetic request across a few backend records. Expose approximately five to ten narrowly scoped tools, adjusted to the actual task, such as search, retrieve summary, retrieve bounded history, and explain permitted next steps. These are illustrative operation categories, not assumed existing endpoints.
+
+Use approved nonproduction data or synthetic fixtures. “Read-only” is not equivalent to “safe”: reads can expose sensitive records, invoke expensive searches, or leak results to an external model provider. Establish approved data destinations, field-level disclosure, result limits, and account access before connecting the host. Do not paste internal data into public documentation or evaluation examples.
+
+### Separate three identities and permissions
+
+1. **The human or workload using the agent.** Establish who initiated the operation through trusted authentication.
+2. **The agent host accessing MCP.** Establish client identity using the supported authorization flow, and authorize the authenticated user or workload’s tool access and scopes. Do not assume every host is a confidential OAuth client.
+3. **The MCP adapter calling the backend.** Use the backend's approved credential and delegation mechanism. Preserve user/object authorization; do not silently substitute a highly privileged shared identity.
+
+A user ID in tool arguments is not identity. If the backend supports approved on-behalf-of delegation, use that mechanism with audience-correct credentials. Otherwise explicitly decide which service identity is permitted, restrict its data/actions, and define how user entitlements are enforced. Do not pass an MCP access token through to an unrelated backend resource or treat an agent's claim of permission as proof. The applicable standards are the [MCP authorization specification](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization) and [security guidance](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices); the organization’s actual identity architecture still needs review.
+
+### Select transport for the actual client
+
+A local stdio process may be sufficient for a developer-only prototype. A shared remote server typically needs an approved network endpoint and supported HTTP MCP transport, TLS, authentication, egress controls, and operational ownership. Verify the chosen host's exact protocol, transport, authentication, and schema support. Do not expose a development server publicly just to make a demo reachable.
+
+### Implement the read-only contract first
+
+Each tool should have a purpose-oriented name, a short description of when to use it, strict inputs, bounded structured outputs, stable identifiers, safe errors, and explicit limitations. Enforce read-only access in server/backend permissions; a tool annotation is not an access control. Build server-side allowlists rather than a generic arbitrary-URL proxy. Apply row/object checks to detail endpoints and pagination just as strictly as search. Set per-operation deadlines, concurrency and response-size limits, and record correlation IDs without capturing unnecessary payloads.
+
+### Demonstrate value and failure containment
+
+Run a small held-out set of realistic tasks, including ambiguous identifiers, missing records, unauthorized objects, large result sets, upstream errors, and malicious text in retrieved records. Test at least two differently privileged identities, expired credentials, and revoked access. Compare the agent's answer with known backend state. Report correct completion, unauthorized disclosure/action attempts blocked, false success claims, latency, and calls per successful task. A successful happy-path demo is not production qualification.
+
+Only after the read pilot is useful should a separate write phase add exact previews, approval boundaries, idempotency, optimistic concurrency, audit receipts, and recovery for ambiguous outcomes. Agree on deployment, security review, support, and rollback requirements before production use.
+
+## 5. Concrete fit for Personal Lab
 
 Repository inspection used public main at commit **97cd1ad74cc5577fbe1b78cce4ae27ef7ac2ba57**, not unpublished local changes. Evidence: [README](../../README.md), [architecture](../architecture.md), [adding a toolset](../adding-a-toolset.md), and [toolkit package](../../apps/toolkit/pyproject.toml).
 
@@ -142,7 +181,7 @@ Observed:
 
 **Do not do now:** add a mandatory internal model loop, expose all filesystem/network capabilities through a generic execution tool, automatically migrate protocol versions, or replace existing exact-plan approval with an `approved: true` parameter.
 
-## 5. Evaluation and acceptance plan
+## 6. Evaluation and acceptance plan
 
 Anthropic's January 9, 2026 evaluation guidance distinguishes the trajectory from final environment state and recommends repeated trials. A correct-looking response is not proof that the requested operation succeeded. Use final-state and invariant checks rather than insisting on a single valid tool sequence. [Agent evaluations](https://www.anthropic.com/research/demystifying-evals-for-ai-agents)
 
