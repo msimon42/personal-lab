@@ -1,0 +1,98 @@
+{
+  "manifest_version": 1,
+  "reviewed_at": "2026-11-17",
+  "allowed_hosts": [
+    "dataverse.harvard.edu",
+    "www.fec.gov",
+    "www.archives.gov",
+    "www2.census.gov"
+  ],
+  "licenses": [
+    {
+      "license_id": "cc0-1.0",
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0",
+      "access_notes": "Dataverse dataset metadata declares CC0 1.0. Downloads require a Dataverse guestbook response (name, email, institution, position).",
+      "redistribution_status": "permitted_with_attribution"
+    },
+    {
+      "license_id": "us-government-work",
+      "name": "Work of the United States Government (17 U.S.C. 105)",
+      "url": "https://www.usa.gov/government-copyright",
+      "access_notes": "Federal publication with no copyright in the United States. Attribution retained as provenance practice.",
+      "redistribution_status": "permitted"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "mit-county-president",
+      "publisher": "MIT Election Data and Science Lab",
+      "landing_url": "https://doi.org/10.7910/DVN/VOQCHQ",
+      "authority_kind": "academic_secondary",
+      "license_id": "cc0-1.0",
+      "documentation_url": "https://electionlab.mit.edu/data",
+      "attribution": "MIT Election Data and Science Lab, County Presidential Election Returns 2000-2024, Harvard Dataverse, doi:10.7910/DVN/VOQCHQ.",
+      "access_conditions": "Harvard Dataverse guestbook 458 (name, email, institution, position) before each file download. Identity is read from the data root's local config, never from Git.",
+      "artifacts": [
+        {"artifact_key": "countypres_2000-2024.tab", "format": "tsv", "mime_type": "text/tab-separated-values",
+         "access": {"kind": "dataverse_guestbook", "host": "dataverse.harvard.edu", "datafile_id": 13573089,
+                    "redirect_hosts": ["dvn-cloud-iqss.s3.amazonaws.com"]},
+         "max_bytes": 50000000},
+        {"artifact_key": "codebook.md", "format": "markdown", "mime_type": "text/markdown",
+         "access": {"kind": "dataverse_guestbook", "host": "dataverse.harvard.edu", "datafile_id": 11723285,
+                    "redirect_hosts": ["dvn-cloud-iqss.s3.amazonaws.com"]},
+         "max_bytes": 1000000}
+      ]
+    },
+    {
+      "source_id": "fec-federal-elections-2024-president",
+      "publisher": "Federal Election Commission",
+      "landing_url": "https://www.fec.gov/introduction-campaign-finance/election-results-and-voting-information/",
+      "authority_kind": "official_compilation",
+      "license_id": "us-government-work",
+      "documentation_url": "https://www.fec.gov/introduction-campaign-finance/election-results-and-voting-information/",
+      "attribution": "Federal Election Commission, Official 2024 Presidential General Election Results (compiled from state election offices; electoral votes from NARA certificates).",
+      "access_conditions": "Public download.",
+      "artifacts": [
+        {"artifact_key": "2024presgeresults.xlsx", "format": "xlsx",
+         "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+         "access": {"kind": "direct", "url": "https://www.fec.gov/documents/5645/2024presgeresults.xlsx",
+                    "redirect_hosts": ["www.fec.gov"]},
+         "max_bytes": 5000000}
+      ]
+    },
+    {
+      "source_id": "nara-electoral-college-2024",
+      "publisher": "U.S. National Archives and Records Administration",
+      "landing_url": "https://www.archives.gov/electoral-college/2024",
+      "authority_kind": "official_certificate",
+      "license_id": "us-government-work",
+      "documentation_url": "https://www.archives.gov/electoral-college",
+      "attribution": "National Archives and Records Administration, 2024 Electoral College Results (Certificates of Vote).",
+      "access_conditions": "Public web page; per-state certificate PDFs are linked from it.",
+      "artifacts": [
+        {"artifact_key": "electoral-college-2024.html", "format": "html", "mime_type": "text/html",
+         "access": {"kind": "direct", "url": "https://www.archives.gov/electoral-college/2024"},
+         "max_bytes": 5000000}
+      ]
+    },
+    {
+      "source_id": "census-cb-2020-20m",
+      "publisher": "U.S. Census Bureau",
+      "landing_url": "https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html",
+      "authority_kind": "official_reference_geometry",
+      "license_id": "us-government-work",
+      "documentation_url": "https://www.census.gov/programs-surveys/geography/technical-documentation/naming-convention/cartographic-boundary-file.html",
+      "attribution": "U.S. Census Bureau, 2020 Cartographic Boundary Files, 1:20,000,000.",
+      "access_conditions": "Public download. Cartographic generalization is for display, not legal boundary accuracy.",
+      "artifacts": [
+        {"artifact_key": "cb_2020_us_county_20m.zip", "format": "shapefile_zip", "mime_type": "application/zip",
+         "access": {"kind": "direct", "url": "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_county_20m.zip"},
+         "max_bytes": 50000000},
+        {"artifact_key": "cb_2020_us_state_20m.zip", "format": "shapefile_zip", "mime_type": "application/zip",
+         "access": {"kind": "direct", "url": "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_state_20m.zip"},
+         "max_bytes": 50000000}
+      ]
+    }
+  ]
+}

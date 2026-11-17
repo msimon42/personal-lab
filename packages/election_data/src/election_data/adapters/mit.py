@@ -1,0 +1,209 @@
+"""MIT Election Lab county presidential returns (countypres_2000-2024) for one cycle.
+
+Rows are preserved at source grain: every voting mode, aggregate and metric row is
+kept with its file line as evidence. Blank modes become ``unknown``; blank counts
+become ``missing``; neither is turned into a total or a zero here.
+"""
+from __future__ import annotations
+
+import csv
+import io
+import re
+import sqlite3
+from typing import Any
+
+from ..core import DataRoot, ReviewRequired, canonical_json, stable_id, transaction
+from ..pipeline import (Normalized, begin_run, complete_run, county_versions, ensure_aggregate, ensure_contests,
+                        ensure_ticket, existing_result, load_curation, round_key_for, state_versions,
+                        statewide_contest, unit_id)
+
+ADAPTER_ID = "mit-county-president"
+ADAPTER_VERSION = "1"
+SOURCE_ID = "mit-county-president"
+HEADER = ["state", "county_name", "year", "state_po", "county_fips", "office", "candidate", "party",
+          "candidatevotes", "totalvotes", "version", "mode"]
+OFFICE_LABEL = "US PRESIDENT"
+
+
+def mode_key(raw: str) -> str:
+    if raw == "TOTAL":
+        return "all"
+    if raw == "":
+        return "unknown"
+    return re.sub(r"[^a-z0-9]+", "_", raw.lower()).strip("_")
+
+
+def _batch(grains: dict[tuple, int], grain: tuple, accounting: dict[str, int]) -> str:
+    """Repeated rows at one grain are kept as ordered batches, never merged or dropped."""
+    grains[grain] = grains.get(grain, 0) + 1
+    if grains[grain] > 1:
+        accounting["repeated_grain_rows"] += 1
+    return f"b{grains[grain]}"
+
+
+def unit_mapping(postal: str, fips: str, name: str, counties: dict[str, str], states: dict,
+                 curation: dict[str, Any]) -> tuple[str, str, str | None, list[tuple[str, str]], str | None]:
+    """Return ``(natural_key, kind, geo_version_id, components, notes)`` for an MIT unit."""
+    merge = next(d["scope"] for d in curation["decisions"] if d["decision_type"] == "unit_merge")
+    if fips in merge["members"]:
+        target_version = counties[merge["target_fips"]]
+        others = [member for member in merge["members"] if member != fips]
+        if fips == merge["target_fips"]:
+            return (f"county-part:{fips}:excluding:{'+'.join(others)}", "county", None,
+                    [(target_version, "part_of")], "County election authority excluding separately reported units.")
+        return (f"election-jurisdiction:{postal}:{fips}", "election_jurisdiction", None,
+                [(target_version, "part_of")], f"Separately reported jurisdiction ({name.title()}).")
+    if postal == "AK":
+        number = int(fips[2:])
+        if number == 99:
+            return (f"nongeographic:AK:mit-{fips}", "nongeographic", None, [],
+                    "Source bucket DISTRICT 99; not distributed to districts.")
+        return (f"ak-house-district-2024:{number:02d}", "state_legislative_district", None, [],
+                "Alaska state house district (2024 plan); geometry not acquired in Phase 1.")
+    crosswalk = next(d["scope"]["codes"] for d in curation["decisions"] if d["decision_type"] == "unit_code_crosswalk")
+    if fips in crosswalk and crosswalk[fips] in counties:
+        target = crosswalk[fips]
+        return (f"county:{target}", "county", counties[target], [],
+                f"Source code {fips} crosswalked to {target} (dec-2024-pres-fips-crosswalk).")
+    if fips in counties:
+        return f"county:{fips}", "county", counties[fips], [], None
+    return f"unmapped:{postal}:{fips}", "nongeographic", None, [], "Source unit without a reviewed geographic mapping."
+
+
+def import_cycle(root: DataRoot, connection: sqlite3.Connection, artifact_id: str, *, year: int = 2024) -> dict:
+    curation, curation_hash = load_curation()
+    if year != curation["election"]["cycle_year"]:
+        raise ReviewRequired(f"No reviewed curation mapping for {year}.")
+    context = begin_run(root, connection, adapter_id=ADAPTER_ID, adapter_version=ADAPTER_VERSION,
+                        artifacts={"returns": artifact_id}, mapping_version=curation["mapping_version"],
+                        mapping_hash=curation_hash, config={"year": year})
+    if context.existing:
+        return existing_result(connection, context)
+    labels = curation["source_labels"][SOURCE_ID]
+    ensure_contests(connection, curation)
+    states, counties = state_versions(connection), county_versions(connection)
+    normalized = Normalized()
+    accounting = {"rows_read": 0, "rows_other_years": 0, "rows_other_office": 0, "vote_rows": 0,
+                  "metric_rows": 0, "missing_counts": 0, "repeated_grain_rows": 0}
+    sets: dict[str, str] = {}
+    units: dict[tuple[str, str], str] = {}
+    options: dict[tuple[str, str], str] = {}
+    grains: dict[tuple, int] = {}
+    totalvotes: dict[tuple, tuple[int, int]] = {}
+    versions: set[str] = set()
+    path = context.paths["returns"]
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.reader(handle, delimiter="\t")
+        header = next(reader)
+        if header != HEADER:
+            raise ReviewRequired(f"MIT layout changed: header {header} does not match the reviewed fingerprint.")
+        with transaction(connection):
+            for record in reader:
+                accounting["rows_read"] += 1
+                line = reader.line_num
+                row = dict(zip(HEADER, record, strict=True))
+                if row["year"] != str(year):
+                    accounting["rows_other_years"] += 1
+                    continue
+                if row["office"] != OFFICE_LABEL:
+                    accounting["rows_other_office"] += 1
+                    continue
+                postal = row["state_po"]
+                if postal not in curation["states_with_electors"]:
+                    raise ReviewRequired(f"Line {line}: state {postal} has no elector contest mapping.")
+                versions.add(row["version"])
+                contest = statewide_contest(postal, curation)
+                if contest not in sets:
+                    sets[contest] = stable_id("set", context.identity, contest, "mit-county-units")
+                    normalized.result_sets.append((
+                        sets[contest], SOURCE_ID, contest, "", "secondary_compilation", None, None,
+                        "source_reported_by_mode", "mit-county-units",
+                        "MIT county returns; modes preserved; blank mode stored as unknown."))
+                fips = row["county_fips"].zfill(5)
+                if not fips.isdigit():
+                    raise ReviewRequired(f"Line {line}: county code {row['county_fips']!r} is not numeric.")
+                if (postal, fips) not in units:
+                    natural, kind, version, components, notes = unit_mapping(
+                        postal, fips, row["county_name"], counties, states, curation)
+                    identifier = unit_id(natural)
+                    units[(postal, fips)] = identifier
+                    normalized.other.append((
+                        "INSERT OR IGNORE INTO reporting_unit VALUES (?,?,?,?,?,?,?,?)",
+                        (identifier, kind, version, unit_id(f"state:{states[postal]['fips']}"),
+                         row["county_name"].title(), f"mit:{fips}", natural, notes)))
+                    for component_version, role in components:
+                        normalized.other.append(("INSERT OR IGNORE INTO reporting_unit_component VALUES (?,?,?)",
+                                                 (identifier, component_version, role)))
+                    if kind == "nongeographic" and natural.startswith("unmapped:"):
+                        normalized.diagnostics.append({"line": line, "issue": "unmapped_unit", "fips": fips})
+                unit = units[(postal, fips)]
+                mode = mode_key(row["mode"])
+                round_key = round_key_for(postal, curation)
+                raw = row["candidatevotes"]
+                if raw == "":
+                    votes, status = None, "missing"
+                    accounting["missing_counts"] += 1
+                elif raw.isdigit():
+                    votes, status = int(raw), "reported"
+                else:
+                    raise ReviewRequired(f"Line {line}: vote count {raw!r} is not a nonnegative integer.")
+                locator = canonical_json({"line": line, "format": "tsv"})
+                candidate = row["candidate"]
+                if candidate in labels["metrics"]:
+                    metric = labels["metrics"][candidate]
+                    grain = ("metric", sets[contest], unit, round_key, mode, metric)
+                    batch = _batch(grains, grain, accounting)
+                    metric_id = stable_id("mobs", *grain[1:], batch)
+                    normalized.metrics.append((metric_id, sets[contest], unit, round_key, mode, batch, metric, votes,
+                                               status, f"line:{line}"))
+                    normalized.evidence.append((metric_id, artifact_id, locator))
+                    accounting["metric_rows"] += 1
+                    continue
+                if candidate in labels["candidates"]:
+                    key = labels["candidates"][candidate]
+                    if (contest, key) not in options:
+                        options[(contest, key)] = ensure_ticket(connection, curation, contest, key)
+                elif candidate in labels["aggregates"]:
+                    key = labels["aggregates"][candidate]
+                    if (contest, key) not in options:
+                        options[(contest, key)] = ensure_aggregate(connection, contest, key, "Other (MIT aggregate)")
+                else:
+                    raise ReviewRequired(f"Line {line}: candidate label {candidate!r} has no reviewed mapping.")
+                option = options[(contest, key)]
+                grain = ("vote", sets[contest], unit, option, round_key, mode)
+                batch = _batch(grains, grain, accounting)
+                observation = stable_id("vobs", *grain[1:], batch)
+                normalized.votes.append((observation, sets[contest], unit, option, round_key, mode, batch, votes,
+                                         status, f"line:{line}", candidate, row["party"]))
+                normalized.evidence.append((observation, artifact_id, locator))
+                accounting["vote_rows"] += 1
+                if row["totalvotes"].isdigit():
+                    key_total = (sets[contest], unit, round_key, mode)
+                    value = int(row["totalvotes"])
+                    if key_total not in totalvotes:
+                        totalvotes[key_total] = (value, line)
+                    elif totalvotes[key_total][0] != value:
+                        normalized.diagnostics.append({"line": line, "issue": "inconsistent_totalvotes_column"})
+    for (set_id, unit, round_key, mode), (value, line) in sorted(totalvotes.items()):
+        metric_id = stable_id("mobs", set_id, unit, round_key, mode, "mit_totalvotes_column")
+        normalized.metrics.append((metric_id, set_id, unit, round_key, mode, "b1", "mit_totalvotes_column",
+                                   value, "reported", f"line:{line}"))
+        normalized.evidence.append((metric_id, artifact_id, canonical_json({"line": line, "column": "totalvotes"})))
+    if len(versions) != 1:
+        raise ReviewRequired(f"Expected one MIT version label for {year}, found {sorted(versions)}.")
+    revision = f"MIT version {versions.pop()}"
+    normalized.result_sets = [(row[0], row[1], row[2], revision, *row[4:]) for row in normalized.result_sets]
+    accounting["rows_in_scope"] = accounting["vote_rows"] + accounting["metric_rows"]
+    if accounting["rows_read"] != (accounting["rows_in_scope"] + accounting["rows_other_years"]
+                                   + accounting["rows_other_office"]):
+        raise ReviewRequired("Raw row counts do not reconcile to accepted and ignored rows.")
+    normalized.accounting = accounting
+    return complete_run(connection, context, normalized)
+
+
+def parse_preview(text: str) -> list[dict[str, str]]:
+    """Small helper for tests and diagnostics: parse TSV text with the reviewed header."""
+    reader = csv.reader(io.StringIO(text), delimiter="\t")
+    if next(reader) != HEADER:
+        raise ReviewRequired("Header mismatch.")
+    return [dict(zip(HEADER, record, strict=True)) for record in reader]

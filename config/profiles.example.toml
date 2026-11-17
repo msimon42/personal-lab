@@ -3,6 +3,9 @@
 # Empty configuration is sufficient for dev fixtures and core-only.
 # The explicit election-research profile also needs no source roots or credentials;
 # its reviewed operations use bundled public aggregate data and bounded inputs.
+# The explicit election-data profile reads published releases from one operator-
+# selected root created by `election-data init --data-dir <path>`.
+# election_data_root = "/operator-configured/election-data"
 installations = []
 
 [ck3_locations]

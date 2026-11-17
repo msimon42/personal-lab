@@ -11,6 +11,7 @@ dependencies = ["toolkit-core", "mcp==2.3.0", "tomlkit>=0.13,<1"]
 [project.optional-dependencies]
 mod-engine = ["eu5-mod-engine"]
 election-model = ["election-model"]
+election-data = ["election-data"]
 
 [project.scripts]
 lab = "personal_lab.cli:main"
@@ -19,6 +20,7 @@ lab = "personal_lab.cli:main"
 toolkit-core = { workspace = true }
 eu5-mod-engine = { workspace = true }
 election-model = { workspace = true }
+election-data = { workspace = true }
 
 [tool.setuptools.packages.find]
 where = ["src"]

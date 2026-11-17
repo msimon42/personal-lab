@@ -13,6 +13,8 @@ from toolkit_core.contracts import StrictModel
 class Configuration(StrictModel):
     installations: list[dict] = Field(default_factory=list)
     ck3_locations: dict = Field(default_factory=dict)
+    # Operator-selected election data root (see `election-data init`). Read-only to tools.
+    election_data_root: str | None = None
 
 
 @dataclass(frozen=True)
@@ -29,6 +31,7 @@ PROFILES = {
     "eu5-local": Profile("eu5-local", ("core", "eu5")),
     "ck3-local": Profile("ck3-local", ("core", "ck3")),
     "election-research": Profile("election-research", ("core", "election")),
+    "election-data": Profile("election-data", ("core", "election_data")),
     # This tiny unrelated toolset proves the extension seam; no production
     # profile enables it, and configuration cannot name an import path.
     "test-only": Profile("test-only", ("core", "text_statistics")),

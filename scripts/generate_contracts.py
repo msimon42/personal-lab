@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def outputs():
     with tempfile.TemporaryDirectory(prefix="lab-contracts-") as temporary:
         registered = {}
-        for profile in ("personal", "election-research"):
+        for profile in ("personal", "election-research", "election-data"):
             with LabApplication(Path(temporary).resolve() / profile, profile=profile) as application:
                 for contract in application.contracts():
                     previous = registered.setdefault(contract["name"], contract)

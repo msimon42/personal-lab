@@ -1,3 +1,6 @@
 # Preserve immutable election evidence exactly across Git checkouts.
 data/elections/** -text
 packages/election_model/src/election_model/data/** -text
+tests/fixtures/election_data/*.tab -text
+# Owner-supplied specification kept byte-for-byte (Markdown hard breaks use trailing spaces).
+docs/elections/ELECTION_DATA_TECHNICAL_SPEC.md -text -whitespace

@@ -1,0 +1,362 @@
+{
+  "mapping_version": "us-2024-president-v1",
+  "author": "election-data curation (reviewed in repository)",
+  "created_at": "2026-11-17T00:00:00Z",
+  "election": {
+    "natural_key": "us-general-2024-11-05",
+    "label": "2024 United States general election",
+    "date": "2024-11-05",
+    "cycle_year": 2024
+  },
+  "office": {
+    "code": "president",
+    "name": "President of the United States",
+    "level": "federal",
+    "default_selection_method": "electoral_college"
+  },
+  "states_with_electors": [
+    "AL",
+    "AK",
+    "AZ",
+    "AR",
+    "CA",
+    "CO",
+    "CT",
+    "DE",
+    "DC",
+    "FL",
+    "GA",
+    "HI",
+    "ID",
+    "IL",
+    "IN",
+    "IA",
+    "KS",
+    "KY",
+    "LA",
+    "ME",
+    "MD",
+    "MA",
+    "MI",
+    "MN",
+    "MS",
+    "MO",
+    "MT",
+    "NE",
+    "NV",
+    "NH",
+    "NJ",
+    "NM",
+    "NY",
+    "NC",
+    "ND",
+    "OH",
+    "OK",
+    "OR",
+    "PA",
+    "RI",
+    "SC",
+    "SD",
+    "TN",
+    "TX",
+    "UT",
+    "VT",
+    "VA",
+    "WA",
+    "WV",
+    "WI",
+    "WY"
+  ],
+  "persons": [
+    {
+      "key": "kamala-d-harris",
+      "name": "Kamala D. Harris",
+      "party": "democratic"
+    },
+    {
+      "key": "donald-j-trump",
+      "name": "Donald J. Trump",
+      "party": "republican"
+    },
+    {
+      "key": "tim-walz",
+      "name": "Tim Walz",
+      "party": "democratic"
+    },
+    {
+      "key": "jd-vance",
+      "name": "JD Vance",
+      "party": "republican"
+    },
+    {
+      "key": "chase-oliver",
+      "name": "Chase Oliver",
+      "party": "libertarian"
+    },
+    {
+      "key": "jill-stein",
+      "name": "Jill Stein",
+      "party": "green"
+    },
+    {
+      "key": "robert-f-kennedy-jr",
+      "name": "Robert F. Kennedy Jr.",
+      "party": null
+    },
+    {
+      "key": "cornel-west",
+      "name": "Cornel West",
+      "party": null
+    },
+    {
+      "key": "claudia-de-la-cruz",
+      "name": "Claudia De la Cruz",
+      "party": null
+    }
+  ],
+  "tickets": [
+    {
+      "president": "kamala-d-harris",
+      "vice_president": "tim-walz"
+    },
+    {
+      "president": "donald-j-trump",
+      "vice_president": "jd-vance"
+    }
+  ],
+  "parties": [
+    {
+      "key": "democratic",
+      "name": "Democratic Party"
+    },
+    {
+      "key": "republican",
+      "name": "Republican Party"
+    },
+    {
+      "key": "libertarian",
+      "name": "Libertarian Party"
+    },
+    {
+      "key": "green",
+      "name": "Green Party"
+    }
+  ],
+  "source_labels": {
+    "mit-county-president": {
+      "candidates": {
+        "KAMALA D HARRIS": "kamala-d-harris",
+        "DONALD J TRUMP": "donald-j-trump",
+        "CHASE OLIVER": "chase-oliver"
+      },
+      "aggregates": {
+        "OTHER": "aggregate-other-mit"
+      },
+      "metrics": {
+        "TOTAL VOTES CAST": "source_total_votes_cast",
+        "UNDERVOTES": "undervotes",
+        "OVERVOTES": "overvotes",
+        "SPOILED": "spoiled_ballots"
+      },
+      "parties": {
+        "DEMOCRAT": "democratic",
+        "REPUBLICAN": "republican",
+        "LIBERTARIAN": "libertarian"
+      }
+    },
+    "fec-federal-elections-2024-president": {
+      "candidates": {
+        "HARRIS": "kamala-d-harris",
+        "TRUMP": "donald-j-trump",
+        "OLIVER": "chase-oliver",
+        "STEIN": "jill-stein",
+        "KENNEDY": "robert-f-kennedy-jr",
+        "WEST": "cornel-west",
+        "DE LA CRUZ": "claudia-de-la-cruz"
+      },
+      "aggregates": {
+        "WRITE-INS (SCATTERED)": "aggregate-write-in-scattered",
+        "NONE OF THESE CANDIDATES": "none-of-these-candidates"
+      },
+      "unresolved_policy": "Other FEC column labels are surnames only. Each receives a provisional person keyed by the FEC label instead of a guessed identity."
+    }
+  },
+  "decisions": [
+    {
+      "decision_id": "dec-2024-pres-source-priority",
+      "decision_type": "source_priority",
+      "entity_id": "contest:us-2024-president:*",
+      "rationale": "State-level published totals use the FEC official compilation of state-certified returns. County-level detail uses MIT Election Lab county returns, a secondary compilation. County results never override state totals; county partitions are reconciled against FEC and differences are published as coverage notes.",
+      "evidence": {
+        "fec_note": "Popular Vote: State Elections Offices (FEC workbook footer, compiled January 16, 2025)"
+      }
+    },
+    {
+      "decision_id": "dec-2024-pres-rcv-first-round",
+      "decision_type": "round_semantics",
+      "entity_id": "contest:us-2024-president:AK,ME",
+      "scope": {
+        "states": [
+          "AK",
+          "ME"
+        ],
+        "round_key": "round_1",
+        "voting_system": "ranked_choice"
+      },
+      "rationale": "Alaska and Maine use ranked-choice voting for presidential general elections. Sources report first-choice tallies only. A validation rule checks that the first-round leader holds a majority of reported options, in which case no further rounds were required; otherwise the outcome is withheld for review.",
+      "evidence": {
+        "rule": "rcv_first_round_majority"
+      }
+    },
+    {
+      "decision_id": "dec-2024-pres-mit-blank-mode",
+      "decision_type": "mode_as_total",
+      "entity_id": "source:mit-county-president",
+      "scope": {
+        "states": [
+          "ID",
+          "NC",
+          "RI",
+          "UT",
+          "WA",
+          "WI",
+          "WV",
+          "WY"
+        ],
+        "source_mode": "unknown"
+      },
+      "rationale": "In these states MIT rows carry a blank mode and no TOTAL rows. Blank mode is stored as voting_mode='unknown'. In some states (for example NC) each candidate has several unlabeled blank-mode rows per unit, which are kept as ordered batches (see dec-2024-pres-mit-repeated-rows). Publication treats the unknown-mode tally (after any accepted batch sum) as the all-mode total only for these states, and only while the state partition reconciles to the FEC official total; mismatches are published as warnings.",
+      "evidence": {
+        "profile": "2024 rows: these states have no TOTAL mode and no labeled mode values"
+      }
+    },
+    {
+      "decision_id": "dec-2024-pres-mit-repeated-rows",
+      "decision_type": "sum_source_batches",
+      "entity_id": "source:mit-county-president",
+      "scope": {
+        "observation": "vote",
+        "states": [
+          "CA",
+          "CT",
+          "NC",
+          "SC"
+        ]
+      },
+      "rationale": "MIT repeats some candidate rows at identical state/unit/candidate/party/mode grain (NC: four unlabeled rows per candidate per unit; CA and CT: repeated OTHER rows; SC: repeated FAILSAFE PROVISIONAL rows). Each row is stored as a separate batch with its own line evidence. For the listed states, batches of one ballot option are summed for publication only when the unit's summed options equal MIT's own totalvotes column for that unit; otherwise the unit is withheld. Repeated metric rows (for example AZ UNDERVOTES 452 and 0) are never summed.",
+      "evidence": {
+        "check": "2024: in every CA, CT, NC, ID, WI and RI unit the sum of all candidate rows equals the totalvotes column",
+        "rule": "batch_sum_matches_totalvotes_column"
+      }
+    },
+    {
+      "decision_id": "dec-2024-pres-mit-sd-vote-center",
+      "decision_type": "mode_as_total",
+      "entity_id": "source:mit-county-president",
+      "scope": {
+        "states": [
+          "SD"
+        ],
+        "source_mode": "vote_center"
+      },
+      "rationale": "Nine South Dakota units report only VOTE CENTER rows (no TOTAL). For those units only, VOTE CENTER is published as the all-mode total, subject to the state partition reconciling to the FEC total.",
+      "evidence": {
+        "profile": "2024 SD units without TOTAL rows report the single mode VOTE CENTER"
+      }
+    },
+    {
+      "decision_id": "dec-2024-pres-kansas-city-merge",
+      "decision_type": "unit_merge",
+      "entity_id": "county:29095",
+      "scope": {
+        "target_fips": "29095",
+        "members": [
+          "29095",
+          "36000"
+        ]
+      },
+      "rationale": "Missouri reports the Kansas City Board of Election Commissioners jurisdiction (MIT code 36000) separately from the Jackson County election authority (29095). The county map unit for Jackson County is the documented merge of these two nonoverlapping reporting units. The merge is accepted only if Missouri's full partition reconciles to the FEC official total, which would fail if Kansas City overlapped another county's reported units.",
+      "evidence": {
+        "rule": "county_partition_reconciles_to_state"
+      }
+    },
+    {
+      "decision_id": "dec-2024-pres-fips-crosswalk",
+      "decision_type": "unit_code_crosswalk",
+      "entity_id": "source:mit-county-president",
+      "scope": {
+        "codes": {
+          "46113": "46102"
+        }
+      },
+      "rationale": "MIT reports South Dakota's Oglala Lakota County under its pre-2015 code 46113 (Shannon County). The county was renamed and assigned FIPS 46102 in 2015 without a boundary change. The source code is retained as the unit's source identifier and the unit is joined to the 2020-vintage county 46102.",
+      "evidence": {
+        "census_note": "Census Bureau substantial-changes list: Shannon County, SD (46113) renamed Oglala Lakota County (46102), effective May 1, 2015"
+      }
+    },
+    {
+      "decision_id": "dec-2024-pres-alaska-house-districts",
+      "decision_type": "unit_geography",
+      "entity_id": "source:mit-county-president:AK",
+      "rationale": "Alaska results are reported by state house district (MIT codes 2001-2040) plus code 2099, not by borough. No district geometry is acquired in Phase 1, so these units are published as tabular results with boundary_unavailable. Code 2099 is kept as a nongeographic bucket and is never distributed to districts.",
+      "evidence": {
+        "mit_units": "DISTRICT 01 .. DISTRICT 40, DISTRICT 99"
+      }
+    },
+    {
+      "decision_id": "dec-2024-pres-boundary-vintage",
+      "decision_type": "boundary_vintage",
+      "entity_id": "boundary:census-cb-2020-20m",
+      "rationale": "MIT 2024 Connecticut units are the eight historical counties. Census replaced them with planning regions from the 2022 vintage, so the 2020 1:20M cartographic files are the latest vintage whose county polygons match the reporting units. State outlines did not change. Geometry is generalized for display. NAD83 coordinates are used as WGS84 without transformation; the datum difference (about 1-2 m) is far below 1:20M generalization.",
+      "evidence": {
+        "census_vintage": "GENZ2020 cb_*_20m"
+      }
+    },
+    {
+      "decision_id": "dec-2024-pres-district-electors",
+      "decision_type": "electoral_components",
+      "entity_id": "election:us-general-2024-11-05",
+      "scope": {
+        "ME": {
+          "statewide_at_large": {
+            "electors": 2,
+            "winner": "kamala-d-harris"
+          },
+          "CD1": {
+            "electors": 1,
+            "winner": "kamala-d-harris"
+          },
+          "CD2": {
+            "electors": 1,
+            "winner": "donald-j-trump"
+          }
+        },
+        "NE": {
+          "statewide_at_large": {
+            "electors": 2,
+            "winner": "donald-j-trump"
+          },
+          "CD1": {
+            "electors": 1,
+            "winner": "donald-j-trump"
+          },
+          "CD2": {
+            "electors": 1,
+            "winner": "kamala-d-harris"
+          },
+          "CD3": {
+            "electors": 1,
+            "winner": "donald-j-trump"
+          }
+        }
+      },
+      "rationale": "NARA records Maine and Nebraska state electoral totals and explains their district allocation in page notes. Components are transcribed from those notes; a validation rule requires component electors and winners to sum to the NARA state totals. District popular votes are not in Phase 1 sources and are reported as unavailable.",
+      "evidence": {
+        "nara_notes": [
+          "Maine: Harris-Walz won in the First Congressional District and took the state; Trump-Vance won the Second Congressional District.",
+          "Nebraska: Trump-Vance won in the First and Third Congressional Districts and took the state; Harris-Walz won the Second Congressional District."
+        ]
+      }
+    }
+  ]
+}

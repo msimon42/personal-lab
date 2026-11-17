@@ -10594,6 +10594,2678 @@ Output schema:
 }
 ```
 
+## election_data_contests
+
+List contests in a published release with sourced outcomes, electoral votes and coverage cells.
+
+Effect: observation. Read-only hint: true.
+
+Preconditions: enabled startup profile, permitted instance/data scope, and all required schema fields. Mutations recheck their domain prerequisites.
+
+Retry: Repeat an observation against the same pinned scope.
+
+Next: follow returned run IDs with `lab_run_get`, result continuations with the same tool, and artifact IDs with `lab_artifact_read`; then follow domain workflow instructions.
+
+Input schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {
+    "cursor": {
+      "default": 0,
+      "description": "Offset returned as next_cursor by a previous page.",
+      "maximum": 100000,
+      "minimum": 0,
+      "title": "Cursor",
+      "type": "integer"
+    },
+    "limit": {
+      "default": 10,
+      "maximum": 15,
+      "minimum": 1,
+      "title": "Limit",
+      "type": "integer"
+    },
+    "release_id": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "pattern": "^release_[0-9a-f]{20}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Pin a published release; defaults to the active release.",
+      "title": "Release Id"
+    },
+    "state": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Z]{2}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "USPS postal code.",
+      "title": "State"
+    }
+  },
+  "title": "ContestsRequest",
+  "type": "object"
+}
+```
+
+Output schema:
+
+```json
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "byte_size": {
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        }
+      },
+      "required": [
+        "id",
+        "media_type",
+        "byte_size",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "ContestSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "contest_id": {
+          "title": "Contest Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "seat_key": {
+          "title": "Seat Key",
+          "type": "string"
+        },
+        "stage": {
+          "title": "Stage",
+          "type": "string"
+        },
+        "contest_type": {
+          "title": "Contest Type",
+          "type": "string"
+        },
+        "voting_system": {
+          "title": "Voting System",
+          "type": "string"
+        },
+        "selection_method": {
+          "title": "Selection Method",
+          "type": "string"
+        },
+        "outcomes": {
+          "items": {
+            "$ref": "#/$defs/Outcome"
+          },
+          "title": "Outcomes",
+          "type": "array"
+        },
+        "coverage": {
+          "items": {
+            "$ref": "#/$defs/CoverageCell"
+          },
+          "title": "Coverage",
+          "type": "array"
+        },
+        "electoral_votes": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Electoral Votes",
+          "type": "object"
+        }
+      },
+      "required": [
+        "contest_id",
+        "label",
+        "seat_key",
+        "stage",
+        "contest_type",
+        "voting_system",
+        "selection_method",
+        "outcomes",
+        "coverage",
+        "electoral_votes"
+      ],
+      "title": "ContestSummary",
+      "type": "object"
+    },
+    "ContestsReport": {
+      "additionalProperties": false,
+      "properties": {
+        "api_version": {
+          "default": "1",
+          "title": "Api Version",
+          "type": "string"
+        },
+        "release_id": {
+          "title": "Release Id",
+          "type": "string"
+        },
+        "contests": {
+          "items": {
+            "$ref": "#/$defs/ContestSummary"
+          },
+          "title": "Contests",
+          "type": "array"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Cursor"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "release_id",
+        "contests",
+        "next_cursor",
+        "total"
+      ],
+      "title": "ContestsReport",
+      "type": "object"
+    },
+    "CoverageCell": {
+      "additionalProperties": false,
+      "properties": {
+        "geography_level": {
+          "title": "Geography Level",
+          "type": "string"
+        },
+        "coverage_status": {
+          "title": "Coverage Status",
+          "type": "string"
+        },
+        "expected_units": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected Units"
+        },
+        "available_units": {
+          "title": "Available Units",
+          "type": "integer"
+        },
+        "missing_units": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Units",
+          "type": "array"
+        },
+        "boundary_status": {
+          "title": "Boundary Status",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Notes"
+        }
+      },
+      "required": [
+        "geography_level",
+        "coverage_status",
+        "expected_units",
+        "available_units",
+        "missing_units",
+        "boundary_status",
+        "notes"
+      ],
+      "title": "CoverageCell",
+      "type": "object"
+    },
+    "Error": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "details": {
+          "additionalProperties": true,
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "Error",
+      "type": "object"
+    },
+    "Outcome": {
+      "additionalProperties": false,
+      "properties": {
+        "outcome_type": {
+          "title": "Outcome Type",
+          "type": "string"
+        },
+        "candidacy_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Candidacy Id"
+        },
+        "display_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Display Name"
+        },
+        "basis": {
+          "title": "Basis",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Notes"
+        }
+      },
+      "required": [
+        "outcome_type",
+        "candidacy_id",
+        "display_name",
+        "basis",
+        "notes"
+      ],
+      "title": "Outcome",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "instance_id": {
+      "title": "Instance Id",
+      "type": "string"
+    },
+    "status": {
+      "default": "ok",
+      "enum": [
+        "ok",
+        "accepted",
+        "needs_input",
+        "blocked",
+        "error"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "data": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ContestsReport"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "artifacts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "next_cursor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next Cursor"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Error"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "instance_id",
+    "summary"
+  ],
+  "title": "Result[ContestsReport]",
+  "type": "object"
+}
+```
+
+## election_data_issues
+
+Page validation issues and their curation resolutions for a release.
+
+Effect: observation. Read-only hint: true.
+
+Preconditions: enabled startup profile, permitted instance/data scope, and all required schema fields. Mutations recheck their domain prerequisites.
+
+Retry: Repeat an observation against the same pinned scope.
+
+Next: follow returned run IDs with `lab_run_get`, result continuations with the same tool, and artifact IDs with `lab_artifact_read`; then follow domain workflow instructions.
+
+Input schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {
+    "cursor": {
+      "default": 0,
+      "description": "Offset returned as next_cursor by a previous page.",
+      "maximum": 100000,
+      "minimum": 0,
+      "title": "Cursor",
+      "type": "integer"
+    },
+    "limit": {
+      "default": 10,
+      "maximum": 15,
+      "minimum": 1,
+      "title": "Limit",
+      "type": "integer"
+    },
+    "release_id": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "pattern": "^release_[0-9a-f]{20}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Pin a published release; defaults to the active release.",
+      "title": "Release Id"
+    },
+    "severity": {
+      "anyOf": [
+        {
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Severity"
+    }
+  },
+  "title": "IssuesRequest",
+  "type": "object"
+}
+```
+
+Output schema:
+
+```json
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "byte_size": {
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        }
+      },
+      "required": [
+        "id",
+        "media_type",
+        "byte_size",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Error": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "details": {
+          "additionalProperties": true,
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "Error",
+      "type": "object"
+    },
+    "Issue": {
+      "additionalProperties": false,
+      "properties": {
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "rule_version": {
+          "title": "Rule Version",
+          "type": "integer"
+        },
+        "severity": {
+          "title": "Severity",
+          "type": "string"
+        },
+        "entity_type": {
+          "title": "Entity Type",
+          "type": "string"
+        },
+        "entity_id": {
+          "title": "Entity Id",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected"
+        },
+        "actual": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Actual"
+        },
+        "resolution_status": {
+          "title": "Resolution Status",
+          "type": "string"
+        },
+        "decision_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Decision Id"
+        }
+      },
+      "required": [
+        "rule_id",
+        "rule_version",
+        "severity",
+        "entity_type",
+        "entity_id",
+        "message",
+        "expected",
+        "actual",
+        "resolution_status",
+        "decision_id"
+      ],
+      "title": "Issue",
+      "type": "object"
+    },
+    "IssuesReport": {
+      "additionalProperties": false,
+      "properties": {
+        "api_version": {
+          "default": "1",
+          "title": "Api Version",
+          "type": "string"
+        },
+        "release_id": {
+          "title": "Release Id",
+          "type": "string"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/Issue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Cursor"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "release_id",
+        "issues",
+        "next_cursor",
+        "total"
+      ],
+      "title": "IssuesReport",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "instance_id": {
+      "title": "Instance Id",
+      "type": "string"
+    },
+    "status": {
+      "default": "ok",
+      "enum": [
+        "ok",
+        "accepted",
+        "needs_input",
+        "blocked",
+        "error"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "data": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/IssuesReport"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "artifacts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "next_cursor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next Cursor"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Error"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "instance_id",
+    "summary"
+  ],
+  "title": "Result[IssuesReport]",
+  "type": "object"
+}
+```
+
+## election_data_map
+
+Return a contest's map asset reference and per-feature join status, leader and margin.
+
+Effect: observation. Read-only hint: true.
+
+Preconditions: enabled startup profile, permitted instance/data scope, and all required schema fields. Mutations recheck their domain prerequisites.
+
+Retry: Repeat an observation against the same pinned scope.
+
+Next: follow returned run IDs with `lab_run_get`, result continuations with the same tool, and artifact IDs with `lab_artifact_read`; then follow domain workflow instructions.
+
+Input schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {
+    "cursor": {
+      "default": 0,
+      "description": "Offset returned as next_cursor by a previous page.",
+      "maximum": 100000,
+      "minimum": 0,
+      "title": "Cursor",
+      "type": "integer"
+    },
+    "limit": {
+      "default": 50,
+      "maximum": 100,
+      "minimum": 1,
+      "title": "Limit",
+      "type": "integer"
+    },
+    "release_id": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "pattern": "^release_[0-9a-f]{20}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Pin a published release; defaults to the active release.",
+      "title": "Release Id"
+    },
+    "contest_id": {
+      "maxLength": 64,
+      "pattern": "^contest_[0-9a-f]{24}$",
+      "title": "Contest Id",
+      "type": "string"
+    },
+    "level": {
+      "default": "county",
+      "enum": [
+        "state",
+        "county"
+      ],
+      "title": "Level",
+      "type": "string"
+    }
+  },
+  "required": [
+    "contest_id"
+  ],
+  "title": "MapRequest",
+  "type": "object"
+}
+```
+
+Output schema:
+
+```json
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "byte_size": {
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        }
+      },
+      "required": [
+        "id",
+        "media_type",
+        "byte_size",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Error": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "details": {
+          "additionalProperties": true,
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "Error",
+      "type": "object"
+    },
+    "MapAsset": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "byte_length": {
+          "title": "Byte Length",
+          "type": "integer"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "join_property": {
+          "title": "Join Property",
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_id",
+        "path",
+        "sha256",
+        "byte_length",
+        "kind",
+        "join_property"
+      ],
+      "title": "MapAsset",
+      "type": "object"
+    },
+    "MapFeature": {
+      "additionalProperties": false,
+      "properties": {
+        "feature_id": {
+          "title": "Feature Id",
+          "type": "string"
+        },
+        "unit_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Unit Id"
+        },
+        "result_status": {
+          "title": "Result Status",
+          "type": "string"
+        },
+        "leader_candidacy_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Leader Candidacy Id"
+        },
+        "leader_margin_points": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Leader Margin Points"
+        }
+      },
+      "required": [
+        "feature_id",
+        "unit_id",
+        "result_status",
+        "leader_candidacy_id",
+        "leader_margin_points"
+      ],
+      "title": "MapFeature",
+      "type": "object"
+    },
+    "MapReport": {
+      "additionalProperties": false,
+      "properties": {
+        "api_version": {
+          "default": "1",
+          "title": "Api Version",
+          "type": "string"
+        },
+        "release_id": {
+          "title": "Release Id",
+          "type": "string"
+        },
+        "contest_id": {
+          "title": "Contest Id",
+          "type": "string"
+        },
+        "level": {
+          "enum": [
+            "state",
+            "county"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "asset": {
+          "$ref": "#/$defs/MapAsset"
+        },
+        "features": {
+          "items": {
+            "$ref": "#/$defs/MapFeature"
+          },
+          "title": "Features",
+          "type": "array"
+        },
+        "tabular_only_units": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tabular Only Units",
+          "type": "array"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Cursor"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        },
+        "legend_notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Legend Notes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "release_id",
+        "contest_id",
+        "level",
+        "asset",
+        "features",
+        "tabular_only_units",
+        "next_cursor",
+        "total",
+        "legend_notes"
+      ],
+      "title": "MapReport",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "instance_id": {
+      "title": "Instance Id",
+      "type": "string"
+    },
+    "status": {
+      "default": "ok",
+      "enum": [
+        "ok",
+        "accepted",
+        "needs_input",
+        "blocked",
+        "error"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "data": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MapReport"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "artifacts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "next_cursor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next Cursor"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Error"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "instance_id",
+    "summary"
+  ],
+  "title": "Result[MapReport]",
+  "type": "object"
+}
+```
+
+## election_data_provenance
+
+Trace a published result's derivation to archived source rows, hashes, locators and licenses.
+
+Effect: observation. Read-only hint: true.
+
+Preconditions: enabled startup profile, permitted instance/data scope, and all required schema fields. Mutations recheck their domain prerequisites.
+
+Retry: Repeat an observation against the same pinned scope.
+
+Next: follow returned run IDs with `lab_run_get`, result continuations with the same tool, and artifact IDs with `lab_artifact_read`; then follow domain workflow instructions.
+
+Input schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {
+    "cursor": {
+      "default": 0,
+      "description": "Offset returned as next_cursor by a previous page.",
+      "maximum": 100000,
+      "minimum": 0,
+      "title": "Cursor",
+      "type": "integer"
+    },
+    "limit": {
+      "default": 10,
+      "maximum": 15,
+      "minimum": 1,
+      "title": "Limit",
+      "type": "integer"
+    },
+    "derivation_id": {
+      "maxLength": 64,
+      "pattern": "^deriv_[0-9a-f]{24}$",
+      "title": "Derivation Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "derivation_id"
+  ],
+  "title": "ProvenanceRequest",
+  "type": "object"
+}
+```
+
+Output schema:
+
+```json
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "byte_size": {
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        }
+      },
+      "required": [
+        "id",
+        "media_type",
+        "byte_size",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Error": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "details": {
+          "additionalProperties": true,
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "Error",
+      "type": "object"
+    },
+    "EvidenceItem": {
+      "additionalProperties": false,
+      "properties": {
+        "input_kind": {
+          "title": "Input Kind",
+          "type": "string"
+        },
+        "input_id": {
+          "title": "Input Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "votes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Votes"
+        },
+        "voting_mode": {
+          "title": "Voting Mode",
+          "type": "string"
+        },
+        "batch_key": {
+          "title": "Batch Key",
+          "type": "string"
+        },
+        "value_status": {
+          "title": "Value Status",
+          "type": "string"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_status": {
+          "title": "Source Status",
+          "type": "string"
+        },
+        "revision_label": {
+          "title": "Revision Label",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "locator": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Locator",
+          "type": "object"
+        },
+        "retrieved_from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retrieved From"
+        },
+        "license": {
+          "title": "License",
+          "type": "string"
+        }
+      },
+      "required": [
+        "input_kind",
+        "input_id",
+        "label",
+        "votes",
+        "voting_mode",
+        "batch_key",
+        "value_status",
+        "source_id",
+        "source_status",
+        "revision_label",
+        "artifact_sha256",
+        "locator",
+        "retrieved_from",
+        "license"
+      ],
+      "title": "EvidenceItem",
+      "type": "object"
+    },
+    "ProvenanceReport": {
+      "additionalProperties": false,
+      "properties": {
+        "api_version": {
+          "default": "1",
+          "title": "Api Version",
+          "type": "string"
+        },
+        "derivation_id": {
+          "title": "Derivation Id",
+          "type": "string"
+        },
+        "rule_version": {
+          "title": "Rule Version",
+          "type": "string"
+        },
+        "parameters": {
+          "additionalProperties": true,
+          "title": "Parameters",
+          "type": "object"
+        },
+        "output_hash": {
+          "title": "Output Hash",
+          "type": "string"
+        },
+        "import_runs": {
+          "items": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "title": "Import Runs",
+          "type": "array"
+        },
+        "inputs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceItem"
+          },
+          "title": "Inputs",
+          "type": "array"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Cursor"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "derivation_id",
+        "rule_version",
+        "parameters",
+        "output_hash",
+        "import_runs",
+        "inputs",
+        "next_cursor",
+        "total"
+      ],
+      "title": "ProvenanceReport",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "instance_id": {
+      "title": "Instance Id",
+      "type": "string"
+    },
+    "status": {
+      "default": "ok",
+      "enum": [
+        "ok",
+        "accepted",
+        "needs_input",
+        "blocked",
+        "error"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "data": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProvenanceReport"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "artifacts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "next_cursor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next Cursor"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Error"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "instance_id",
+    "summary"
+  ],
+  "title": "Result[ProvenanceReport]",
+  "type": "object"
+}
+```
+
+## election_data_results
+
+Page state or county results for one contest with shares, denominators, status and provenance IDs.
+
+Effect: observation. Read-only hint: true.
+
+Preconditions: enabled startup profile, permitted instance/data scope, and all required schema fields. Mutations recheck their domain prerequisites.
+
+Retry: Repeat an observation against the same pinned scope.
+
+Next: follow returned run IDs with `lab_run_get`, result continuations with the same tool, and artifact IDs with `lab_artifact_read`; then follow domain workflow instructions.
+
+Input schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {
+    "cursor": {
+      "default": 0,
+      "description": "Offset returned as next_cursor by a previous page.",
+      "maximum": 100000,
+      "minimum": 0,
+      "title": "Cursor",
+      "type": "integer"
+    },
+    "limit": {
+      "default": 10,
+      "maximum": 15,
+      "minimum": 1,
+      "title": "Limit",
+      "type": "integer"
+    },
+    "release_id": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "pattern": "^release_[0-9a-f]{20}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Pin a published release; defaults to the active release.",
+      "title": "Release Id"
+    },
+    "contest_id": {
+      "maxLength": 64,
+      "pattern": "^contest_[0-9a-f]{24}$",
+      "title": "Contest Id",
+      "type": "string"
+    },
+    "level": {
+      "default": "state",
+      "enum": [
+        "state",
+        "county"
+      ],
+      "title": "Level",
+      "type": "string"
+    },
+    "unit_id": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "pattern": "^unit_[0-9a-f]{24}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit Id"
+    }
+  },
+  "required": [
+    "contest_id"
+  ],
+  "title": "ResultsRequest",
+  "type": "object"
+}
+```
+
+Output schema:
+
+```json
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "byte_size": {
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        }
+      },
+      "required": [
+        "id",
+        "media_type",
+        "byte_size",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "CandidateResult": {
+      "additionalProperties": false,
+      "properties": {
+        "candidacy_id": {
+          "title": "Candidacy Id",
+          "type": "string"
+        },
+        "display_name": {
+          "title": "Display Name",
+          "type": "string"
+        },
+        "candidacy_kind": {
+          "title": "Candidacy Kind",
+          "type": "string"
+        },
+        "party": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Party"
+        },
+        "votes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Votes"
+        },
+        "share": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Fraction of the declared denominator, not a percentage.",
+          "title": "Share"
+        },
+        "result_status": {
+          "title": "Result Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "candidacy_id",
+        "display_name",
+        "candidacy_kind",
+        "party",
+        "votes",
+        "result_status"
+      ],
+      "title": "CandidateResult",
+      "type": "object"
+    },
+    "CoverageCell": {
+      "additionalProperties": false,
+      "properties": {
+        "geography_level": {
+          "title": "Geography Level",
+          "type": "string"
+        },
+        "coverage_status": {
+          "title": "Coverage Status",
+          "type": "string"
+        },
+        "expected_units": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected Units"
+        },
+        "available_units": {
+          "title": "Available Units",
+          "type": "integer"
+        },
+        "missing_units": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Units",
+          "type": "array"
+        },
+        "boundary_status": {
+          "title": "Boundary Status",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Notes"
+        }
+      },
+      "required": [
+        "geography_level",
+        "coverage_status",
+        "expected_units",
+        "available_units",
+        "missing_units",
+        "boundary_status",
+        "notes"
+      ],
+      "title": "CoverageCell",
+      "type": "object"
+    },
+    "Error": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "details": {
+          "additionalProperties": true,
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "Error",
+      "type": "object"
+    },
+    "ResultsReport": {
+      "additionalProperties": false,
+      "properties": {
+        "api_version": {
+          "default": "1",
+          "title": "Api Version",
+          "type": "string"
+        },
+        "release_id": {
+          "title": "Release Id",
+          "type": "string"
+        },
+        "contest_id": {
+          "title": "Contest Id",
+          "type": "string"
+        },
+        "contest_label": {
+          "title": "Contest Label",
+          "type": "string"
+        },
+        "level": {
+          "enum": [
+            "state",
+            "county"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "coverage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CoverageCell"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "units": {
+          "items": {
+            "$ref": "#/$defs/UnitResult"
+          },
+          "title": "Units",
+          "type": "array"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Cursor"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "release_id",
+        "contest_id",
+        "contest_label",
+        "level",
+        "coverage",
+        "units",
+        "next_cursor",
+        "total"
+      ],
+      "title": "ResultsReport",
+      "type": "object"
+    },
+    "UnitResult": {
+      "additionalProperties": false,
+      "properties": {
+        "unit_id": {
+          "title": "Unit Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "unit_kind": {
+          "title": "Unit Kind",
+          "type": "string"
+        },
+        "geography_level": {
+          "title": "Geography Level",
+          "type": "string"
+        },
+        "boundary_feature_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Boundary Feature Id"
+        },
+        "boundary_status": {
+          "title": "Boundary Status",
+          "type": "string"
+        },
+        "result_status": {
+          "title": "Result Status",
+          "type": "string"
+        },
+        "source_status": {
+          "title": "Source Status",
+          "type": "string"
+        },
+        "round": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Round"
+        },
+        "voting_mode": {
+          "title": "Voting Mode",
+          "type": "string"
+        },
+        "denominator": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Denominator"
+        },
+        "margin": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Top-two margin in percentage points.",
+          "title": "Margin"
+        },
+        "results": {
+          "items": {
+            "$ref": "#/$defs/CandidateResult"
+          },
+          "title": "Results",
+          "type": "array"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        },
+        "provenance_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Provenance Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "unit_id",
+        "label",
+        "unit_kind",
+        "geography_level",
+        "boundary_feature_id",
+        "boundary_status",
+        "result_status",
+        "source_status",
+        "round",
+        "voting_mode",
+        "denominator",
+        "results",
+        "notes",
+        "provenance_ids"
+      ],
+      "title": "UnitResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "instance_id": {
+      "title": "Instance Id",
+      "type": "string"
+    },
+    "status": {
+      "default": "ok",
+      "enum": [
+        "ok",
+        "accepted",
+        "needs_input",
+        "blocked",
+        "error"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "data": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ResultsReport"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "artifacts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "next_cursor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next Cursor"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Error"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "instance_id",
+    "summary"
+  ],
+  "title": "Result[ResultsReport]",
+  "type": "object"
+}
+```
+
+## election_data_status
+
+Inspect the local election results archive: active release, sources, licenses and coverage limits.
+
+Effect: observation. Read-only hint: true.
+
+Preconditions: enabled startup profile, permitted instance/data scope, and all required schema fields. Mutations recheck their domain prerequisites.
+
+Retry: Repeat an observation against the same pinned scope.
+
+Next: follow returned run IDs with `lab_run_get`, result continuations with the same tool, and artifact IDs with `lab_artifact_read`; then follow domain workflow instructions.
+
+Input schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {},
+  "title": "StatusRequest",
+  "type": "object"
+}
+```
+
+Output schema:
+
+```json
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "media_type": {
+          "title": "Media Type",
+          "type": "string"
+        },
+        "byte_size": {
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        }
+      },
+      "required": [
+        "id",
+        "media_type",
+        "byte_size",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "CoverageSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "geography_level": {
+          "title": "Geography Level",
+          "type": "string"
+        },
+        "coverage_status": {
+          "title": "Coverage Status",
+          "type": "string"
+        },
+        "contests": {
+          "title": "Contests",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "geography_level",
+        "coverage_status",
+        "contests"
+      ],
+      "title": "CoverageSummary",
+      "type": "object"
+    },
+    "Error": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "details": {
+          "additionalProperties": true,
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "Error",
+      "type": "object"
+    },
+    "ReleaseSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "release_id": {
+          "title": "Release Id",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "published_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Published At"
+        },
+        "active": {
+          "title": "Active",
+          "type": "boolean"
+        },
+        "parent_release_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent Release Id"
+        },
+        "issue_counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Issue Counts",
+          "type": "object"
+        }
+      },
+      "required": [
+        "release_id",
+        "status",
+        "created_at",
+        "published_at",
+        "active",
+        "parent_release_id",
+        "issue_counts"
+      ],
+      "title": "ReleaseSummary",
+      "type": "object"
+    },
+    "SourceSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "publisher": {
+          "title": "Publisher",
+          "type": "string"
+        },
+        "authority_kind": {
+          "title": "Authority Kind",
+          "type": "string"
+        },
+        "license": {
+          "title": "License",
+          "type": "string"
+        },
+        "redistribution_status": {
+          "title": "Redistribution Status",
+          "type": "string"
+        },
+        "attribution": {
+          "title": "Attribution",
+          "type": "string"
+        },
+        "access_conditions": {
+          "title": "Access Conditions",
+          "type": "string"
+        },
+        "latest_artifact_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latest Artifact Sha256"
+        },
+        "latest_retrieved_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latest Retrieved At"
+        },
+        "latest_retrieval_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latest Retrieval Status"
+        }
+      },
+      "required": [
+        "source_id",
+        "publisher",
+        "authority_kind",
+        "license",
+        "redistribution_status",
+        "attribution",
+        "access_conditions",
+        "latest_artifact_sha256",
+        "latest_retrieved_at",
+        "latest_retrieval_status"
+      ],
+      "title": "SourceSummary",
+      "type": "object"
+    },
+    "StatusReport": {
+      "additionalProperties": false,
+      "properties": {
+        "api_version": {
+          "default": "1",
+          "title": "Api Version",
+          "type": "string"
+        },
+        "configured": {
+          "title": "Configured",
+          "type": "boolean"
+        },
+        "data_root_note": {
+          "title": "Data Root Note",
+          "type": "string"
+        },
+        "active_release_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Active Release Id"
+        },
+        "releases": {
+          "items": {
+            "$ref": "#/$defs/ReleaseSummary"
+          },
+          "title": "Releases",
+          "type": "array"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/SourceSummary"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "coverage": {
+          "items": {
+            "$ref": "#/$defs/CoverageSummary"
+          },
+          "title": "Coverage",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "configured",
+        "data_root_note",
+        "active_release_id",
+        "releases",
+        "sources",
+        "coverage",
+        "limitations"
+      ],
+      "title": "StatusReport",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "instance_id": {
+      "title": "Instance Id",
+      "type": "string"
+    },
+    "status": {
+      "default": "ok",
+      "enum": [
+        "ok",
+        "accepted",
+        "needs_input",
+        "blocked",
+        "error"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "data": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/StatusReport"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "artifacts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "next_cursor": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next Cursor"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Error"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "instance_id",
+    "summary"
+  ],
+  "title": "Result[StatusReport]",
+  "type": "object"
+}
+```
+
 ## election_forecast
 
 Compare bounded aggregate election margins and uncertainty under baseline, historical and reversal scenarios.

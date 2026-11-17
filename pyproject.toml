@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8,<10", "hypothesis>=6,<7", "ruff>=0.9,<1", "build>=1,<2", "setuptools>=75", "installer>=0.7,<1", "mypy>=1.15,<2", "personal-lab-toolkit[mod-engine,election-model]"]
+dev = ["pytest>=8,<10", "hypothesis>=6,<7", "ruff>=0.9,<1", "build>=1,<2", "setuptools>=75", "installer>=0.7,<1", "mypy>=1.15,<2", "personal-lab-toolkit[mod-engine,election-model,election-data]"]
 
 [tool.setuptools.packages.find]
 include = ["backend*"]
@@ -29,7 +29,7 @@ include = ["backend*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = [".", "packages/toolkit_core/src", "apps/toolkit/src", "packages/election_model/src"]
+pythonpath = [".", "packages/toolkit_core/src", "apps/toolkit/src", "packages/election_model/src", "packages/election_data/src"]
 addopts = "-q"
 
 [tool.ruff]
@@ -40,14 +40,15 @@ line-length = 110
 select = ["E4", "E7", "E9", "F"]
 
 [tool.uv.workspace]
-members = ["apps/toolkit", "packages/toolkit_core", "packages/election_model"]
+members = ["apps/toolkit", "packages/toolkit_core", "packages/election_model", "packages/election_data"]
 
 [tool.uv.sources]
 toolkit-core = { workspace = true }
 personal-lab-toolkit = { workspace = true }
 election-model = { workspace = true }
+election-data = { workspace = true }
 
 [tool.mypy]
 python_version = "3.12"
 follow_imports = "silent"
-files = ["packages/toolkit_core/src/toolkit_core/contracts.py", "apps/toolkit/src/personal_lab/profiles.py", "apps/toolkit/src/personal_lab/toolsets/ck3_models.py", "packages/election_model/src/election_model"]
+files = ["packages/toolkit_core/src/toolkit_core/contracts.py", "apps/toolkit/src/personal_lab/profiles.py", "apps/toolkit/src/personal_lab/toolsets/ck3_models.py", "packages/election_model/src/election_model", "packages/election_data/src/election_data/contracts.py"]

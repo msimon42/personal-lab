@@ -26,6 +26,8 @@ TOOLSETS = {
                    "personal_lab.toolsets.ck3", ("mod-engine",)),
     "election": Toolset("election", "1.0", "Public aggregate election research and polling-error scenarios.",
                         "personal_lab.toolsets.election", ("election-model",)),
+    "election_data": Toolset("election_data", "1.0", "Released, provenance-backed observed US election results.",
+                             "personal_lab.toolsets.election_data", ("election-data",)),
     "text_statistics": Toolset("text_statistics", "1.0", "Test-only unrelated text computation.",
                                "personal_lab.toolsets.testing"),
 }

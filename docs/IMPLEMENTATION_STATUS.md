@@ -1,3 +1,22 @@
+# Observed election data, Phase 1 — 17 November 2026
+
+`packages/election_data` adds an auditable local archive and release pipeline for observed
+US election results (decision 0007, [operations and coverage](elections/data-platform.md)).
+Delivered: content-addressed source archive with retrieval records; SQLite STRICT schema for the
+spec's logical model; reviewed adapters for Census 2020 boundaries, FEC official 2024 presidential
+state totals, MIT county returns and NARA electoral votes; append-only curation decisions;
+validation and reconciliation rules; atomic release publication with rollback; GeoJSON map assets;
+`election-data` CLI; read-only `election_data` MCP toolset in the explicit `election-data` profile;
+SQLite-backup-API backups with verified restore.
+
+Checks executed in a Linux cloud container (Python 3.12.16, uv 0.13.6): `scripts/check.py` passed
+(Ruff, mypy, contract check, **974 pytest passed, 5 skipped**, 20 fixture contracts), plus
+`uv build --all-packages`, `scripts/package.py` and an installed-wheel `election-data` smoke run.
+The live run fetched all six source artifacts and published the 2024 presidential release; 36 of
+51 state county partitions reconcile exactly to FEC totals and 15 differences are disclosed.
+Not executed: macOS/Windows CI for this change (runs on push), any HTTP API or web viewer (not in
+scope), Phase 2 offices/cycles.
+
 # Personal Lab architecture delivery snapshot — 1 November 2026
 
 This record captures the completed architecture migration and local cutover before subsequent toolsets and publication. Its test counts and release fingerprint describe that verified checkpoint.

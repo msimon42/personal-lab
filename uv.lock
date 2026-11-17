@@ -12,6 +12,7 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "election-data",
     "election-model",
     "eu5-mod-engine",
     "personal-lab-toolkit",
@@ -230,6 +231,17 @@ wheels = [
 ]
 
 [[package]]
+name = "election-data"
+version = "0.1.0"
+source = { editable = "packages/election_data" }
+dependencies = [
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic", specifier = ">=2.8,<3" }]
+
+[[package]]
 name = "election-model"
 version = "0.1.1"
 source = { editable = "packages/election_model" }
@@ -256,7 +268,7 @@ dev = [
     { name = "hypothesis" },
     { name = "installer" },
     { name = "mypy" },
-    { name = "personal-lab-toolkit", extra = ["election-model", "mod-engine"] },
+    { name = "personal-lab-toolkit", extra = ["election-data", "election-model", "mod-engine"] },
     { name = "pytest" },
     { name = "ruff" },
     { name = "setuptools" },
@@ -269,7 +281,7 @@ requires-dist = [
     { name = "installer", marker = "extra == 'dev'", specifier = ">=0.7,<1" },
     { name = "jsonschema", specifier = ">=4.23,<5" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.15,<2" },
-    { name = "personal-lab-toolkit", extras = ["mod-engine", "election-model"], marker = "extra == 'dev'", editable = "apps/toolkit" },
+    { name = "personal-lab-toolkit", extras = ["mod-engine", "election-model", "election-data"], marker = "extra == 'dev'", editable = "apps/toolkit" },
     { name = "pydantic", specifier = ">=2.8,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8,<10" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9,<1" },
@@ -693,6 +705,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+election-data = [
+    { name = "election-data" },
+]
 election-model = [
     { name = "election-model" },
 ]
@@ -702,13 +717,14 @@ mod-engine = [
 
 [package.metadata]
 requires-dist = [
+    { name = "election-data", marker = "extra == 'election-data'", editable = "packages/election_data" },
     { name = "election-model", marker = "extra == 'election-model'", editable = "packages/election_model" },
     { name = "eu5-mod-engine", marker = "extra == 'mod-engine'", editable = "." },
     { name = "mcp", specifier = "==2.3.0" },
     { name = "tomlkit", specifier = ">=0.13,<1" },
     { name = "toolkit-core", editable = "packages/toolkit_core" },
 ]
-provides-extras = ["mod-engine", "election-model"]
+provides-extras = ["mod-engine", "election-model", "election-data"]
 
 [[package]]
 name = "pluggy"
