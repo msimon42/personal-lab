@@ -848,6 +848,32 @@
    "evidence": {}
   },
   {
+   "decision_id": "dec-fed-electors-appointed",
+   "decision_type": "electoral_votes",
+   "entity_id": "source:nara-electoral-college",
+   "rationale": "On the 1808, 1816 and 1820 pages the total row's elector cell reads like '176 (175)', and the page note explains it: the first number is electors appointed and the second is electors who voted (an elector died or did not vote). The first number is checked against the sum of the state elector column; vote columns are checked as usual, so the missing votes remain visible as the difference between a state's electors and its votes. Pages whose rows contradict their own totals (1800 Virginia, 1936 Colorado) and the 1868 page, where Georgia's votes are shown in parentheses because they were counted conditionally, are not imported and stay in review.",
+   "scope": {
+    "pattern": "N (M) in the totals elector cell",
+    "pages": [
+     1808,
+     1816,
+     1820
+    ],
+    "left_in_review": {
+     "1800": "Virginia row lacks Burr's 21 votes that the total requires",
+     "1868": "Georgia's votes counted conditionally",
+     "1936": "Colorado row shows 9 vice-presidential votes for 6 electors"
+    }
+   },
+   "evidence": {
+    "notes": [
+     "1808: One elector from Kentucky did not vote.",
+     "1816: One elector from Delaware and three from Maryland did not vote.",
+     "1820: 235 electors were appointed, but only 232 votes were cast"
+    ]
+   }
+  },
+  {
    "decision_id": "dec-fed-history-inventory",
    "decision_type": "coverage_statement",
    "entity_id": "scope:us-federal-pre-1976",

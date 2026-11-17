@@ -15,7 +15,7 @@ separate [`election-model`](README.md) handles polling research.
 | Senate, state totals | 1976-2024 incl. specials and runoffs | MIT Election Lab (secondary) |
 | House, district totals | 1976-2024 incl. specials and runoffs; DC delegate separately | MIT Election Lab (secondary) |
 | President, county detail | 2000-2024 | MIT Election Lab county file (secondary) |
-| Electoral votes as cast | 1789-2024, 54 of 60 elections | NARA |
+| Electoral votes as cast | 1789-2024, 57 of 60 elections | NARA |
 | State and county polygons | 2020 vintage, 1:20M | Census |
 | Congressional districts | elections 1976-2024 (95th-119th Congress) | UCLA (95th-112th), Census (113th-116th, 118th, 119th) |
 
@@ -88,7 +88,7 @@ about 21 s; warm reads 1-20 ms.
 | 1 2024 President | As before; state totals official, 36 of 51 county partitions exact, 47 with named tickets exact | Maine, Rhode Island and Virginia named-ticket differences need the state canvasses |
 | 2 Modern federal | President, Senate, House 1976-2024 contest totals; regular/special/runoff distinct and linked; district geometry and district-level drill-down; atomic publication; no unreviewed errors | **2026 returns** (no reachable structured source; certification in progress); reconciliation to official canvasses; sourced winners for Senate and House; county-within-district House view |
 | 3 Back to 1976 | Same contest-level coverage back to 1976; coverage reports quantify gaps | Per-state jurisdiction adapters for congressional county/precinct detail (none) |
-| 4 Historical | Electoral votes 1789-2024 for 54 elections; coverage statements for every earlier cycle | Popular votes before 1976; 6 NARA pages awaiting review (1800, 1808, 1816, 1820, 1868, 1936); district geometry before the 95th Congress; House Clerk PDF extraction; ICPSR |
+| 4 Historical | Electoral votes 1789-2024 for 57 elections; coverage statements for every earlier cycle | Popular votes before 1976; 3 NARA pages in review (1800 and 1936 contradict their own totals; 1868 shows Georgia's conditionally counted votes); district geometry before the 95th Congress; House Clerk PDF extraction; ICPSR |
 | 5 Optional | Identical-unit comparisons; national presidential summary; coverage and other read tools over MCP | Governors, primaries, state legislatures; demographic overlays; crosswalk-based comparisons; hosted distribution; HTTP API and web viewer |
 
 ### Known gaps the inventory reports
@@ -127,6 +127,8 @@ about 21 s; warm reads 1-20 ms.
 - UCLA shapefiles do not follow the usual ring-direction convention, so rings are nested by
   containment; a district redrawn during a Congress appears twice and the plan in force when that
   Congress was elected is used.
+- NARA serves byte-different copies of the same page from different servers. Run hashes cover facts only,
+  so such a copy is archived as new evidence without producing a new release.
 - OpenElections' Pennsylvania 2024 precinct file was examined as a first per-state source and not
   adopted: 64 of 67 counties, inconsistent candidate spellings between counties, blank House
   districts in many rows and no license file.

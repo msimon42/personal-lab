@@ -44,9 +44,12 @@ for what is and is not delivered.
    imported source, so those contests report a derived plurality leader, labeled as such,
    with notes for runoffs and ranked-choice contests whose reported round is unknown.
    Presidential elector outcomes come from NARA.
-9. **Assets are content-addressed.** Map assets live under `assets/by-hash/` and are shared
+9. **Run hashes cover facts only.** Identifiers, row keys and evidence locators are excluded, and a
+   release's identity uses those hashes, so a byte-different copy of a source that states the same
+   facts is archived and imported as evidence without creating a new release.
+10. **Assets are content-addressed.** Map assets live under `assets/by-hash/` and are shared
    by releases; a release records kind, path and hash.
-10. **Comparisons use identical units only.** The comparison operation covers presidential
+11. **Comparisons use identical units only.** The comparison operation covers presidential
     margins on units with the same identifier in both cycles; it applies no crosswalk and
     refuses when no unit is shared.
 

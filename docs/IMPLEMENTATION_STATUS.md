@@ -1,7 +1,7 @@
 # Observed election data, federal baseline 1976-2024 — 17 November 2026
 
 `election-data` now covers President, Senate and House general elections 1976-2024 at contest
-level, presidential county detail 2000-2024, electoral votes as cast for 54 of the 60 elections
+level, presidential county detail 2000-2024, electoral votes as cast for 57 of the 60 elections
 from 1789, and congressional district geometry for every House election since 1976 (decision
 0008, [operations and coverage](elections/data-platform.md)). Delivered: schema version 2 with an
 in-place migration; a derived, hash-pinned reference table for House apportionment and Senate
@@ -12,8 +12,8 @@ assets; nine read-only MCP tools including coverage, a national presidential sum
 identical-unit comparisons.
 
 Checks executed in a Linux cloud container (Python 3.12.16, uv 0.13.6): `scripts/check.py` passed
-(Ruff, mypy, contract check, **989 pytest passed, 5 skipped**, 20 fixture contracts). The live run
-archived 97 artifacts (410 MB), imported 85 of 91 adapters (six NARA pages stopped for review),
+(Ruff, mypy, contract check, **991 pytest passed, 5 skipped**, 20 fixture contracts). The live run
+archived 97 artifacts (410 MB), imported 88 of 91 adapters (three NARA pages stopped for review),
 published 12,408 contest totals with no blocking errors and 159 accepted warnings, and passed
 backup creation and restore verification on the 1.3 GB data root.
 

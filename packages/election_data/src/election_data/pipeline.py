@@ -248,9 +248,27 @@ class Normalized:
     diagnostics: list[dict[str, Any]] = field(default_factory=list)
 
     def output_hash(self) -> str:
-        content = {"sets": sorted(self.result_sets), "votes": sorted(self.votes), "metrics": sorted(self.metrics),
-                   "evidence": sorted(self.evidence), "other": sorted(self.other, key=repr)}
+        """Hash of the facts only.
+
+        Run, artifact, set and observation identifiers, source row keys and evidence
+        locators are excluded, so byte-different copies of a source that state the same
+        facts hash identically and do not, by themselves, produce a new release.
+        """
+        sets = {row[0]: [row[2], row[8]] for row in self.result_sets}
+
+        def facts(values):
+            return [value for value in values if not (isinstance(value, str) and value.startswith(_ID_PREFIXES))]
+
+        content = {
+            "sets": sorted((list(row[1:]) for row in self.result_sets), key=canonical_json),
+            "votes": sorted(([sets.get(row[1]), *row[2:9], *row[10:]] for row in self.votes), key=canonical_json),
+            "metrics": sorted(([sets.get(row[1]), *row[2:9]] for row in self.metrics), key=canonical_json),
+            "other": sorted(([statement, facts(values)] for statement, values in self.other), key=canonical_json),
+        }
         return sha256_text(canonical_json(content))
+
+
+_ID_PREFIXES = ("run_", "artifact_", "set_", "vobs_", "mobs_", "ev_")
 
 
 def import_identity(adapter_id: str, adapter_version: str, artifacts: dict[str, str], mapping_hash: str,

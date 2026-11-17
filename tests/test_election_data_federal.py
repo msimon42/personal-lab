@@ -403,3 +403,37 @@ def test_backup_verification_samples_a_contest_at_its_own_level(federal, tmp_pat
         create_backup(root, tmp_path / "backup")
     verified = verify_backup(tmp_path / "backup")
     assert verified["verified"] is True and verified["sample_query"] == "Alaska at-large"
+
+
+def test_same_facts_from_different_bytes_do_not_create_a_new_release(federal, tmp_path):
+    import shutil
+
+    from election_data.acquire import add_manual_artifact
+    from election_data.importer import run_adapter
+
+    root, imports, built, sources = federal
+    copy = tmp_path / "copy"
+    shutil.copytree(root.path, copy)
+    clone = DataRoot.open(copy)
+    variant = tmp_path / "nara-2020-variant.html"
+    variant.write_bytes(sources["nara-electoral-2020"].read_bytes().replace(b"<html>", b"<html><!-- served by another node -->"))
+    with closing(connect(clone.database)) as connection, writer_lock(clone):
+        artifact = add_manual_artifact(clone, connection, "nara-electoral-college", "electoral-college-2020.html", variant)
+        assert artifact["status"] == "new_artifact"
+        again = run_adapter(clone, connection, "nara-electoral-2020", artifact["artifact_id"])
+        assert again["status"] == "completed" and again["output_hash"] == imports["nara-electoral-2020"]["output_hash"]
+        rebuilt = build_release(clone, connection)
+    assert rebuilt["release_id"] == built["release_id"] and rebuilt["build"] == "unchanged_inputs"
+
+
+def test_appointed_versus_voting_electors_in_the_total_row(federal, tmp_path):
+    _, _, _, sources = federal
+    page = tmp_path / "nara-1808.html"
+    html = nara_modern_page(1808, [("James Madison, of Virginia", "p"), ("George Clinton, of New York", "v")],
+                            [("Georgia", 6, [6, 6]), ("Maine", 4, [3, 3])]).decode()
+    page.write_text(html.replace("<td>Total</td><td>10</td>", "<td>Totals</td><td>10 (9)*</td>"), encoding="utf-8")
+    root, imports = load_universe(tmp_path / "root", {key: value for key, value in sources.items()
+                                                      if key.startswith("census")} | {"nara-electoral-1808": page})
+    assert imports["nara-electoral-1808"]["accounting"]["electors"] == 10
+    with closing(connect(root.database)) as connection:
+        assert connection.execute("SELECT sum(votes) FROM electoral_vote WHERE vote_role='president'").fetchone()[0] == 9

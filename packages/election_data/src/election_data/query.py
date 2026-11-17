@@ -31,7 +31,7 @@ LIMITATIONS = [
     "County detail exists only for President 2000-2024 (MIT, secondary); differences from state totals are disclosed "
     "per contest. Congressional county and precinct detail is not researched.",
     "Winners are not sourced for Senate and House: outcomes there are derived plurality leaders, not certified winners.",
-    "Electoral votes are as cast per NARA for 1789-2024 except six elections awaiting review of annotated pages.",
+    "Electoral votes are as cast per NARA for 1789-2024 except 1800, 1868 and 1936, whose pages await review.",
     "2026 returns and all popular-vote returns before 1976 are not researched; the coverage inventory says so per cycle.",
     "Maine and Nebraska district popular votes are unavailable; Alaska county-level data is by state house district "
     "without geometry.",

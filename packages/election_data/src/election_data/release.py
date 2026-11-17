@@ -745,7 +745,9 @@ def build_release(root: DataRoot, connection: sqlite3.Connection, *, notes: str 
         "SELECT decision_id, content_hash FROM curation_decision"))
     # The release identity pins the rule implementation too: any change to this module yields a new release.
     rules_source = hashlib.sha256(Path(__file__).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
-    manifest = {"runs": {name: [row["run_id"], row["output_hash"]] for name, row in sorted(runs.items())},
+    # Runs enter the identity by their fact hash, not their run id: re-importing byte-different
+    # copies of a source that state the same facts does not create a new release.
+    manifest = {"runs": {name: row["output_hash"] for name, row in sorted(runs.items())},
                 "decisions": decisions, "curation_hash": curation_hash, "federal_hash": federal_hash,
                 "rules": RULE_VERSION, "rules_source_sha256": rules_source, "schema_version": SCHEMA_VERSION,
                 "scope": "us-federal"}

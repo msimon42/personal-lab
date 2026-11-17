@@ -15,7 +15,7 @@ from ..pipeline import (Normalized, begin_run, complete_run, election_id, existi
                         person_id)
 
 ADAPTER_ID = "nara-electoral-college-page"
-ADAPTER_VERSION = "2"
+ADAPTER_VERSION = "3"
 YEARS = [1789] + list(range(1792, 2025, 4))
 STATE_ALIASES = {"D.C.": "DC", "DIST. OF COLUMBIA": "DC", "DISTRICT OF COLUMBIA": "DC"}
 
@@ -94,6 +94,10 @@ def _parse(tables, year: int):
             if len(cells) <= 1 or not cells[0] or cells[0].lower().startswith("note"):
                 continue  # footnote and note rows carry no vote cells
             if cells[0].lower().startswith("total"):
+                # "176 (175)" in the elector column: 176 electors appointed, 175 voted (dec-fed-electors-appointed).
+                appointed = re.fullmatch(r"(\d+) \((\d+)\)\*?", cells[1])
+                if appointed:
+                    cells[1] = appointed.group(1)
                 reported = [_count(cell, f"{year} totals") for cell in cells[1:2 + len(names)]]
                 continue
             if len(cells) != 2 + len(names):
