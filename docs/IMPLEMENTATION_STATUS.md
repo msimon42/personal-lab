@@ -1,3 +1,27 @@
+# Observed election data, federal baseline 1976-2024 — 17 November 2026
+
+`election-data` now covers President, Senate and House general elections 1976-2024 at contest
+level, presidential county detail 2000-2024, electoral votes as cast for 54 of the 60 elections
+from 1789, and congressional district geometry for every House election since 1976 (decision
+0008, [operations and coverage](elections/data-platform.md)). Delivered: schema version 2 with an
+in-place migration; a derived, hash-pinned reference table for House apportionment and Senate
+classes; reviewed adapters for the three MIT state-level files, all MIT county cycles, NARA pages
+and Census/UCLA district files; a generic release engine with source priority, fusion sums, linked
+runoffs, a general county rule and an expected-contest coverage inventory; content-addressed map
+assets; nine read-only MCP tools including coverage, a national presidential summary and
+identical-unit comparisons.
+
+Checks executed in a Linux cloud container (Python 3.12.16, uv 0.13.6): `scripts/check.py` passed
+(Ruff, mypy, contract check, **989 pytest passed, 5 skipped**, 20 fixture contracts). The live run
+archived 97 artifacts (410 MB), imported 85 of 91 adapters (six NARA pages stopped for review),
+published 12,408 contest totals with no blocking errors and 159 accepted warnings, and passed
+backup creation and restore verification on the 1.3 GB data root.
+
+Not done, and reported as such by the coverage inventory: 2026 returns; popular votes before 1976;
+reconciliation of the MIT compilations to official canvasses; sourced Senate/House winners;
+congressional county and precinct detail; governors, primaries and state legislatures; an HTTP
+API or web viewer. macOS/Windows CI for this change runs on push and was not observed here.
+
 # Observed election data, Phase 1 — 17 November 2026
 
 `packages/election_data` adds an auditable local archive and release pipeline for observed

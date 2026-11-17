@@ -24,7 +24,8 @@ from election_data_support import load_universe, write_sources
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = {"election_data_status", "election_data_contests", "election_data_results", "election_data_provenance",
-         "election_data_map", "election_data_issues"}
+         "election_data_map", "election_data_issues", "election_data_coverage", "election_data_president_summary",
+         "election_data_compare"}
 
 
 def _environment():
@@ -145,16 +146,21 @@ def test_read_workflow_over_real_mcp_subprocess(configured):
 
             status = await call("election_data_status", {})
             assert status["configured"] and status["active_release_id"]
-            assert {source["source_id"] for source in status["sources"]} == {
+            assert {source["source_id"] for source in status["sources"]} >= {
                 "mit-county-president", "fec-federal-elections-2024-president", "nara-electoral-college-2024",
-                "census-cb-2020-20m"}
+                "census-cb-2020-20m", "mit-house", "ucla-congressional-districts"}
+            summary = await call("election_data_president_summary", {"year": 2024})
+            assert summary["states_with_totals"] == 51 and summary["electoral_vote_status"] == "complete"
+            gaps = await call("election_data_coverage", {"office": "house", "from_year": 2024, "to_year": 2024})
+            assert gaps["rows"][0]["coverage_status"] == "not_researched"
             nc = (await call("election_data_contests", {"state": "NC"}))["contests"][0]
             county = await call("election_data_results", {"contest_id": nc["contest_id"], "level": "county"})
             alamance = next(unit for unit in county["units"] if unit["label"] == "Alamance")
             trace = await call("election_data_provenance", {"derivation_id": alamance["provenance_ids"][0]})
             assert trace["total"] == 14 and trace["inputs"][0]["artifact_sha256"]
             view = await call("election_data_map", {"contest_id": nc["contest_id"]})
-            assert view["asset"]["path"].endswith("counties.geojson") and view["features"]
+            assert view["asset"]["kind"] == "geojson:counties" and view["features"]
+            assert view["asset"]["path"].endswith(view["asset"]["sha256"] + ".geojson")
             issues = await call("election_data_issues", {"severity": "warning"})
             assert issues["total"] >= 1 and all(issue["decision_id"] for issue in issues["issues"])
     asyncio.run(run())

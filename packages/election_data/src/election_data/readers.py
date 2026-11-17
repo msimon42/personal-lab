@@ -82,12 +82,16 @@ def read_xlsx(path: Path) -> list[dict[str, Any]]:
 
 # --- HTML tables ----------------------------------------------------------------------------------
 class _TableParser(html.parser.HTMLParser):
+    """Collects table cells as ``(text, colspan)``; footnote markers in <sup> are dropped."""
+
     def __init__(self):
         super().__init__(convert_charrefs=True)
-        self.tables: list[list[list[str]]] = []
+        self.tables: list[list[list[tuple[str, int]]]] = []
         self.depth = 0
-        self.row: list[str] | None = None
+        self.row: list[tuple[str, int]] | None = None
         self.cell: list[str] | None = None
+        self.span = 1
+        self.superscript = 0
 
     def handle_starttag(self, tag, attrs):
         if tag == "table":
@@ -97,31 +101,40 @@ class _TableParser(html.parser.HTMLParser):
             self.row = []
         elif tag in ("td", "th") and self.row is not None:
             self.cell = []
+            value = dict(attrs).get("colspan") or "1"
+            self.span = int(value) if value.isdigit() and 0 < int(value) < 200 else 1
         elif tag == "br" and self.cell is not None:
             self.cell.append(" ")
+        elif tag == "sup":
+            self.superscript += 1
 
     def handle_endtag(self, tag):
         if tag in ("td", "th") and self.cell is not None and self.row is not None:
-            self.row.append(re.sub(r"\s+", " ", "".join(self.cell)).strip())
+            self.row.append((re.sub(r"\s+", " ", "".join(self.cell)).strip(), self.span))
             self.cell = None
         elif tag == "tr" and self.row is not None:
             self.tables[-1].append(self.row)
             self.row = None
         elif tag == "table" and self.depth:
             self.depth -= 1
+        elif tag == "sup" and self.superscript:
+            self.superscript -= 1
 
     def handle_data(self, data):
-        if self.cell is not None:
+        if self.cell is not None and not self.superscript:
             self.cell.append(data)
 
 
-def read_html_tables(path: Path, max_bytes: int = 10_000_000) -> list[list[list[str]]]:
+def read_html_tables(path: Path, max_bytes: int = 10_000_000, *, spans: bool = False):
+    """Tables as rows of cell text; with ``spans=True`` each cell is ``(text, colspan)``."""
     raw = path.read_bytes()
     if len(raw) > max_bytes:
         raise InvalidInput("HTML document is too large.")
     parser = _TableParser()
     parser.feed(raw.decode("utf-8", "replace"))
-    return parser.tables
+    if spans:
+        return parser.tables
+    return [[[text for text, _ in row] for row in table] for table in parser.tables]
 
 
 # --- Shapefiles -----------------------------------------------------------------------------------
@@ -138,22 +151,52 @@ def _contains(ring: list[tuple[float, float]], point: tuple[float, float]) -> bo
     return inside
 
 
-def _polygon_geometry(rings: list[list[tuple[float, float]]], precision: int) -> dict[str, Any]:
-    """ESRI rings (clockwise exterior) to RFC 7946 (counter-clockwise exterior) polygons."""
+def _nest_by_orientation(rings):
+    """ESRI convention: clockwise rings are exteriors, counter-clockwise rings are holes."""
     exteriors, holes = [], []
     for ring in rings:
         (exteriors if _signed_area(ring) < 0 else holes).append(ring)
     if not exteriors:
-        raise InvalidInput("Polygon record has no exterior ring.")
+        return None
     polygons = [[exterior] for exterior in exteriors]
     for hole in holes:
         owner = next((polygon for polygon in polygons if _contains(polygon[0], hole[0])), None)
         if owner is None:
-            raise InvalidInput("Polygon hole is not inside any exterior ring.")
+            return None
         owner.append(hole)
+    return polygons
+
+
+def _nest_by_containment(rings):
+    """Fallback for files with unreliable winding: even nesting depth is an exterior."""
+    boxes = [(min(x for x, _ in ring), min(y for _, y in ring), max(x for x, _ in ring), max(y for _, y in ring))
+             for ring in rings]
+    order = sorted(range(len(rings)), key=lambda index: -abs(_signed_area(rings[index])))
+    parents: dict[int, list[int]] = {}
+    for position, index in enumerate(order):
+        x, y = rings[index][0]
+        parents[index] = [other for other in order[:position]
+                          if boxes[other][0] <= x <= boxes[other][2] and boxes[other][1] <= y <= boxes[other][3]
+                          and _contains(rings[other], (x, y))]
+    polygons: dict[int, list] = {}
+    for index in order:
+        if len(parents[index]) % 2 == 0:
+            polygons[index] = [rings[index]]
+        else:
+            polygons[parents[index][-1]].append(rings[index])  # smallest containing ring is its exterior
+    return [polygons[index] for index in order if index in polygons]
+
+
+def _polygon_geometry(rings: list[list[tuple[float, float]]], precision: int) -> dict[str, Any]:
+    """Shapefile rings to RFC 7946 polygons (counter-clockwise exteriors, clockwise holes)."""
+    rings = [ring for ring in rings if len(ring) >= 4 and _signed_area(ring) != 0]
+    if not rings:
+        raise InvalidInput("Polygon record has no usable ring.")
+    polygons = _nest_by_orientation(rings) or _nest_by_containment(rings)
 
     def emit(ring, exterior):
-        oriented = list(reversed(ring)) if exterior else ring
+        clockwise = _signed_area(ring) < 0
+        oriented = list(reversed(ring)) if clockwise == exterior else ring
         return [[round(x, precision), round(y, precision)] for x, y in oriented]
 
     coordinates = [[emit(ring, index == 0) for index, ring in enumerate(polygon)] for polygon in polygons]
@@ -166,7 +209,7 @@ def _read_shp(raw: bytes, precision: int) -> Iterator[dict[str, Any] | None]:
     if len(raw) < 100 or struct.unpack(">i", raw[:4])[0] != 9994:
         raise InvalidInput("Not an ESRI shapefile.")
     shape_type = struct.unpack("<i", raw[32:36])[0]
-    if shape_type != 5:
+    if shape_type not in (5, 15, 25):  # Polygon, PolygonZ, PolygonM: only X/Y are read
         raise InvalidInput(f"Only polygon shapefiles are supported (type {shape_type}).")
     offset = 100
     while offset < len(raw):
@@ -177,7 +220,7 @@ def _read_shp(raw: bytes, precision: int) -> Iterator[dict[str, Any] | None]:
         if record_type == 0:
             yield None
             continue
-        if record_type != 5:
+        if record_type != shape_type:
             raise InvalidInput(f"Unexpected shape record type {record_type}.")
         parts_count, points_count = struct.unpack("<ii", content[36:44])
         parts = list(struct.unpack(f"<{parts_count}i", content[44:44 + 4 * parts_count]))
@@ -236,3 +279,32 @@ def bbox(geometry: dict[str, Any]) -> list[float]:
     xs = [point[0] for polygon in polygons for ring in polygon for point in ring]
     ys = [point[1] for polygon in polygons for ring in polygon for point in ring]
     return [min(xs), min(ys), max(xs), max(ys)]
+
+
+def quantize_geometry(geometry: dict[str, Any], decimals: int) -> dict[str, Any] | None:
+    """Snap coordinates to a grid and drop repeated points.
+
+    Shared borders stay shared because identical source vertices snap identically.
+    Interior rings that collapse are dropped; a polygon whose exterior collapses is
+    dropped; ``None`` means the whole feature collapsed (callers must disclose it).
+    """
+    polygons = [geometry["coordinates"]] if geometry["type"] == "Polygon" else geometry["coordinates"]
+    output = []
+    for polygon in polygons:
+        rings = []
+        for index, ring in enumerate(polygon):
+            snapped: list[list[float]] = []
+            for x, y in ring:
+                point = [round(x, decimals), round(y, decimals)]
+                if not snapped or snapped[-1] != point:
+                    snapped.append(point)
+            if len(snapped) >= 4 and len({tuple(point) for point in snapped}) >= 3:
+                rings.append(snapped)
+            elif index == 0:
+                rings = []
+                break
+        if rings:
+            output.append(rings)
+    if not output:
+        return None
+    return {"type": "Polygon", "coordinates": output[0]} if len(output) == 1 else {"type": "MultiPolygon", "coordinates": output}

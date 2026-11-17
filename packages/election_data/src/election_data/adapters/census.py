@@ -98,3 +98,112 @@ def import_layer(root: DataRoot, connection: sqlite3.Connection, artifact_id: st
     normalized.accounting = {"features_read": len(features), "features_accepted": len(seen) - len(normalized.diagnostics),
                              "features_rejected": len(normalized.diagnostics)}
     return complete_run(connection, context, normalized)
+
+
+# --- Congressional districts ----------------------------------------------------------------------
+CENSUS_CD = {113: "cb_2013_us_cd113_20m", 114: "cb_2014_us_cd114_20m", 115: "cb_2016_us_cd115_20m",
+             116: "cb_2018_us_cd116_20m", 118: "cb_2022_us_cd118_20m", 119: "cb_2024_us_cd119_20m"}
+UCLA_CONGRESSES = range(95, 113)
+
+
+def congress_start(congress: int) -> str:
+    year = 1789 + 2 * (congress - 1)
+    return f"{year}-01-03" if year >= 1935 else f"{year}-03-04"
+
+
+def district_boundary_set(congress: int) -> str:
+    return stable_id("boundary_set", "congressional-districts", congress)
+
+
+def import_districts(root: DataRoot, connection: sqlite3.Connection, artifact_id: str, congress: int) -> dict:
+    """Import one Congress's districts from Census (113+) or UCLA (95-112) files."""
+    from ..federal import decision, states
+    from ..readers import quantize_geometry
+
+    ucla = congress in UCLA_CONGRESSES
+    if not ucla and congress not in CENSUS_CD:
+        raise ReviewRequired(f"No reviewed district boundary source for the {congress}th Congress.")
+    layer = f"districts{congress:03d}" if ucla else CENSUS_CD[congress]
+    rules = decision("dec-fed-district-boundaries")["scope"]
+    context = begin_run(root, connection, adapter_id="congressional-district-boundaries", adapter_version="2",
+                        artifacts={"boundary": artifact_id}, mapping_version="district-boundaries-v1",
+                        mapping_hash=sha256_text(canonical_json(rules)), config={"congress": congress})
+    if context.existing:
+        return existing_result(connection, context)
+    features = read_shapefile_zip(context.paths["boundary"], layer)
+    if not features or "North_American_1983" not in features[0]["projection"]:
+        raise ReviewRequired("District boundary layer is empty or not in NAD83 geographic coordinates.")
+    field = f"CD{congress}FP"
+    required = {"STATENAME", "DISTRICT", "STARTCONG", "ENDCONG", "ID"} if ucla else {"STATEFP", field, "GEOID"}
+    if missing := required - set(features[0]["properties"]):
+        raise ReviewRequired(f"District boundary schema changed: missing fields {sorted(missing)}.")
+    by_fips = {row["fips"]: postal for postal, row in states().items()}
+    by_name = {row["name"].upper(): postal for postal, row in states().items()}
+    boundary_set = district_boundary_set(congress)
+    publisher = "Lewis, DeVine, Pitcher and Martis (UCLA)" if ucla else "U.S. Census Bureau"
+    normalized = Normalized()
+    normalized.other.append(("INSERT OR IGNORE INTO boundary_set VALUES (?,?,?,?,?,?,?,?)", (
+        boundary_set, publisher, f"congress-{congress}", layer, "EPSG:4269 (NAD83 geographic)", artifact_id,
+        "mit-license-ucla-cdmaps" if ucla else "us-government-work",
+        f"grid_quantized_{rules['quantization_decimals']}_decimals" if ucla else "cartographic_generalized_1:20m")))
+    fallback = rules["congress_117_fallback"]
+    accounting = {"features_read": len(features), "features_accepted": 0, "outside_scope": 0, "rejected": 0,
+                  "later_plan_same_congress": 0}
+    seen: set[str] = set()
+    if ucla:
+        # A district redrawn during a Congress appears twice; the plan already in force when the
+        # Congress was elected (the earlier STARTCONG) is the one its election used.
+        features = sorted(features, key=lambda item: (item["properties"]["STATENAME"],
+                                                      float(item["properties"]["DISTRICT"]),
+                                                      float(item["properties"]["STARTCONG"]), item["record"]))
+    for feature in features:
+        properties = feature["properties"]
+        if ucla:
+            postal = by_name.get(properties["STATENAME"].upper())
+            number = int(float(properties["DISTRICT"]))
+            code = None if number < 0 else f"{number:02d}"
+            natural = f"cd:ucla:{properties['ID']}"
+            start, end = int(float(properties["STARTCONG"])), int(float(properties["ENDCONG"]))
+        else:
+            postal = by_fips.get(properties["STATEFP"])
+            code = properties[field] if properties[field].isdigit() else None
+            natural = f"cd:census:{congress}:{properties['GEOID']}"
+            start = end = congress
+        if postal is None or code is None:
+            accounting["outside_scope"] += 1  # territories, undefined areas, general-ticket shapes
+            continue
+        geometry = feature["geometry"]
+        if geometry is not None and ucla:
+            geometry = quantize_geometry(geometry, rules["quantization_decimals"])
+        key = f"{postal}:{code}"
+        if key in seen:
+            accounting["later_plan_same_congress"] += 1
+            normalized.diagnostics.append({"district": key, "note": "later plan within the same Congress not used"})
+            continue
+        if geometry is None or _validate_geometry({"geometry": geometry}):
+            accounting["rejected"] += 1
+            normalized.diagnostics.append({"district": key, "problem": "empty, invalid or collapsed geometry"})
+            continue
+        seen.add(key)
+        entity, version = geo_id(natural), geo_version_id(natural, congress_start(start))
+        name = f"{states()[postal]['name']} " + ("at-large" if code == "00" else "delegate district" if code == "98"
+                                                 else f"district {int(code)}")
+        normalized.other.append(("INSERT OR IGNORE INTO geographic_entity VALUES (?,?,?,?)",
+                                 (entity, "congressional_district", name, natural)))
+        normalized.other.append(("INSERT OR IGNORE INTO geographic_version VALUES (?,?,?,?,?,?,?)", (
+            version, entity, name, congress_start(start), congress_start(end + 1), artifact_id,
+            f"congress_{start}_to_{end}")))
+        congresses = [congress]
+        if congress == fallback["use"] and postal not in fallback["except_states"]:
+            congresses.append(117)
+        for number in congresses:
+            value = f"{number}:{postal}:{code}"
+            normalized.other.append(("INSERT OR IGNORE INTO geographic_identifier VALUES (?,?,?,?)",
+                                     (stable_id("geoident", "cd_congress", value, version), version, "cd_congress", value)))
+        geometry_json = canonical_json(geometry)
+        normalized.other.append(("INSERT OR IGNORE INTO boundary_feature VALUES (?,?,?,?,?,?,?,?)", (
+            stable_id("feature", boundary_set, key), boundary_set, version, key, None, sha256_text(geometry_json),
+            canonical_json(bbox(geometry)), geometry_json)))
+        accounting["features_accepted"] += 1
+    normalized.accounting = accounting
+    return complete_run(connection, context, normalized)

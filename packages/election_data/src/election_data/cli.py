@@ -13,7 +13,7 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any
 
-from .core import DataRoot, ElectionDataError, InvalidInput, connect, migrate, writer_lock
+from .core import DataRoot, ElectionDataError, InvalidInput, ReviewRequired, connect, migrate, writer_lock
 
 
 def _open(arguments, *, create: bool = False) -> DataRoot:
@@ -94,21 +94,41 @@ def command_archive_add(arguments) -> dict:
 
 def command_import(arguments) -> list:
     from .acquire import latest_artifact
-    from .importer import ADAPTERS, run_adapter
+    from .importer import ADAPTERS, ordered, run_adapter
 
     root = _open(arguments)
-    names = sorted(ADAPTERS, key=lambda name: ADAPTERS[name].order) if arguments.adapter == "all" else [arguments.adapter]
+    if arguments.adapter != "all" and arguments.adapter not in ADAPTERS:
+        raise InvalidInput(f"Unknown adapter {arguments.adapter}; see 'election-data adapters'.")
+    entries = ordered() if arguments.adapter == "all" else [ADAPTERS[arguments.adapter]]
     results = []
     with writer_lock(root), closing(connect(root.database)) as connection:
-        for name in names:
-            if name not in ADAPTERS:
-                raise InvalidInput(f"Unknown adapter {name}; choose from {sorted(ADAPTERS)} or 'all'.")
-            entry = ADAPTERS[name]
-            artifact = arguments.artifact or latest_artifact(connection, entry.source_id, entry.artifact_key)
-            result = run_adapter(root, connection, name, artifact)
+        for entry in entries:
+            try:
+                artifact = arguments.artifact or latest_artifact(connection, entry.source_id, entry.artifact_key)
+            except InvalidInput:
+                if arguments.adapter != "all":
+                    raise
+                results.append({"adapter": entry.name, "status": "not_fetched"})
+                continue
+            try:
+                result = run_adapter(root, connection, entry.name, artifact)
+            except ElectionDataError as error:
+                if arguments.adapter != "all":
+                    raise
+                # One source needing review must not block the others; it stays unimported and visible.
+                status = "review_required" if isinstance(error, ReviewRequired) else "failed"
+                results.append({"adapter": entry.name, "status": status, "message": str(error)})
+                continue
             result.pop("diagnostics", None)
             results.append(result)
     return results
+
+
+def command_adapters(arguments) -> list:
+    from .importer import ordered
+
+    return [{"adapter": entry.name, "group": entry.group, "source_id": entry.source_id,
+             "artifact_key": entry.artifact_key} for entry in ordered()]
 
 
 def command_release(arguments) -> Any:
@@ -153,9 +173,37 @@ def command_issues(arguments):
 
 
 def command_coverage(arguments):
+    from .contracts import CoverageRequest
     from .query import ElectionDataReader
 
-    return ElectionDataReader(_open(arguments).path).status().coverage
+    return ElectionDataReader(_open(arguments).path).coverage(CoverageRequest(
+        office=arguments.office, from_year=arguments.from_year, to_year=arguments.to_year, series=arguments.series,
+        only_gaps=arguments.only_gaps, cursor=arguments.cursor, limit=arguments.limit))
+
+
+def command_contests(arguments):
+    from .contracts import ContestsRequest
+    from .query import ElectionDataReader
+
+    return ElectionDataReader(_open(arguments).path).contests(ContestsRequest(
+        office=arguments.office, year=arguments.year, state=arguments.state, cursor=arguments.cursor,
+        limit=arguments.limit))
+
+
+def command_summary(arguments):
+    from .contracts import PresidentSummaryRequest
+    from .query import ElectionDataReader
+
+    return ElectionDataReader(_open(arguments).path).president_summary(PresidentSummaryRequest(year=arguments.year))
+
+
+def command_compare(arguments):
+    from .contracts import CompareRequest
+    from .query import ElectionDataReader
+
+    return ElectionDataReader(_open(arguments).path).compare(CompareRequest(
+        year_a=arguments.year_a, year_b=arguments.year_b, state=arguments.state, level=arguments.level,
+        cursor=arguments.cursor, limit=arguments.limit))
 
 
 def command_results(arguments):
@@ -166,8 +214,12 @@ def command_results(arguments):
     contest = arguments.contest
     if contest is None:
         if arguments.state is None:
-            raise InvalidInput("Pass --contest or --state.")
-        contest = reader.contests(ContestsRequest(state=arguments.state, release_id=arguments.release)).contests[0].contest_id
+            raise InvalidInput("Pass --contest, or --state with optional --office and --year.")
+        found = reader.contests(ContestsRequest(state=arguments.state, office=arguments.office, year=arguments.year,
+                                                release_id=arguments.release, limit=1)).contests
+        if not found:
+            raise InvalidInput("No published contest matches that state, office and year.")
+        contest = found[0].contest_id
     return reader.results(ResultsRequest(contest_id=contest, level=arguments.level, release_id=arguments.release,
                                          cursor=arguments.cursor, limit=arguments.limit))
 
@@ -251,6 +303,7 @@ def parser() -> argparse.ArgumentParser:
     archive.add_argument("--source", required=True)
     archive.add_argument("--artifact-key", required=True)
     archive.add_argument("file")
+    commands.add_parser("adapters", help="List reviewed adapters")
     importing = commands.add_parser("import", help="Run a reviewed adapter on an archived artifact")
     importing.add_argument("--adapter", required=True, help="Adapter id or 'all'")
     importing.add_argument("--artifact", help="Artifact id (default: latest archived for the adapter's source)")
@@ -269,15 +322,31 @@ def parser() -> argparse.ArgumentParser:
     issues = commands.add_parser("issues", help="List validation issues for a release")
     issues.add_argument("--release")
     issues.add_argument("--severity", choices=["error", "warning", "info"])
-    commands.add_parser("coverage", help="Summarize coverage of the active release")
+    coverage = commands.add_parser("coverage", help="Coverage inventory by office and cycle")
+    coverage.add_argument("--office", choices=["president", "senate", "house"])
+    coverage.add_argument("--from", dest="from_year", type=int, default=1976)
+    coverage.add_argument("--to", dest="to_year", type=int, default=2100)
+    coverage.add_argument("--series", choices=["contest_totals", "county_detail", "electoral_votes", "boundaries"])
+    coverage.add_argument("--only-gaps", action="store_true")
+    contests = commands.add_parser("contests", help="List published contests")
+    summary = commands.add_parser("summary", help="National presidential popular and electoral totals for a year")
+    summary.add_argument("year", type=int)
+    compare = commands.add_parser("compare", help="Presidential margin change between two cycles on identical units")
+    compare.add_argument("year_a", type=int)
+    compare.add_argument("year_b", type=int)
+    compare.add_argument("--state")
+    compare.add_argument("--level", choices=["state", "county"], default="state")
     results = commands.add_parser("results", help="Show published results")
     results.add_argument("--contest")
-    results.add_argument("--state")
-    results.add_argument("--level", choices=["state", "county"], default="state")
+    results.add_argument("--level", choices=["state", "county", "district"])
     results.add_argument("--release")
+    for filtered in (contests, results):
+        filtered.add_argument("--office", choices=["president", "senate", "house", "house_delegate"])
+        filtered.add_argument("--year", type=int)
+        filtered.add_argument("--state")
     provenance = commands.add_parser("provenance", help="Trace a published result to archived source rows")
     provenance.add_argument("derivation_id")
-    for paged in (issues, results, provenance):
+    for paged in (issues, results, provenance, coverage, contests, compare):
         paged.add_argument("--cursor", type=int, default=0)
         paged.add_argument("--limit", type=int, default=10)
     export = commands.add_parser("export", help="Export a release's published results as CSV")
@@ -298,8 +367,9 @@ def parser() -> argparse.ArgumentParser:
 
 
 HANDLERS = {"init": command_init, "sources": command_sources, "fetch": command_fetch, "archive": command_archive_add,
-            "import": command_import, "release": command_release, "refresh": command_refresh,
-            "issues": command_issues, "coverage": command_coverage, "results": command_results,
+            "import": command_import, "adapters": command_adapters, "release": command_release, "refresh": command_refresh,
+            "issues": command_issues, "coverage": command_coverage, "contests": command_contests,
+            "summary": command_summary, "compare": command_compare, "results": command_results,
             "provenance": command_provenance, "export": command_export, "backup": command_backup,
             "restore": command_restore, "doctor": command_doctor}
 
@@ -319,6 +389,8 @@ def main(argv: list[str] | None = None) -> int:
     _emit(value, arguments.json)
     if arguments.command == "doctor" and not value["ok"]:
         return 6
+    if arguments.command == "import" and any(item.get("status") in ("review_required", "failed") for item in value):
+        return 5  # partial work: the per-adapter report above says which sources need review
     return 0
 
 

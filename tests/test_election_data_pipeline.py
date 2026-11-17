@@ -55,9 +55,9 @@ def _issues(reader, release_id):
 
 def test_imports_account_for_every_source_row(published):
     _, imports, _, _ = published
-    mit = imports["mit-county-president-2024"]["accounting"]
-    assert mit["rows_read"] == mit["rows_in_scope"] + mit["rows_other_years"] + mit["rows_other_office"]
-    assert mit["rows_other_years"] == 1 and mit["metric_rows"] == 1 and mit["missing_counts"] == 1
+    mit = imports["mit-county-president"]["accounting"]
+    assert mit["rows_read"] == mit["vote_rows"] + mit["metric_rows"] + mit["rows_other_office"]
+    assert mit["cycles"] == 1 and mit["metric_rows"] == 1 and mit["missing_counts"] == 1
     # The real Alamance excerpt has three candidates with four unlabeled rows each.
     assert mit["repeated_grain_rows"] == 9
     assert imports["fec-president-2024"]["accounting"]["state_rows"] == 51
@@ -97,7 +97,7 @@ def test_real_nc_batches_are_summed_only_after_matching_totalvotes(published):
     assert provenance.total == 14  # 13 vote rows + the totalvotes check
     assert {item.batch_key for item in provenance.inputs if item.input_kind == "vote_observation"} >= {"b1", "b2"}
     assert all(item.locator.get("line") for item in provenance.inputs)
-    assert provenance.parameters["decisions"] == ["dec-2024-pres-mit-blank-mode", "dec-2024-pres-mit-repeated-rows"]
+    assert provenance.parameters["decisions"] == ["dec-fed-county-total-selection"]
 
 
 def test_missing_counts_are_not_zero_and_withhold_shares(published):
@@ -219,7 +219,7 @@ def test_source_correction_creates_new_release_and_rollback_restores_previous(pu
     with closing(connect(clone.database)) as connection, writer_lock(clone):
         artifact = add_manual_artifact(clone, connection, "mit-county-president", "countypres_2000-2024.tab", corrected)
         assert artifact["status"] == "new_artifact"
-        assert run_adapter(clone, connection, "mit-county-president-2024", artifact["artifact_id"])["status"] == "completed"
+        assert run_adapter(clone, connection, "mit-county-president", artifact["artifact_id"])["status"] == "completed"
         second = build_release(clone, connection)
         assert second["release_id"] != built["release_id"] and second["parent_release_id"] == built["release_id"]
         publish_release(clone, connection, second["release_id"])
@@ -240,12 +240,12 @@ def test_source_correction_creates_new_release_and_rollback_restores_previous(pu
 def test_layout_change_fails_closed_without_facts(published, tmp_path):
     _, _, _, sources = published
     broken = tmp_path / "sources"
-    shutil.copytree(sources["mit-county-president-2024"].parent, broken)
+    shutil.copytree(sources["mit-county-president"].parent, broken)
     path = broken / "mit.tab"
     text = path.read_text(encoding="utf-8").replace("candidatevotes", "votes", 1)
     path.write_text(text, encoding="utf-8")
     with pytest.raises(ReviewRequired, match="layout changed"):
-        load_universe(tmp_path / "root", {**sources, "mit-county-president-2024": path})
+        load_universe(tmp_path / "root", {**sources, "mit-county-president": path})
     with closing(sqlite3.connect(tmp_path / "root" / "db" / "elections.sqlite")) as connection:
         status = connection.execute("SELECT status FROM import_run WHERE adapter_id='mit-county-president'").fetchone()[0]
         mit_votes = connection.execute(
@@ -254,20 +254,28 @@ def test_layout_change_fails_closed_without_facts(published, tmp_path):
     assert status == "failed" and mit_votes == 0
 
 
-def test_unknown_candidate_label_and_negative_counts_require_review(published, tmp_path):
-    _, _, _, sources = published
+def test_negative_counts_require_review_and_unlisted_labels_stay_source_names(published, tmp_path):
     import re
-    cases = [(r'"OTHER"\t"OTHER"', '"WRITE IN PERSON"\t"OTHER"'),
-             (r'("KAMALA D HARRIS"\t"DEMOCRAT"\t)\d+', r"\g<1>-5")]
-    for index, (pattern, replacement) in enumerate(cases):
-        directory = tmp_path / f"case{index}"
-        shutil.copytree(sources["mit-county-president-2024"].parent, directory)
-        path = directory / "mit.tab"
-        text, count = re.subn(pattern, replacement, path.read_text(encoding="utf-8"), count=1)
-        assert count == 1
-        path.write_text(text, encoding="utf-8")
-        with pytest.raises(ReviewRequired):
-            load_universe(tmp_path / f"root{index}", {**sources, "mit-county-president-2024": path})
+    _, _, _, sources = published
+    directory = tmp_path / "negative"
+    shutil.copytree(sources["mit-county-president"].parent, directory)
+    path = directory / "mit.tab"
+    text, count = re.subn(r'("KAMALA D HARRIS"\t"DEMOCRAT"\t)\d+', r"\g<1>-5", path.read_text(encoding="utf-8"), count=1)
+    assert count == 1
+    path.write_text(text, encoding="utf-8")
+    with pytest.raises(ReviewRequired, match="nonnegative integer"):
+        load_universe(tmp_path / "root-negative", {**sources, "mit-county-president": path})
+    # A label outside the reviewed classes is kept exactly as a candidate name, never merged or dropped.
+    directory = tmp_path / "label"
+    shutil.copytree(sources["mit-county-president"].parent, directory)
+    path = directory / "mit.tab"
+    text, count = re.subn(r'"OTHER"\t"OTHER"', '"WRITE IN PERSON"\t"OTHER"', path.read_text(encoding="utf-8"), count=1)
+    assert count == 1
+    path.write_text(text, encoding="utf-8")
+    root, _ = load_universe(tmp_path / "root-label", {**sources, "mit-county-president": path})
+    with closing(connect(root.database)) as connection:
+        kinds = connection.execute("SELECT candidacy_kind, status FROM candidacy WHERE display_name='Write In Person'").fetchall()
+    assert [tuple(row) for row in kinds] == [("candidate", "source_label_unresolved_person")]
 
 
 def test_publication_requires_verified_assets_and_keeps_previous_release_active(published, tmp_path):

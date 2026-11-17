@@ -10060,8 +10060,380 @@
       "read_only": true
     },
     {
+      "name": "election_data_compare",
+      "description": "Compare presidential margins between two cycles on identical state or county units; no reallocation.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "cursor": {
+            "default": 0,
+            "description": "Offset returned as next_cursor by a previous page.",
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Cursor",
+            "type": "integer"
+          },
+          "limit": {
+            "default": 25,
+            "maximum": 60,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "pattern": "^release_[0-9a-f]{20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Pin a published release; defaults to the active release.",
+            "title": "Release Id"
+          },
+          "year_a": {
+            "maximum": 2100,
+            "minimum": 1976,
+            "title": "Year A",
+            "type": "integer"
+          },
+          "year_b": {
+            "maximum": 2100,
+            "minimum": 1976,
+            "title": "Year B",
+            "type": "integer"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Z]{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Required for county level.",
+            "title": "State"
+          },
+          "level": {
+            "default": "state",
+            "enum": [
+              "state",
+              "county"
+            ],
+            "title": "Level",
+            "type": "string"
+          }
+        },
+        "required": [
+          "year_a",
+          "year_b"
+        ],
+        "title": "CompareRequest",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "ArtifactRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "media_type": {
+                "title": "Media Type",
+                "type": "string"
+              },
+              "byte_size": {
+                "title": "Byte Size",
+                "type": "integer"
+              },
+              "sha256": {
+                "title": "Sha256",
+                "type": "string"
+              },
+              "run_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Run Id"
+              }
+            },
+            "required": [
+              "id",
+              "media_type",
+              "byte_size",
+              "sha256"
+            ],
+            "title": "ArtifactRef",
+            "type": "object"
+          },
+          "CompareReport": {
+            "additionalProperties": false,
+            "properties": {
+              "api_version": {
+                "default": "1",
+                "title": "Api Version",
+                "type": "string"
+              },
+              "release_id": {
+                "title": "Release Id",
+                "type": "string"
+              },
+              "office": {
+                "title": "Office",
+                "type": "string"
+              },
+              "year_a": {
+                "title": "Year A",
+                "type": "integer"
+              },
+              "year_b": {
+                "title": "Year B",
+                "type": "integer"
+              },
+              "level": {
+                "title": "Level",
+                "type": "string"
+              },
+              "method": {
+                "title": "Method",
+                "type": "string"
+              },
+              "units": {
+                "items": {
+                  "$ref": "#/$defs/ComparedUnit"
+                },
+                "title": "Units",
+                "type": "array"
+              },
+              "excluded_units": {
+                "title": "Excluded Units",
+                "type": "integer"
+              },
+              "exclusions": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Exclusions",
+                "type": "array"
+              },
+              "next_cursor": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Next Cursor"
+              },
+              "total": {
+                "title": "Total",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "release_id",
+              "office",
+              "year_a",
+              "year_b",
+              "level",
+              "method",
+              "units",
+              "excluded_units",
+              "exclusions",
+              "next_cursor",
+              "total"
+            ],
+            "title": "CompareReport",
+            "type": "object"
+          },
+          "ComparedUnit": {
+            "additionalProperties": false,
+            "properties": {
+              "unit_id": {
+                "title": "Unit Id",
+                "type": "string"
+              },
+              "label": {
+                "title": "Label",
+                "type": "string"
+              },
+              "margin_a_points": {
+                "title": "Margin A Points",
+                "type": "number"
+              },
+              "margin_b_points": {
+                "title": "Margin B Points",
+                "type": "number"
+              },
+              "swing_points": {
+                "description": "margin_b - margin_a; positive is toward the Democratic ticket.",
+                "title": "Swing Points",
+                "type": "number"
+              },
+              "total_a": {
+                "title": "Total A",
+                "type": "integer"
+              },
+              "total_b": {
+                "title": "Total B",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "unit_id",
+              "label",
+              "margin_a_points",
+              "margin_b_points",
+              "swing_points",
+              "total_a",
+              "total_b"
+            ],
+            "title": "ComparedUnit",
+            "type": "object"
+          },
+          "Error": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              },
+              "retryable": {
+                "default": false,
+                "title": "Retryable",
+                "type": "boolean"
+              },
+              "details": {
+                "additionalProperties": true,
+                "title": "Details",
+                "type": "object"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "title": "Error",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "instance_id": {
+            "title": "Instance Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "ok",
+            "enum": [
+              "ok",
+              "accepted",
+              "needs_input",
+              "blocked",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CompareReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "artifacts": {
+            "items": {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Next Cursor"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Error"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "instance_id",
+          "summary"
+        ],
+        "title": "Result[CompareReport]",
+        "type": "object"
+      },
+      "effect": "observation",
+      "read_only": true
+    },
+    {
       "name": "election_data_contests",
-      "description": "List contests in a published release with sourced outcomes, electoral votes and coverage cells.",
+      "description": "List contests by office, cycle year and state with outcomes, electoral votes and coverage cells.",
       "input_schema": {
         "additionalProperties": false,
         "properties": {
@@ -10094,6 +10466,39 @@
             "default": null,
             "description": "Pin a published release; defaults to the active release.",
             "title": "Release Id"
+          },
+          "office": {
+            "anyOf": [
+              {
+                "enum": [
+                  "president",
+                  "senate",
+                  "house",
+                  "house_delegate"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Office"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "maximum": 2100,
+                "minimum": 1788,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Election cycle year.",
+            "title": "Year"
           },
           "state": {
             "anyOf": [
@@ -10167,6 +10572,25 @@
                 "title": "Label",
                 "type": "string"
               },
+              "office": {
+                "title": "Office",
+                "type": "string"
+              },
+              "cycle_year": {
+                "title": "Cycle Year",
+                "type": "integer"
+              },
+              "predecessor_contest_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Predecessor Contest Id"
+              },
               "seat_key": {
                 "title": "Seat Key",
                 "type": "string"
@@ -10212,6 +10636,9 @@
             "required": [
               "contest_id",
               "label",
+              "office",
+              "cycle_year",
+              "predecessor_contest_id",
               "seat_key",
               "stage",
               "contest_type",
@@ -10502,6 +10929,388 @@
           "summary"
         ],
         "title": "Result[ContestsReport]",
+        "type": "object"
+      },
+      "effect": "observation",
+      "read_only": true
+    },
+    {
+      "name": "election_data_coverage",
+      "description": "Page the coverage inventory by office and cycle: expected contests, what is available, what is missing and why.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "cursor": {
+            "default": 0,
+            "description": "Offset returned as next_cursor by a previous page.",
+            "maximum": 100000,
+            "minimum": 0,
+            "title": "Cursor",
+            "type": "integer"
+          },
+          "limit": {
+            "default": 25,
+            "maximum": 50,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "pattern": "^release_[0-9a-f]{20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Pin a published release; defaults to the active release.",
+            "title": "Release Id"
+          },
+          "office": {
+            "anyOf": [
+              {
+                "enum": [
+                  "president",
+                  "senate",
+                  "house"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Office"
+          },
+          "from_year": {
+            "default": 1976,
+            "maximum": 2100,
+            "minimum": 1788,
+            "title": "From Year",
+            "type": "integer"
+          },
+          "to_year": {
+            "default": 2100,
+            "maximum": 2100,
+            "minimum": 1788,
+            "title": "To Year",
+            "type": "integer"
+          },
+          "series": {
+            "anyOf": [
+              {
+                "enum": [
+                  "contest_totals",
+                  "county_detail",
+                  "electoral_votes",
+                  "boundaries"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Series"
+          },
+          "only_gaps": {
+            "default": false,
+            "description": "Return only rows whose status is not complete.",
+            "title": "Only Gaps",
+            "type": "boolean"
+          }
+        },
+        "title": "CoverageRequest",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "ArtifactRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "media_type": {
+                "title": "Media Type",
+                "type": "string"
+              },
+              "byte_size": {
+                "title": "Byte Size",
+                "type": "integer"
+              },
+              "sha256": {
+                "title": "Sha256",
+                "type": "string"
+              },
+              "run_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Run Id"
+              }
+            },
+            "required": [
+              "id",
+              "media_type",
+              "byte_size",
+              "sha256"
+            ],
+            "title": "ArtifactRef",
+            "type": "object"
+          },
+          "CoverageReport": {
+            "additionalProperties": false,
+            "properties": {
+              "api_version": {
+                "default": "1",
+                "title": "Api Version",
+                "type": "string"
+              },
+              "release_id": {
+                "title": "Release Id",
+                "type": "string"
+              },
+              "rows": {
+                "items": {
+                  "$ref": "#/$defs/CoverageRow"
+                },
+                "title": "Rows",
+                "type": "array"
+              },
+              "next_cursor": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Next Cursor"
+              },
+              "total": {
+                "title": "Total",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "release_id",
+              "rows",
+              "next_cursor",
+              "total"
+            ],
+            "title": "CoverageReport",
+            "type": "object"
+          },
+          "CoverageRow": {
+            "additionalProperties": false,
+            "properties": {
+              "office": {
+                "title": "Office",
+                "type": "string"
+              },
+              "cycle_year": {
+                "title": "Cycle Year",
+                "type": "integer"
+              },
+              "series": {
+                "title": "Series",
+                "type": "string"
+              },
+              "coverage_status": {
+                "title": "Coverage Status",
+                "type": "string"
+              },
+              "expected": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Expected"
+              },
+              "available": {
+                "title": "Available",
+                "type": "integer"
+              },
+              "missing": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Missing",
+                "type": "array"
+              },
+              "missing_total": {
+                "title": "Missing Total",
+                "type": "integer"
+              },
+              "extra": {
+                "additionalProperties": true,
+                "title": "Extra",
+                "type": "object"
+              },
+              "notes": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Notes"
+              }
+            },
+            "required": [
+              "office",
+              "cycle_year",
+              "series",
+              "coverage_status",
+              "expected",
+              "available",
+              "missing",
+              "missing_total",
+              "extra",
+              "notes"
+            ],
+            "title": "CoverageRow",
+            "type": "object"
+          },
+          "Error": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              },
+              "retryable": {
+                "default": false,
+                "title": "Retryable",
+                "type": "boolean"
+              },
+              "details": {
+                "additionalProperties": true,
+                "title": "Details",
+                "type": "object"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "title": "Error",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "instance_id": {
+            "title": "Instance Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "ok",
+            "enum": [
+              "ok",
+              "accepted",
+              "needs_input",
+              "blocked",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CoverageReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "artifacts": {
+            "items": {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Next Cursor"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Error"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "instance_id",
+          "summary"
+        ],
+        "title": "Result[CoverageReport]",
         "type": "object"
       },
       "effect": "observation",
@@ -10878,7 +11687,7 @@
     },
     {
       "name": "election_data_map",
-      "description": "Return a contest's map asset reference and per-feature join status, leader and margin.",
+      "description": "Map asset reference and per-feature status, leader and margin for one contest or a national office-year view.",
       "input_schema": {
         "additionalProperties": false,
         "properties": {
@@ -10892,7 +11701,7 @@
           },
           "limit": {
             "default": 50,
-            "maximum": 100,
+            "maximum": 80,
             "minimum": 1,
             "title": "Limit",
             "type": "integer"
@@ -10913,24 +11722,71 @@
             "title": "Release Id"
           },
           "contest_id": {
-            "maxLength": 64,
-            "pattern": "^contest_[0-9a-f]{24}$",
-            "title": "Contest Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "pattern": "^contest_[0-9a-f]{24}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "One contest's own geography (its state's counties, or its district).",
+            "title": "Contest Id"
+          },
+          "office": {
+            "anyOf": [
+              {
+                "enum": [
+                  "president",
+                  "senate",
+                  "house",
+                  "house_delegate"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "With year: a national map of that office's general contests.",
+            "title": "Office"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "maximum": 2100,
+                "minimum": 1788,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Year"
           },
           "level": {
-            "default": "county",
-            "enum": [
-              "state",
-              "county"
+            "anyOf": [
+              {
+                "enum": [
+                  "state",
+                  "county",
+                  "district"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Level",
-            "type": "string"
+            "default": null,
+            "title": "Level"
           }
         },
-        "required": [
-          "contest_id"
-        ],
         "title": "MapRequest",
         "type": "object"
       },
@@ -11052,6 +11908,21 @@
                 "title": "Feature Id",
                 "type": "string"
               },
+              "feature_key": {
+                "title": "Feature Key",
+                "type": "string"
+              },
+              "contest_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Contest Id"
+              },
               "unit_id": {
                 "anyOf": [
                   {
@@ -11092,6 +11963,8 @@
             },
             "required": [
               "feature_id",
+              "feature_key",
+              "contest_id",
               "unit_id",
               "result_status",
               "leader_candidacy_id",
@@ -11113,13 +11986,29 @@
                 "type": "string"
               },
               "contest_id": {
-                "title": "Contest Id",
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Contest Id"
+              },
+              "office": {
+                "title": "Office",
                 "type": "string"
+              },
+              "cycle_year": {
+                "title": "Cycle Year",
+                "type": "integer"
               },
               "level": {
                 "enum": [
                   "state",
-                  "county"
+                  "county",
+                  "district"
                 ],
                 "title": "Level",
                 "type": "string"
@@ -11167,6 +12056,8 @@
             "required": [
               "release_id",
               "contest_id",
+              "office",
+              "cycle_year",
               "level",
               "asset",
               "features",
@@ -11267,6 +12158,364 @@
           "summary"
         ],
         "title": "Result[MapReport]",
+        "type": "object"
+      },
+      "effect": "observation",
+      "read_only": true
+    },
+    {
+      "name": "election_data_president_summary",
+      "description": "National popular totals by ticket and actual electoral votes for one presidential election year.",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "release_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "pattern": "^release_[0-9a-f]{20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Pin a published release; defaults to the active release.",
+            "title": "Release Id"
+          },
+          "year": {
+            "maximum": 2100,
+            "minimum": 1788,
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year"
+        ],
+        "title": "PresidentSummaryRequest",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "ArtifactRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "media_type": {
+                "title": "Media Type",
+                "type": "string"
+              },
+              "byte_size": {
+                "title": "Byte Size",
+                "type": "integer"
+              },
+              "sha256": {
+                "title": "Sha256",
+                "type": "string"
+              },
+              "run_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Run Id"
+              }
+            },
+            "required": [
+              "id",
+              "media_type",
+              "byte_size",
+              "sha256"
+            ],
+            "title": "ArtifactRef",
+            "type": "object"
+          },
+          "ElectoralRecipient": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "role": {
+                "title": "Role",
+                "type": "string"
+              },
+              "electoral_votes": {
+                "title": "Electoral Votes",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "role",
+              "electoral_votes"
+            ],
+            "title": "ElectoralRecipient",
+            "type": "object"
+          },
+          "Error": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              },
+              "retryable": {
+                "default": false,
+                "title": "Retryable",
+                "type": "boolean"
+              },
+              "details": {
+                "additionalProperties": true,
+                "title": "Details",
+                "type": "object"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "title": "Error",
+            "type": "object"
+          },
+          "NationalCandidate": {
+            "additionalProperties": false,
+            "properties": {
+              "display_name": {
+                "title": "Display Name",
+                "type": "string"
+              },
+              "party": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Party"
+              },
+              "votes": {
+                "title": "Votes",
+                "type": "integer"
+              },
+              "share": {
+                "description": "Fraction of all reported options nationwide.",
+                "title": "Share",
+                "type": "number"
+              },
+              "states_led": {
+                "title": "States Led",
+                "type": "integer"
+              },
+              "states_reported": {
+                "title": "States Reported",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "display_name",
+              "party",
+              "votes",
+              "share",
+              "states_led",
+              "states_reported"
+            ],
+            "title": "NationalCandidate",
+            "type": "object"
+          },
+          "PresidentSummaryReport": {
+            "additionalProperties": false,
+            "properties": {
+              "api_version": {
+                "default": "1",
+                "title": "Api Version",
+                "type": "string"
+              },
+              "release_id": {
+                "title": "Release Id",
+                "type": "string"
+              },
+              "year": {
+                "title": "Year",
+                "type": "integer"
+              },
+              "popular_vote_status": {
+                "title": "Popular Vote Status",
+                "type": "string"
+              },
+              "states_with_totals": {
+                "title": "States With Totals",
+                "type": "integer"
+              },
+              "total_votes": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Total Votes"
+              },
+              "candidates": {
+                "items": {
+                  "$ref": "#/$defs/NationalCandidate"
+                },
+                "title": "Candidates",
+                "type": "array"
+              },
+              "other_votes": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Other Votes"
+              },
+              "electoral_vote_status": {
+                "title": "Electoral Vote Status",
+                "type": "string"
+              },
+              "electoral_votes": {
+                "items": {
+                  "$ref": "#/$defs/ElectoralRecipient"
+                },
+                "title": "Electoral Votes",
+                "type": "array"
+              },
+              "notes": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Notes",
+                "type": "array"
+              }
+            },
+            "required": [
+              "release_id",
+              "year",
+              "popular_vote_status",
+              "states_with_totals",
+              "total_votes",
+              "candidates",
+              "other_votes",
+              "electoral_vote_status",
+              "electoral_votes",
+              "notes"
+            ],
+            "title": "PresidentSummaryReport",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "instance_id": {
+            "title": "Instance Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "ok",
+            "enum": [
+              "ok",
+              "accepted",
+              "needs_input",
+              "blocked",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PresidentSummaryReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "artifacts": {
+            "items": {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            "title": "Artifacts",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Next Cursor"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Error"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "instance_id",
+          "summary"
+        ],
+        "title": "Result[PresidentSummaryReport]",
         "type": "object"
       },
       "effect": "observation",
@@ -11648,7 +12897,7 @@
     },
     {
       "name": "election_data_results",
-      "description": "Page state or county results for one contest with shares, denominators, status and provenance IDs.",
+      "description": "Page state, district or county results for one contest with shares, denominators, status and provenance IDs.",
       "input_schema": {
         "additionalProperties": false,
         "properties": {
@@ -11689,13 +12938,22 @@
             "type": "string"
           },
           "level": {
-            "default": "state",
-            "enum": [
-              "state",
-              "county"
+            "anyOf": [
+              {
+                "enum": [
+                  "state",
+                  "county",
+                  "district"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Level",
-            "type": "string"
+            "default": null,
+            "description": "Defaults to the contest's own scope: state, or district for House.",
+            "title": "Level"
           },
           "unit_id": {
             "anyOf": [
@@ -11940,7 +13198,8 @@
               "level": {
                 "enum": [
                   "state",
-                  "county"
+                  "county",
+                  "district"
                 ],
                 "title": "Level",
                 "type": "string"

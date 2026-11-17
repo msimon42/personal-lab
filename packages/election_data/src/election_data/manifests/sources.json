@@ -1,10 +1,11 @@
 {
-  "manifest_version": 1,
+  "manifest_version": 2,
   "reviewed_at": "2026-11-17",
   "allowed_hosts": [
+    "cdmaps.polisci.ucla.edu",
     "dataverse.harvard.edu",
-    "www.fec.gov",
     "www.archives.gov",
+    "www.fec.gov",
     "www2.census.gov"
   ],
   "licenses": [
@@ -21,6 +22,13 @@
       "url": "https://www.usa.gov/government-copyright",
       "access_notes": "Federal publication with no copyright in the United States. Attribution retained as provenance practice.",
       "redistribution_status": "permitted"
+    },
+    {
+      "license_id": "mit-license-ucla-cdmaps",
+      "name": "MIT License (cdmaps.polisci.ucla.edu footer), citation requested",
+      "url": "https://cdmaps.polisci.ucla.edu/",
+      "access_notes": "Site states 'Copyright Jeffrey B. Lewis, 2013-2018 and released under the mit license' and asks for citation. Per-district documentation files are restricted and are not acquired.",
+      "redistribution_status": "permitted_with_attribution"
     }
   ],
   "sources": [
@@ -34,14 +42,34 @@
       "attribution": "MIT Election Data and Science Lab, County Presidential Election Returns 2000-2024, Harvard Dataverse, doi:10.7910/DVN/VOQCHQ.",
       "access_conditions": "Harvard Dataverse guestbook 458 (name, email, institution, position) before each file download. Identity is read from the data root's local config, never from Git.",
       "artifacts": [
-        {"artifact_key": "countypres_2000-2024.tab", "format": "tsv", "mime_type": "text/tab-separated-values",
-         "access": {"kind": "dataverse_guestbook", "host": "dataverse.harvard.edu", "datafile_id": 13573089,
-                    "redirect_hosts": ["dvn-cloud-iqss.s3.amazonaws.com"]},
-         "max_bytes": 50000000},
-        {"artifact_key": "codebook.md", "format": "markdown", "mime_type": "text/markdown",
-         "access": {"kind": "dataverse_guestbook", "host": "dataverse.harvard.edu", "datafile_id": 11723285,
-                    "redirect_hosts": ["dvn-cloud-iqss.s3.amazonaws.com"]},
-         "max_bytes": 1000000}
+        {
+          "artifact_key": "countypres_2000-2024.tab",
+          "format": "tsv",
+          "mime_type": "text/tab-separated-values",
+          "access": {
+            "kind": "dataverse_guestbook",
+            "host": "dataverse.harvard.edu",
+            "datafile_id": 13573089,
+            "redirect_hosts": [
+              "dvn-cloud-iqss.s3.amazonaws.com"
+            ]
+          },
+          "max_bytes": 50000000
+        },
+        {
+          "artifact_key": "codebook.md",
+          "format": "markdown",
+          "mime_type": "text/markdown",
+          "access": {
+            "kind": "dataverse_guestbook",
+            "host": "dataverse.harvard.edu",
+            "datafile_id": 11723285,
+            "redirect_hosts": [
+              "dvn-cloud-iqss.s3.amazonaws.com"
+            ]
+          },
+          "max_bytes": 1000000
+        }
       ]
     },
     {
@@ -54,11 +82,19 @@
       "attribution": "Federal Election Commission, Official 2024 Presidential General Election Results (compiled from state election offices; electoral votes from NARA certificates).",
       "access_conditions": "Public download.",
       "artifacts": [
-        {"artifact_key": "2024presgeresults.xlsx", "format": "xlsx",
-         "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-         "access": {"kind": "direct", "url": "https://www.fec.gov/documents/5645/2024presgeresults.xlsx",
-                    "redirect_hosts": ["www.fec.gov"]},
-         "max_bytes": 5000000}
+        {
+          "artifact_key": "2024presgeresults.xlsx",
+          "format": "xlsx",
+          "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.fec.gov/documents/5645/2024presgeresults.xlsx",
+            "redirect_hosts": [
+              "www.fec.gov"
+            ]
+          },
+          "max_bytes": 5000000
+        }
       ]
     },
     {
@@ -71,9 +107,16 @@
       "attribution": "National Archives and Records Administration, 2024 Electoral College Results (Certificates of Vote).",
       "access_conditions": "Public web page; per-state certificate PDFs are linked from it.",
       "artifacts": [
-        {"artifact_key": "electoral-college-2024.html", "format": "html", "mime_type": "text/html",
-         "access": {"kind": "direct", "url": "https://www.archives.gov/electoral-college/2024"},
-         "max_bytes": 5000000}
+        {
+          "artifact_key": "electoral-college-2024.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/2024"
+          },
+          "max_bytes": 5000000
+        }
       ]
     },
     {
@@ -86,12 +129,1034 @@
       "attribution": "U.S. Census Bureau, 2020 Cartographic Boundary Files, 1:20,000,000.",
       "access_conditions": "Public download. Cartographic generalization is for display, not legal boundary accuracy.",
       "artifacts": [
-        {"artifact_key": "cb_2020_us_county_20m.zip", "format": "shapefile_zip", "mime_type": "application/zip",
-         "access": {"kind": "direct", "url": "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_county_20m.zip"},
-         "max_bytes": 50000000},
-        {"artifact_key": "cb_2020_us_state_20m.zip", "format": "shapefile_zip", "mime_type": "application/zip",
-         "access": {"kind": "direct", "url": "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_state_20m.zip"},
-         "max_bytes": 50000000}
+        {
+          "artifact_key": "cb_2020_us_county_20m.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_county_20m.zip"
+          },
+          "max_bytes": 50000000
+        },
+        {
+          "artifact_key": "cb_2020_us_state_20m.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_state_20m.zip"
+          },
+          "max_bytes": 50000000
+        }
+      ]
+    },
+    {
+      "source_id": "mit-state-president",
+      "publisher": "MIT Election Data and Science Lab",
+      "landing_url": "https://doi.org/10.7910/DVN/42MVDX",
+      "authority_kind": "academic_secondary",
+      "license_id": "cc0-1.0",
+      "documentation_url": "https://electionlab.mit.edu/data",
+      "attribution": "MIT Election Data and Science Lab, U.S. President 1976-2024, Harvard Dataverse, doi:10.7910/DVN/42MVDX.",
+      "access_conditions": "Harvard Dataverse guestbook 458 (name, email, institution, position) before each file download. Identity is read from the data root's local config, never from Git.",
+      "artifacts": [
+        {
+          "artifact_key": "1976-2024-president.csv",
+          "format": "csv",
+          "mime_type": "text/csv",
+          "access": {
+            "kind": "dataverse_guestbook",
+            "host": "dataverse.harvard.edu",
+            "datafile_id": 13887042,
+            "redirect_hosts": [
+              "dvn-cloud-iqss.s3.amazonaws.com"
+            ]
+          },
+          "max_bytes": 20000000
+        },
+        {
+          "artifact_key": "codebook-president.md",
+          "format": "markdown",
+          "mime_type": "text/markdown",
+          "access": {
+            "kind": "dataverse_guestbook",
+            "host": "dataverse.harvard.edu",
+            "datafile_id": 7241480,
+            "redirect_hosts": [
+              "dvn-cloud-iqss.s3.amazonaws.com"
+            ]
+          },
+          "max_bytes": 1000000
+        }
+      ]
+    },
+    {
+      "source_id": "mit-senate",
+      "publisher": "MIT Election Data and Science Lab",
+      "landing_url": "https://doi.org/10.7910/DVN/PEJ5QU",
+      "authority_kind": "academic_secondary",
+      "license_id": "cc0-1.0",
+      "documentation_url": "https://electionlab.mit.edu/data",
+      "attribution": "MIT Election Data and Science Lab, U.S. Senate Statewide 1976-2024, Harvard Dataverse, doi:10.7910/DVN/PEJ5QU.",
+      "access_conditions": "Harvard Dataverse guestbook 458 (name, email, institution, position) before each file download. Identity is read from the data root's local config, never from Git.",
+      "artifacts": [
+        {
+          "artifact_key": "1976-2024-senate-state.tab",
+          "format": "tsv",
+          "mime_type": "text/tab-separated-values",
+          "access": {
+            "kind": "dataverse_guestbook",
+            "host": "dataverse.harvard.edu",
+            "datafile_id": 13887039,
+            "redirect_hosts": [
+              "dvn-cloud-iqss.s3.amazonaws.com"
+            ]
+          },
+          "max_bytes": 20000000
+        },
+        {
+          "artifact_key": "codebook-senate.md",
+          "format": "markdown",
+          "mime_type": "text/markdown",
+          "access": {
+            "kind": "dataverse_guestbook",
+            "host": "dataverse.harvard.edu",
+            "datafile_id": 6708560,
+            "redirect_hosts": [
+              "dvn-cloud-iqss.s3.amazonaws.com"
+            ]
+          },
+          "max_bytes": 1000000
+        }
+      ]
+    },
+    {
+      "source_id": "mit-house",
+      "publisher": "MIT Election Data and Science Lab",
+      "landing_url": "https://doi.org/10.7910/DVN/IG0UN2",
+      "authority_kind": "academic_secondary",
+      "license_id": "cc0-1.0",
+      "documentation_url": "https://electionlab.mit.edu/data",
+      "attribution": "MIT Election Data and Science Lab, U.S. House 1976-2024, Harvard Dataverse, doi:10.7910/DVN/IG0UN2.",
+      "access_conditions": "Harvard Dataverse guestbook 458 (name, email, institution, position) before each file download. Identity is read from the data root's local config, never from Git.",
+      "artifacts": [
+        {
+          "artifact_key": "1976-2024-house.tab",
+          "format": "tsv",
+          "mime_type": "text/tab-separated-values",
+          "access": {
+            "kind": "dataverse_guestbook",
+            "host": "dataverse.harvard.edu",
+            "datafile_id": 13592823,
+            "redirect_hosts": [
+              "dvn-cloud-iqss.s3.amazonaws.com"
+            ]
+          },
+          "max_bytes": 50000000
+        },
+        {
+          "artifact_key": "codebook-house.md",
+          "format": "markdown",
+          "mime_type": "text/markdown",
+          "access": {
+            "kind": "dataverse_guestbook",
+            "host": "dataverse.harvard.edu",
+            "datafile_id": 12066703,
+            "redirect_hosts": [
+              "dvn-cloud-iqss.s3.amazonaws.com"
+            ]
+          },
+          "max_bytes": 1000000
+        }
+      ]
+    },
+    {
+      "source_id": "census-apportionment",
+      "publisher": "U.S. Census Bureau",
+      "landing_url": "https://www.census.gov/data/tables/time-series/dec/apportionment-data-text.html",
+      "authority_kind": "official_compilation",
+      "license_id": "us-government-work",
+      "documentation_url": "https://www.census.gov/topics/public-sector/congressional-apportionment.html",
+      "attribution": "U.S. Census Bureau, Historical Apportionment Data (1910-2020).",
+      "access_conditions": "Public download.",
+      "artifacts": [
+        {
+          "artifact_key": "apportionment.csv",
+          "format": "csv",
+          "mime_type": "text/csv",
+          "access": {
+            "kind": "direct",
+            "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/apportionment/apportionment.csv"
+          },
+          "max_bytes": 2000000
+        }
+      ]
+    },
+    {
+      "source_id": "census-cb-congressional-districts",
+      "publisher": "U.S. Census Bureau",
+      "landing_url": "https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html",
+      "authority_kind": "official_reference_geometry",
+      "license_id": "us-government-work",
+      "documentation_url": "https://www.census.gov/programs-surveys/geography/technical-documentation/naming-convention/cartographic-boundary-file.html",
+      "attribution": "U.S. Census Bureau, Cartographic Boundary Files, Congressional Districts (113th-119th Congress), 1:20,000,000.",
+      "access_conditions": "Public download. Cartographic generalization is for display, not legal boundary accuracy.",
+      "artifacts": [
+        {
+          "artifact_key": "cb_2013_us_cd113_20m.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://www2.census.gov/geo/tiger/GENZ2013/cb_2013_us_cd113_20m.zip"
+          },
+          "max_bytes": 20000000
+        },
+        {
+          "artifact_key": "cb_2014_us_cd114_20m.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://www2.census.gov/geo/tiger/GENZ2014/shp/cb_2014_us_cd114_20m.zip"
+          },
+          "max_bytes": 20000000
+        },
+        {
+          "artifact_key": "cb_2016_us_cd115_20m.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://www2.census.gov/geo/tiger/GENZ2016/shp/cb_2016_us_cd115_20m.zip"
+          },
+          "max_bytes": 20000000
+        },
+        {
+          "artifact_key": "cb_2018_us_cd116_20m.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://www2.census.gov/geo/tiger/GENZ2018/shp/cb_2018_us_cd116_20m.zip"
+          },
+          "max_bytes": 20000000
+        },
+        {
+          "artifact_key": "cb_2022_us_cd118_20m.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://www2.census.gov/geo/tiger/GENZ2022/shp/cb_2022_us_cd118_20m.zip"
+          },
+          "max_bytes": 20000000
+        },
+        {
+          "artifact_key": "cb_2024_us_cd119_20m.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://www2.census.gov/geo/tiger/GENZ2024/shp/cb_2024_us_cd119_20m.zip"
+          },
+          "max_bytes": 20000000
+        }
+      ]
+    },
+    {
+      "source_id": "ucla-congressional-districts",
+      "publisher": "Jeffrey B. Lewis, Brandon DeVine, Lincoln Pitcher and Kenneth C. Martis (UCLA)",
+      "landing_url": "https://cdmaps.polisci.ucla.edu/",
+      "authority_kind": "academic_secondary",
+      "license_id": "mit-license-ucla-cdmaps",
+      "documentation_url": "https://cdmaps.polisci.ucla.edu/",
+      "attribution": "Jeffrey B. Lewis, Brandon DeVine, Lincoln Pitcher, and Kenneth C. Martis. (2013) Digital Boundary Definitions of United States Congressional Districts, 1789-2012. Retrieved from https://cdmaps.polisci.ucla.edu.",
+      "access_conditions": "Public download; citation requested. One shapefile archive per Congress.",
+      "artifacts": [
+        {
+          "artifact_key": "districts095.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts095.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts096.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts096.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts097.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts097.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts098.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts098.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts099.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts099.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts100.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts100.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts101.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts101.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts102.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts102.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts103.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts103.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts104.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts104.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts105.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts105.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts106.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts106.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts107.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts107.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts108.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts108.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts109.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts109.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts110.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts110.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts111.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts111.zip"
+          },
+          "max_bytes": 120000000
+        },
+        {
+          "artifact_key": "districts112.zip",
+          "format": "shapefile_zip",
+          "mime_type": "application/zip",
+          "access": {
+            "kind": "direct",
+            "url": "https://cdmaps.polisci.ucla.edu/shp/districts112.zip"
+          },
+          "max_bytes": 120000000
+        }
+      ]
+    },
+    {
+      "source_id": "nara-electoral-college",
+      "publisher": "U.S. National Archives and Records Administration",
+      "landing_url": "https://www.archives.gov/electoral-college/results",
+      "authority_kind": "official_certificate",
+      "license_id": "us-government-work",
+      "documentation_url": "https://www.archives.gov/electoral-college",
+      "attribution": "National Archives and Records Administration, Electoral College Results (1789-2020).",
+      "access_conditions": "Public web pages, one per presidential election.",
+      "artifacts": [
+        {
+          "artifact_key": "electoral-college-1789.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1789"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1792.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1792"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1796.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1796"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1800.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1800"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1804.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1804"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1808.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1808"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1812.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1812"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1816.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1816"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1820.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1820"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1824.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1824"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1828.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1828"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1832.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1832"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1836.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1836"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1840.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1840"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1844.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1844"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1848.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1848"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1852.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1852"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1856.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1856"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1860.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1860"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1864.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1864"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1868.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1868"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1872.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1872"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1876.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1876"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1880.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1880"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1884.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1884"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1888.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1888"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1892.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1892"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1896.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1896"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1900.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1900"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1904.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1904"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1908.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1908"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1912.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1912"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1916.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1916"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1920.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1920"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1924.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1924"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1928.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1928"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1932.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1932"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1936.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1936"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1940.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1940"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1944.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1944"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1948.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1948"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1952.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1952"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1956.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1956"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1960.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1960"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1964.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1964"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1968.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1968"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1972.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1972"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1976.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1976"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1980.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1980"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1984.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1984"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1988.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1988"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1992.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1992"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-1996.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/1996"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-2000.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/2000"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-2004.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/2004"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-2008.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/2008"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-2012.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/2012"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-2016.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/2016"
+          },
+          "max_bytes": 5000000
+        },
+        {
+          "artifact_key": "electoral-college-2020.html",
+          "format": "html",
+          "mime_type": "text/html",
+          "access": {
+            "kind": "direct",
+            "url": "https://www.archives.gov/electoral-college/2020"
+          },
+          "max_bytes": 5000000
+        }
       ]
     }
   ]

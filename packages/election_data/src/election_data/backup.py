@@ -51,7 +51,7 @@ def create_backup(root: DataRoot, destination: Path) -> dict[str, Any]:
             "SELECT path FROM release_asset JOIN data_release USING (release_id) "
             "WHERE status IN ('staged', 'published') ORDER BY path")]
         active = connection.execute("SELECT release_id FROM active_release").fetchone()
-    for relative in [*archived, *assets]:
+    for relative in sorted({*archived, *assets}):
         source_path = root.resolve(relative)
         target_path = destination / relative
         target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -113,6 +113,9 @@ def restore_backup(location: Path, destination: Path) -> dict[str, Any]:
     if status.active_release_id:
         from .contracts import ContestsRequest, ResultsRequest
         contest = reader.contests(ContestsRequest(limit=1)).contests[0]
-        sample = reader.results(ResultsRequest(contest_id=contest.contest_id, level="state")).units[0].label
+        units = reader.results(ResultsRequest(contest_id=contest.contest_id)).units  # the contest's own level
+        if not units:
+            raise ElectionDataError("Restored release returned no result for a published contest.")
+        sample = units[0].label
     return {"restored_to": str(destination), "files": len(manifest["files"]),
             "active_release_id": status.active_release_id, "sample_query": sample}

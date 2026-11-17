@@ -43,8 +43,9 @@ inspect `data`, `limitations`, explicit continuations and artifact references.
 - `lab_*`: capabilities, persistent run status/events/cancellation, bounded artifacts.
 - `election_*`: aggregate public polling research, scenario margins and retrospective evaluation,
   enabled only in the explicit `election-research` profile; see [election research](docs/elections/README.md).
-- `election_data_*`: released, provenance-backed observed election results (2024 presidential state and
-  county results, electoral votes, map assets), read-only in the explicit `election-data` profile; the
+- `election_data_*`: released, provenance-backed observed election results (President, Senate and House
+  1976-2024, presidential county detail from 2000, electoral votes from 1789, district maps and a per-cycle
+  coverage inventory), read-only in the explicit `election-data` profile; the
   `election-data` CLI acquires, imports and publishes. See [observed election data](docs/elections/data-platform.md).
 - `eu5_*`: scan, findings, source/definition/reference inspection, proposed intent,
   revisioned staging, validation, deployment-plan preparation and experimental ZIPs.

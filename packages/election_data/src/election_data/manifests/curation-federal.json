@@ -1,0 +1,859 @@
+{
+ "mapping_version": "us-federal-1976-2024-v1",
+ "author": "election-data curation (reviewed in repository)",
+ "created_at": "2026-11-17T00:00:00Z",
+ "parties": [
+  {
+   "key": "independent",
+   "name": "Independent"
+  },
+  {
+   "key": "reform",
+   "name": "Reform Party"
+  }
+ ],
+ "persons": [
+  {
+   "key": "jimmy-carter",
+   "name": "Jimmy Carter",
+   "surname": "CARTER",
+   "given": [
+    "JIMMY",
+    "JAMES"
+   ]
+  },
+  {
+   "key": "gerald-ford",
+   "name": "Gerald R. Ford",
+   "surname": "FORD",
+   "given": [
+    "GERALD"
+   ]
+  },
+  {
+   "key": "walter-mondale",
+   "name": "Walter F. Mondale",
+   "surname": "MONDALE",
+   "given": [
+    "WALTER"
+   ]
+  },
+  {
+   "key": "bob-dole",
+   "name": "Robert Dole",
+   "surname": "DOLE",
+   "given": [
+    "BOB",
+    "ROBERT"
+   ]
+  },
+  {
+   "key": "ronald-reagan",
+   "name": "Ronald Reagan",
+   "surname": "REAGAN",
+   "given": [
+    "RONALD"
+   ]
+  },
+  {
+   "key": "george-h-w-bush",
+   "name": "George H. W. Bush",
+   "surname": "BUSH",
+   "given": [
+    "GEORGE"
+   ]
+  },
+  {
+   "key": "john-b-anderson",
+   "name": "John B. Anderson",
+   "surname": "ANDERSON",
+   "given": [
+    "JOHN"
+   ]
+  },
+  {
+   "key": "patrick-lucey",
+   "name": "Patrick J. Lucey",
+   "surname": "LUCEY",
+   "given": [
+    "PATRICK"
+   ]
+  },
+  {
+   "key": "geraldine-ferraro",
+   "name": "Geraldine A. Ferraro",
+   "surname": "FERRARO",
+   "given": [
+    "GERALDINE"
+   ]
+  },
+  {
+   "key": "michael-dukakis",
+   "name": "Michael S. Dukakis",
+   "surname": "DUKAKIS",
+   "given": [
+    "MICHAEL"
+   ]
+  },
+  {
+   "key": "lloyd-bentsen",
+   "name": "Lloyd Bentsen",
+   "surname": "BENTSEN",
+   "given": [
+    "LLOYD"
+   ]
+  },
+  {
+   "key": "dan-quayle",
+   "name": "Dan Quayle",
+   "surname": "QUAYLE",
+   "given": [
+    "DAN",
+    "DANFORTH",
+    "J"
+   ]
+  },
+  {
+   "key": "bill-clinton",
+   "name": "Bill Clinton",
+   "surname": "CLINTON",
+   "given": [
+    "BILL",
+    "WILLIAM"
+   ]
+  },
+  {
+   "key": "al-gore",
+   "name": "Al Gore",
+   "surname": "GORE",
+   "given": [
+    "AL",
+    "ALBERT"
+   ]
+  },
+  {
+   "key": "ross-perot",
+   "name": "Ross Perot",
+   "surname": "PEROT",
+   "given": [
+    "ROSS",
+    "H"
+   ]
+  },
+  {
+   "key": "james-stockdale",
+   "name": "James Stockdale",
+   "surname": "STOCKDALE",
+   "given": [
+    "JAMES"
+   ]
+  },
+  {
+   "key": "jack-kemp",
+   "name": "Jack Kemp",
+   "surname": "KEMP",
+   "given": [
+    "JACK"
+   ]
+  },
+  {
+   "key": "pat-choate",
+   "name": "Pat Choate",
+   "surname": "CHOATE",
+   "given": [
+    "PAT"
+   ]
+  },
+  {
+   "key": "george-w-bush",
+   "name": "George W. Bush",
+   "surname": "BUSH",
+   "given": [
+    "GEORGE"
+   ]
+  },
+  {
+   "key": "dick-cheney",
+   "name": "Richard B. Cheney",
+   "surname": "CHENEY",
+   "given": [
+    "RICHARD",
+    "DICK"
+   ]
+  },
+  {
+   "key": "joe-lieberman",
+   "name": "Joseph Lieberman",
+   "surname": "LIEBERMAN",
+   "given": [
+    "JOSEPH",
+    "JOE"
+   ]
+  },
+  {
+   "key": "ralph-nader",
+   "name": "Ralph Nader",
+   "surname": "NADER",
+   "given": [
+    "RALPH"
+   ]
+  },
+  {
+   "key": "winona-laduke",
+   "name": "Winona LaDuke",
+   "surname": "LADUKE",
+   "given": [
+    "WINONA"
+   ]
+  },
+  {
+   "key": "john-kerry",
+   "name": "John F. Kerry",
+   "surname": "KERRY",
+   "given": [
+    "JOHN"
+   ]
+  },
+  {
+   "key": "john-edwards",
+   "name": "John Edwards",
+   "surname": "EDWARDS",
+   "given": [
+    "JOHN"
+   ]
+  },
+  {
+   "key": "barack-obama",
+   "name": "Barack Obama",
+   "surname": "OBAMA",
+   "given": [
+    "BARACK"
+   ]
+  },
+  {
+   "key": "joseph-r-biden-jr",
+   "name": "Joseph R. Biden Jr.",
+   "surname": "BIDEN",
+   "given": [
+    "JOSEPH",
+    "JOE"
+   ]
+  },
+  {
+   "key": "john-mccain",
+   "name": "John McCain",
+   "surname": "MCCAIN",
+   "given": [
+    "JOHN"
+   ]
+  },
+  {
+   "key": "sarah-palin",
+   "name": "Sarah Palin",
+   "surname": "PALIN",
+   "given": [
+    "SARAH"
+   ]
+  },
+  {
+   "key": "mitt-romney",
+   "name": "Mitt Romney",
+   "surname": "ROMNEY",
+   "given": [
+    "MITT",
+    "WILLARD"
+   ]
+  },
+  {
+   "key": "paul-ryan",
+   "name": "Paul Ryan",
+   "surname": "RYAN",
+   "given": [
+    "PAUL"
+   ]
+  },
+  {
+   "key": "donald-j-trump",
+   "name": "Donald J. Trump",
+   "surname": "TRUMP",
+   "given": [
+    "DONALD"
+   ]
+  },
+  {
+   "key": "mike-pence",
+   "name": "Michael R. Pence",
+   "surname": "PENCE",
+   "given": [
+    "MICHAEL",
+    "MIKE"
+   ]
+  },
+  {
+   "key": "hillary-clinton",
+   "name": "Hillary Clinton",
+   "surname": "CLINTON",
+   "given": [
+    "HILLARY"
+   ]
+  },
+  {
+   "key": "tim-kaine",
+   "name": "Tim Kaine",
+   "surname": "KAINE",
+   "given": [
+    "TIM",
+    "TIMOTHY"
+   ]
+  },
+  {
+   "key": "gary-johnson",
+   "name": "Gary Johnson",
+   "surname": "JOHNSON",
+   "given": [
+    "GARY"
+   ]
+  },
+  {
+   "key": "bill-weld",
+   "name": "Bill Weld",
+   "surname": "WELD",
+   "given": [
+    "BILL",
+    "WILLIAM"
+   ]
+  },
+  {
+   "key": "jill-stein",
+   "name": "Jill Stein",
+   "surname": "STEIN",
+   "given": [
+    "JILL"
+   ]
+  },
+  {
+   "key": "ajamu-baraka",
+   "name": "Ajamu Baraka",
+   "surname": "BARAKA",
+   "given": [
+    "AJAMU"
+   ]
+  },
+  {
+   "key": "kamala-d-harris",
+   "name": "Kamala D. Harris",
+   "surname": "HARRIS",
+   "given": [
+    "KAMALA"
+   ]
+  },
+  {
+   "key": "jo-jorgensen",
+   "name": "Jo Jorgensen",
+   "surname": "JORGENSEN",
+   "given": [
+    "JO"
+   ]
+  },
+  {
+   "key": "spike-cohen",
+   "name": "Spike Cohen",
+   "surname": "COHEN",
+   "given": [
+    "SPIKE",
+    "JEREMY"
+   ]
+  },
+  {
+   "key": "tim-walz",
+   "name": "Tim Walz",
+   "surname": "WALZ",
+   "given": [
+    "TIM",
+    "TIMOTHY"
+   ]
+  },
+  {
+   "key": "jd-vance",
+   "name": "JD Vance",
+   "surname": "VANCE",
+   "given": [
+    "JD",
+    "J",
+    "JAMES"
+   ]
+  },
+  {
+   "key": "chase-oliver",
+   "name": "Chase Oliver",
+   "surname": "OLIVER",
+   "given": [
+    "CHASE"
+   ]
+  },
+  {
+   "key": "mike-ter-maat",
+   "name": "Mike ter Maat",
+   "surname": "MAAT",
+   "given": [
+    "MIKE",
+    "MICHAEL"
+   ]
+  }
+ ],
+ "tickets": {
+  "1976": [
+   {
+    "president": "jimmy-carter",
+    "vice_president": "walter-mondale",
+    "party": "democratic"
+   },
+   {
+    "president": "gerald-ford",
+    "vice_president": "bob-dole",
+    "party": "republican"
+   }
+  ],
+  "1980": [
+   {
+    "president": "ronald-reagan",
+    "vice_president": "george-h-w-bush",
+    "party": "republican"
+   },
+   {
+    "president": "jimmy-carter",
+    "vice_president": "walter-mondale",
+    "party": "democratic"
+   },
+   {
+    "president": "john-b-anderson",
+    "vice_president": "patrick-lucey",
+    "party": "independent"
+   }
+  ],
+  "1984": [
+   {
+    "president": "ronald-reagan",
+    "vice_president": "george-h-w-bush",
+    "party": "republican"
+   },
+   {
+    "president": "walter-mondale",
+    "vice_president": "geraldine-ferraro",
+    "party": "democratic"
+   }
+  ],
+  "1988": [
+   {
+    "president": "george-h-w-bush",
+    "vice_president": "dan-quayle",
+    "party": "republican"
+   },
+   {
+    "president": "michael-dukakis",
+    "vice_president": "lloyd-bentsen",
+    "party": "democratic"
+   }
+  ],
+  "1992": [
+   {
+    "president": "bill-clinton",
+    "vice_president": "al-gore",
+    "party": "democratic"
+   },
+   {
+    "president": "george-h-w-bush",
+    "vice_president": "dan-quayle",
+    "party": "republican"
+   },
+   {
+    "president": "ross-perot",
+    "vice_president": "james-stockdale",
+    "party": "independent"
+   }
+  ],
+  "1996": [
+   {
+    "president": "bill-clinton",
+    "vice_president": "al-gore",
+    "party": "democratic"
+   },
+   {
+    "president": "bob-dole",
+    "vice_president": "jack-kemp",
+    "party": "republican"
+   },
+   {
+    "president": "ross-perot",
+    "vice_president": "pat-choate",
+    "party": "reform"
+   }
+  ],
+  "2000": [
+   {
+    "president": "george-w-bush",
+    "vice_president": "dick-cheney",
+    "party": "republican"
+   },
+   {
+    "president": "al-gore",
+    "vice_president": "joe-lieberman",
+    "party": "democratic"
+   },
+   {
+    "president": "ralph-nader",
+    "vice_president": "winona-laduke",
+    "party": "green"
+   }
+  ],
+  "2004": [
+   {
+    "president": "george-w-bush",
+    "vice_president": "dick-cheney",
+    "party": "republican"
+   },
+   {
+    "president": "john-kerry",
+    "vice_president": "john-edwards",
+    "party": "democratic"
+   }
+  ],
+  "2008": [
+   {
+    "president": "barack-obama",
+    "vice_president": "joseph-r-biden-jr",
+    "party": "democratic"
+   },
+   {
+    "president": "john-mccain",
+    "vice_president": "sarah-palin",
+    "party": "republican"
+   }
+  ],
+  "2012": [
+   {
+    "president": "barack-obama",
+    "vice_president": "joseph-r-biden-jr",
+    "party": "democratic"
+   },
+   {
+    "president": "mitt-romney",
+    "vice_president": "paul-ryan",
+    "party": "republican"
+   }
+  ],
+  "2016": [
+   {
+    "president": "donald-j-trump",
+    "vice_president": "mike-pence",
+    "party": "republican"
+   },
+   {
+    "president": "hillary-clinton",
+    "vice_president": "tim-kaine",
+    "party": "democratic"
+   },
+   {
+    "president": "gary-johnson",
+    "vice_president": "bill-weld",
+    "party": "libertarian"
+   },
+   {
+    "president": "jill-stein",
+    "vice_president": "ajamu-baraka",
+    "party": "green"
+   }
+  ],
+  "2020": [
+   {
+    "president": "joseph-r-biden-jr",
+    "vice_president": "kamala-d-harris",
+    "party": "democratic"
+   },
+   {
+    "president": "donald-j-trump",
+    "vice_president": "mike-pence",
+    "party": "republican"
+   },
+   {
+    "president": "jo-jorgensen",
+    "vice_president": "spike-cohen",
+    "party": "libertarian"
+   }
+  ],
+  "2024": [
+   {
+    "president": "kamala-d-harris",
+    "vice_president": "tim-walz",
+    "party": "democratic"
+   },
+   {
+    "president": "donald-j-trump",
+    "vice_president": "jd-vance",
+    "party": "republican"
+   },
+   {
+    "president": "chase-oliver",
+    "vice_president": "mike-ter-maat",
+    "party": "libertarian"
+   }
+  ]
+ },
+ "decisions": [
+  {
+   "decision_id": "dec-fed-source-priority",
+   "decision_type": "source_priority",
+   "entity_id": "scope:us-federal-1976-2024",
+   "rationale": "Contest totals use the FEC official compilation where one is imported (2024 President) and otherwise the MIT Election Lab state-level files (President, Senate, House 1976-2024), which are secondary compilations of official returns and are labeled as such. County detail for President uses the MIT county file. A lower-priority source never overrides a higher one; both observation sets are stored.",
+   "scope": {
+    "contest_totals": [
+     "fec-federal-elections-2024-president",
+     "mit-state-president",
+     "mit-senate",
+     "mit-house"
+    ],
+    "county_detail": [
+     "mit-county-president"
+    ]
+   },
+   "evidence": {}
+  },
+  {
+   "decision_id": "dec-fed-mit-state-format",
+   "decision_type": "source_format",
+   "entity_id": "source:mit-state-files",
+   "rationale": "Format rules for MIT state-level files. (1) The House file is served with every record wrapped in one quoted field and inner quotes backslash-escaped; records are decoded with a fixed rule and must yield exactly 20 fields or the import stops. (2) Senate counts are written as decimals with a zero fraction (7310.0); only an exact integer value is accepted. (3) A count of -1 is the publisher's missing sentinel and is stored as missing, never as a number.",
+   "scope": {},
+   "evidence": {
+    "profile": "House 33,805 records, 987 with escaped quotes; Senate counts all end in .0; three House rows carry -1"
+   }
+  },
+  {
+   "decision_id": "dec-fed-label-classes",
+   "decision_type": "label_classification",
+   "entity_id": "source:mit-state-files",
+   "rationale": "Source rows that are not candidates are classified by reviewed label. Aggregate ballot options (kept as options and counted in valid-vote denominators): blank candidate with write-in flag, WRITEIN, WRITE-IN, OTHER WRITE-INS, SCATTERING, SCATTER, OTHER, OTHERS, ALL OTHERS, MISCELLANEOUS, NONE OF THESE CANDIDATES, NONE OF THE ABOVE, and unnamed party lines. Ballot metrics (stored as metrics, excluded from candidate denominators): UNDERVOTES, OVERVOTES, BLANK, VOID and their spelling variants, plus combined labels such as BLANK VOTE/SCATTERING, which mix blanks with scattered votes and therefore cannot be counted as valid candidate votes. Any other label is treated as a candidate name exactly as the source gives it.",
+   "scope": {
+    "aggregate_write_in": [
+     "",
+     "WRITEIN",
+     "WRITE-IN",
+     "WRITE IN",
+     "OTHER WRITE-INS",
+     "SCATTERING",
+     "SCATTER",
+     "SCATTERED"
+    ],
+    "aggregate_other": [
+     "OTHER",
+     "OTHERS",
+     "ALL OTHERS",
+     "MISCELLANEOUS"
+    ],
+    "none_of_these": [
+     "NONE OF THESE CANDIDATES",
+     "NONE OF THE ABOVE"
+    ],
+    "metrics": {
+     "UNDERVOTES": "undervotes",
+     "UNDER VOTES": "undervotes",
+     "UNDERVOTE": "undervotes",
+     "OVERVOTES": "overvotes",
+     "OVER VOTES": "overvotes",
+     "OVER VOTE": "overvotes",
+     "OVERVOTE": "overvotes",
+     "BLANK": "blank_votes",
+     "BLANKS": "blank_votes",
+     "BLANK VOTE": "blank_votes",
+     "BLANK VOTES": "blank_votes",
+     "VOID": "void_votes",
+     "VOID VOTE": "void_votes",
+     "VOID VOTES": "void_votes",
+     "SPOILED": "spoiled_ballots",
+     "BLANK VOTE/SCATTERING": "blank_and_scattering_combined",
+     "BLANK VOTE/VOID VOTE/SCATTERING": "blank_void_scattering_combined",
+     "BLANK VOTE/VOID VOTE": "blank_and_void_combined",
+     "TOTAL VOTES CAST": "source_total_votes_cast"
+    }
+   },
+   "evidence": {}
+  },
+  {
+   "decision_id": "dec-fed-fusion-sum",
+   "decision_type": "fusion_rule",
+   "entity_id": "scope:us-federal-1976-2024",
+   "rationale": "Where a candidate appears on several party lines in one contest (New York, Connecticut and others), each line is stored as its own ballot option and the candidate's published total is the sum of the lines, counted once. The sources carry no separate candidate-total row for these contests, so nothing is added twice. Rows repeated at identical candidate and party are kept as ordered batches and also summed; any contest whose summed options differ from the source's own total is flagged.",
+   "scope": {},
+   "evidence": {}
+  },
+  {
+   "decision_id": "dec-fed-senate-seats",
+   "decision_type": "seat_identity",
+   "entity_id": "office:senate",
+   "rationale": "Regular Senate contests are keyed by seat class (class I elected 2018/2024, II 2020/2026, III 2022). Classes per state are derived from the regular general elections in the source and must be two per state and 33/33/34 overall. A special election takes the state's other class when exactly one of the state's classes is regularly up that year; otherwise its class is recorded as unresolved in the seat key and never guessed.",
+   "scope": {},
+   "evidence": {}
+  },
+  {
+   "decision_id": "dec-fed-senate-special-seats",
+   "decision_type": "seat_identity",
+   "entity_id": "office:senate:special",
+   "rationale": "Corrects dec-fed-senate-seats: a special election can be for the same seat as that day's regular election (California 2022 and 2024, Illinois 2010, North Carolina 1986), so its class cannot be derived from which class is regularly up. Each special election's seat class (keyed by state and cycle) is therefore taken from this reviewed table. Twenty-five entries are supported by the source itself: a leading candidate of the special election also leads the next regular election for that class, or the same candidates contest that day's regular election. Georgia 2000 (Coverdell's seat), Nebraska 2024 (Sasse's seat) and Oklahoma 2022 (Inhofe's seat) rest on the historical record because the later election is not in the file or the incumbent did not run. A special election absent from the table is recorded with an unresolved class, never guessed. Where only the special election is recorded for a seat's regular year, it satisfies that seat in the contest inventory and stays labeled special.",
+   "scope": {
+    "special_seat_classes": {
+     "AL:1978": 3,
+     "AZ:2020": 3,
+     "CA:1992": 1,
+     "CA:2022": 3,
+     "CA:2024": 1,
+     "DE:2010": 2,
+     "GA:2000": 3,
+     "GA:2020": 3,
+     "HI:1990": 1,
+     "HI:2014": 3,
+     "IL:2010": 3,
+     "IN:1990": 3,
+     "KS:1996": 3,
+     "MN:1978": 1,
+     "MN:2018": 2,
+     "MO:2002": 1,
+     "MS:2008": 1,
+     "MS:2018": 2,
+     "NC:1986": 3,
+     "NE:2024": 2,
+     "NY:2010": 1,
+     "OK:1994": 2,
+     "OK:2014": 3,
+     "OK:2022": 2,
+     "SC:2014": 3,
+     "TN:1994": 2,
+     "WV:2010": 1,
+     "WY:2008": 1
+    }
+   },
+   "evidence": {
+    "method": "top-two candidate surname overlap between the special election and regular elections for each of the state's two classes",
+    "checked_on": "MIT Senate file version v8.0"
+   },
+   "supersedes": "dec-fed-senate-seats"
+  },
+  {
+   "decision_id": "dec-fed-stage-overrides",
+   "decision_type": "stage_mapping",
+   "entity_id": "office:senate:GA",
+   "rationale": "Georgia Senate elections that went to a runoff are coded inconsistently in the source. For 1992 and 2008 the source labels the November election 'pre' and the decisive runoff 'gen'; these are mapped to general and runoff. For 2020 the January 2021 runoffs carry year 2021 and stage 'runoff' and belong to cycle 2020; for 2022 'GEN RUNOFF' is the runoff. Runoffs are separate contest stages linked to their general election; votes are never summed across stages.",
+   "scope": {
+    "senate": {
+     "GA": {
+      "1992": {
+       "pre": "general",
+       "gen": "runoff"
+      },
+      "2008": {
+       "pre": "general",
+       "gen": "runoff"
+      }
+     }
+    }
+   },
+   "evidence": {}
+  },
+  {
+   "decision_id": "dec-fed-special-format-elections",
+   "decision_type": "inventory_exception",
+   "entity_id": "office:house:TX",
+   "rationale": "Texas held court-ordered special elections in November 1996 (13 districts, coded stage PRI and special) and November 2006 (6 districts, coded special) in place of the regular general election. These satisfy the expected seat in the contest inventory and remain labeled special.",
+   "scope": {},
+   "evidence": {}
+  },
+  {
+   "decision_id": "dec-fed-dc-delegate",
+   "decision_type": "office_scope",
+   "entity_id": "office:house_delegate",
+   "rationale": "The District of Columbia delegate appears in the House source for 2020 and 2024. Delegate races are stored under a separate non-voting office and are never counted among the 435 voting seats.",
+   "scope": {},
+   "evidence": {}
+  },
+  {
+   "decision_id": "dec-fed-county-total-selection",
+   "decision_type": "county_total_rule",
+   "entity_id": "source:mit-county-president",
+   "rationale": "General rule for choosing a county unit's all-mode total from the MIT county file, replacing the 2024 state lists. (1) Rows with mode TOTAL are used when present. (2) Otherwise, if the unit reports a single mode value (including blank), that tally is used. (3) Otherwise the unit's modes are summed, but only when the sum equals the file's own totalvotes value for that unit. Repeated rows at identical grain are summed under the same totalvotes condition. A unit failing these conditions is withheld. Every state's county partition is then compared with the selected state total and any difference is published.",
+   "scope": {
+    "also_replaces": [
+     "dec-2024-pres-mit-sd-vote-center",
+     "dec-2024-pres-mit-repeated-rows"
+    ]
+   },
+   "evidence": {
+    "profile": "Only 2020 and 2024 carry mode breakdowns; 2000-2016 report TOTAL only"
+   },
+   "supersedes": "dec-2024-pres-mit-blank-mode"
+  },
+  {
+   "decision_id": "dec-fed-county-reference-vintage",
+   "decision_type": "boundary_vintage",
+   "entity_id": "boundary:census-cb-2020-20m",
+   "rationale": "County results for 2000-2016 are joined to 2020-vintage county polygons by FIPS code and labeled reference_vintage, not historical geography. Counties whose code no longer exists in 2020 are published as tables with boundary_unavailable. No votes are reallocated between units.",
+   "scope": {},
+   "evidence": {}
+  },
+  {
+   "decision_id": "dec-fed-district-boundaries",
+   "decision_type": "boundary_vintage",
+   "entity_id": "boundary:congressional-districts",
+   "rationale": "House results are joined to the districts of the Congress they elected: Census 1:20M cartographic files for the 113th-116th, 118th and 119th Congresses and the UCLA digital boundary files for the 95th-112th. UCLA shapes are snapped to a 0.01 degree grid for display (shared borders stay shared; no district is dropped). The 117th Congress (2020 election) has no Census file; the 116th is used except in North Carolina, which was redistricted in 2019 and is published without geometry. District identity is never carried across Congresses unless the source says the same shape was in use.",
+   "scope": {
+    "congress_117_fallback": {
+     "use": 116,
+     "except_states": [
+      "NC"
+     ]
+    },
+    "quantization_decimals": 2
+   },
+   "evidence": {}
+  },
+  {
+   "decision_id": "dec-fed-derived-leaders",
+   "decision_type": "outcome_rule",
+   "entity_id": "scope:us-federal-1976-2024",
+   "rationale": "Without a sourced winner, each contest stage reports only a derived plurality leader, labeled as such. It is not a certified winner: in majority-runoff jurisdictions and ranked-choice contests the leader of a round may not be elected, and a general election with a linked runoff is marked as proceeding to that runoff.",
+   "scope": {
+    "ranked_choice_first_cycle": {
+     "ME": {
+      "house": 2018,
+      "senate": 2018,
+      "president": 2020
+     },
+     "AK": {
+      "house": 2022,
+      "senate": 2022,
+      "president": 2024
+     }
+    },
+    "majority_runoff_since": {
+     "GA": 1976,
+     "LA": 1978
+    }
+   },
+   "evidence": {}
+  },
+  {
+   "decision_id": "dec-fed-electoral-votes",
+   "decision_type": "electoral_votes",
+   "entity_id": "source:nara-electoral-college",
+   "rationale": "Actual electoral votes for 1789-2020 are transcribed from NARA's per-election tables as cast, including votes for unexpected recipients. Recipients are matched to curated tickets where possible and otherwise recorded under the NARA label. State rows must sum to the page's total row. Before 1804 each elector cast two undifferentiated votes for President; these are stored with that role and no Vice-President votes are inferred. Allocations are attached to the modern state entity for lookup only and imply no historical boundary.",
+   "scope": {},
+   "evidence": {}
+  },
+  {
+   "decision_id": "dec-fed-history-inventory",
+   "decision_type": "coverage_statement",
+   "entity_id": "scope:us-federal-pre-1976",
+   "rationale": "Coverage before 1976 is stated, not synthesized. Presidential electoral votes are available from 1789. Popular-vote returns before 1976 are not researched in this release (House Clerk tables from 1920 are PDF and need verified extraction; the ICPSR collection needs an account and license review). Senate elections before 1914 are not applicable as popular contests because senators were chosen by state legislatures.",
+   "scope": {},
+   "evidence": {}
+  }
+ ]
+}

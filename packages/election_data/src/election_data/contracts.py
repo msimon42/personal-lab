@@ -11,7 +11,8 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 API_VERSION = "1"
-Level = Literal["state", "county"]
+Level = Literal["state", "county", "district"]
+Office = Literal["president", "senate", "house", "house_delegate"]
 
 
 class Contract(BaseModel):
@@ -74,6 +75,8 @@ class StatusReport(Contract):
 
 
 class ContestsRequest(ReleaseRef, Page):
+    office: Office | None = None
+    year: int | None = Field(None, ge=1788, le=2100, description="Election cycle year.")
     state: str | None = Field(None, pattern=r"^[A-Z]{2}$", description="USPS postal code.")
 
 
@@ -98,6 +101,9 @@ class CoverageCell(Contract):
 class ContestSummary(Contract):
     contest_id: str
     label: str
+    office: str
+    cycle_year: int
+    predecessor_contest_id: str | None
     seat_key: str
     stage: str
     contest_type: str
@@ -118,7 +124,7 @@ class ContestsReport(Contract):
 
 class ResultsRequest(ReleaseRef, Page):
     contest_id: str = Field(..., max_length=64, pattern=r"^contest_[0-9a-f]{24}$")
-    level: Level = "state"
+    level: Level | None = Field(None, description="Defaults to the contest's own scope: state, or district for House.")
     unit_id: str | None = Field(None, max_length=64, pattern=r"^unit_[0-9a-f]{24}$")
 
 
@@ -196,9 +202,12 @@ class ProvenanceReport(Contract):
 
 
 class MapRequest(ReleaseRef, Page):
-    contest_id: str = Field(..., max_length=64, pattern=r"^contest_[0-9a-f]{24}$")
-    level: Level = "county"
-    limit: int = Field(50, ge=1, le=100)
+    contest_id: str | None = Field(None, max_length=64, pattern=r"^contest_[0-9a-f]{24}$",
+                                   description="One contest's own geography (its state's counties, or its district).")
+    office: Office | None = Field(None, description="With year: a national map of that office's general contests.")
+    year: int | None = Field(None, ge=1788, le=2100)
+    level: Level | None = None
+    limit: int = Field(50, ge=1, le=80)
 
 
 class MapAsset(Contract):
@@ -212,6 +221,8 @@ class MapAsset(Contract):
 
 class MapFeature(Contract):
     feature_id: str
+    feature_key: str
+    contest_id: str | None
     unit_id: str | None
     result_status: str
     leader_candidacy_id: str | None
@@ -221,7 +232,9 @@ class MapFeature(Contract):
 class MapReport(Contract):
     api_version: str = API_VERSION
     release_id: str
-    contest_id: str
+    contest_id: str | None
+    office: str
+    cycle_year: int
     level: Level
     asset: MapAsset
     features: list[MapFeature]
@@ -252,5 +265,101 @@ class IssuesReport(Contract):
     api_version: str = API_VERSION
     release_id: str
     issues: list[Issue]
+    next_cursor: int | None
+    total: int
+
+
+class CoverageRequest(ReleaseRef, Page):
+    office: Literal["president", "senate", "house"] | None = None
+    from_year: int = Field(1976, ge=1788, le=2100)
+    to_year: int = Field(2100, ge=1788, le=2100)
+    series: Literal["contest_totals", "county_detail", "electoral_votes", "boundaries"] | None = None
+    only_gaps: bool = Field(False, description="Return only rows whose status is not complete.")
+    limit: int = Field(25, ge=1, le=50)
+
+
+class CoverageRow(Contract):
+    office: str
+    cycle_year: int
+    series: str
+    coverage_status: str
+    expected: int | None
+    available: int
+    missing: list[str]
+    missing_total: int
+    extra: dict
+    notes: str | None
+
+
+class CoverageReport(Contract):
+    api_version: str = API_VERSION
+    release_id: str
+    rows: list[CoverageRow]
+    next_cursor: int | None
+    total: int
+
+
+class PresidentSummaryRequest(ReleaseRef):
+    year: int = Field(..., ge=1788, le=2100)
+
+
+class NationalCandidate(Contract):
+    display_name: str
+    party: str | None
+    votes: int
+    share: float = Field(..., description="Fraction of all reported options nationwide.")
+    states_led: int
+    states_reported: int
+
+
+class ElectoralRecipient(Contract):
+    name: str
+    role: str
+    electoral_votes: int
+
+
+class PresidentSummaryReport(Contract):
+    api_version: str = API_VERSION
+    release_id: str
+    year: int
+    popular_vote_status: str
+    states_with_totals: int
+    total_votes: int | None
+    candidates: list[NationalCandidate]
+    other_votes: int | None
+    electoral_vote_status: str
+    electoral_votes: list[ElectoralRecipient]
+    notes: list[str]
+
+
+class CompareRequest(ReleaseRef, Page):
+    year_a: int = Field(..., ge=1976, le=2100)
+    year_b: int = Field(..., ge=1976, le=2100)
+    state: str | None = Field(None, pattern=r"^[A-Z]{2}$", description="Required for county level.")
+    level: Literal["state", "county"] = "state"
+    limit: int = Field(25, ge=1, le=60)
+
+
+class ComparedUnit(Contract):
+    unit_id: str
+    label: str
+    margin_a_points: float
+    margin_b_points: float
+    swing_points: float = Field(..., description="margin_b - margin_a; positive is toward the Democratic ticket.")
+    total_a: int
+    total_b: int
+
+
+class CompareReport(Contract):
+    api_version: str = API_VERSION
+    release_id: str
+    office: str
+    year_a: int
+    year_b: int
+    level: str
+    method: str
+    units: list[ComparedUnit]
+    excluded_units: int
+    exclusions: list[str]
     next_cursor: int | None
     total: int

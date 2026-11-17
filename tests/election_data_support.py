@@ -204,7 +204,7 @@ def build_universe() -> Universe:
     return universe
 
 
-def mit_tsv(universe: Universe, extra_years: bool = True) -> bytes:
+def mit_tsv(universe: Universe, extra_years: bool = False) -> bytes:
     lines = ["\t".join(HEADER)]
     if extra_years:
         lines.append("\t".join(["ALABAMA", "FIRST AL", "2020", "AL", "1001", "US PRESIDENT", "JOSEPH R BIDEN JR",
@@ -267,8 +267,8 @@ def nara_page(universe: Universe) -> bytes:
     rows.append("<tr><td>Total</td>" + "".join(f"<td>{value}</td>" for value in totals) + "</tr>")
     rows.append("<tr><td>Notes</td></tr>")
     return ("<html><body><table><tr><td>summary</td></tr></table><table>"
-            "<tr><th>State</th><th>Number of Electoral Votes for Each State</th><th>For President</th>"
-            "<th>For Vice-President</th></tr><tr><th>Kamala D. Harris, of California</th>"
+            "<tr><th>State</th><th>Number of Electoral Votes for Each State</th><th colspan=\"2\">For President</th>"
+            "<th colspan=\"2\">For Vice-President</th></tr><tr><th>Kamala D. Harris, of California</th>"
             "<th>Donald J. Trump, of Florida</th><th>Tim Walz,&nbsp;of Minnesota</th><th>JD Vance,&nbsp;of Ohio</th></tr>"
             + "".join(rows) + "</table></body></html>").encode("utf-8")
 
@@ -300,7 +300,7 @@ def write_sources(directory: Path, universe: Universe | None = None) -> dict[str
     state_zip, county_zip = boundary_zips(universe)
     files = {"census-state-2020": ("state.zip", state_zip), "census-county-2020": ("county.zip", county_zip),
              "fec-president-2024": ("fec.xlsx", fec_workbook(universe)),
-             "mit-county-president-2024": ("mit.tab", mit_tsv(universe)),
+             "mit-county-president": ("mit.tab", mit_tsv(universe)),
              "nara-electoral-2024": ("nara.html", nara_page(universe))}
     paths = {}
     for adapter, (name, payload) in files.items():
@@ -316,7 +316,7 @@ def load_universe(root_dir: Path, sources: dict[str, Path]):
 
     from election_data.acquire import add_manual_artifact, register_sources
     from election_data.core import DataRoot, connect, migrate, writer_lock
-    from election_data.importer import ADAPTERS, run_adapter
+    from election_data.importer import ordered, run_adapter
     from election_data.pipeline import ensure_reference, load_curation
 
     root = DataRoot.open(root_dir, create=True)
@@ -325,8 +325,100 @@ def load_universe(root_dir: Path, sources: dict[str, Path]):
         migrate(connection)
         register_sources(connection)
         ensure_reference(connection, load_curation()[0])
-        for name in sorted(ADAPTERS, key=lambda key: ADAPTERS[key].order):
-            entry = ADAPTERS[name]
-            artifact = add_manual_artifact(root, connection, entry.source_id, entry.artifact_key, sources[name])
-            results[name] = run_adapter(root, connection, name, artifact["artifact_id"])
+        for entry in ordered():
+            if entry.name not in sources:
+                continue
+            artifact = add_manual_artifact(root, connection, entry.source_id, entry.artifact_key, sources[entry.name])
+            results[entry.name] = run_adapter(root, connection, entry.name, artifact["artifact_id"])
     return root, results
+
+
+# --- synthetic federal baseline (state-level President/Senate/House, districts, more NARA years) ----
+PRESIDENT_HEADER = ["year", "state", "state_po", "state_fips", "state_cen", "state_ic", "office", "candidate",
+                    "party_detailed", "writein", "candidatevotes", "totalvotes", "version", "notes", "party_simplified"]
+SENATE_HEADER = ["year", "state", "state_po", "state_fips", "state_cen", "state_ic", "office", "district", "stage",
+                 "special", "candidate", "party_detailed", "writein", "mode", "candidatevotes", "totalvotes",
+                 "unofficial", "version", "party_simplified"]
+HOUSE_HEADER = ["year", "state", "state_po", "state_fips", "state_cen", "state_ic", "office", "district", "stage",
+                "runoff", "special", "candidate", "party", "writein", "mode", "candidatevotes", "totalvotes",
+                "unofficial", "version", "fusion_ticket"]
+_NAMES = {postal: (name.upper(), str(int(fips))) for postal, fips, name in STATES}
+
+
+def president_csv(rows: list[tuple]) -> bytes:
+    """rows: (year, postal, candidate, party, writein, votes, total)."""
+    lines = [",".join(PRESIDENT_HEADER)]
+    for year, postal, candidate, party, writein, votes, total in rows:
+        name, fips = _NAMES[postal]
+        quoted = f'"{candidate}"' if "," in candidate else candidate
+        lines.append(",".join([str(year), name, postal, fips, "1", "1", "US PRESIDENT", quoted, party, writein,
+                               str(votes), str(total), "20210113", "", "OTHER"]))
+    return ("\n".join(lines) + "\n").encode("utf-8")
+
+
+def senate_tsv(rows: list[tuple]) -> bytes:
+    """rows: (year, postal, stage, special, candidate, party, votes, total[, unofficial])."""
+    lines = ["\t".join(SENATE_HEADER)]
+    for year, postal, stage, special, candidate, party, votes, total, *rest in rows:
+        name, fips = _NAMES[postal]
+        lines.append("\t".join([str(year), name, postal, fips, "1.0", "1", "US SENATE", "statewide", stage, special,
+                                candidate, party, "False" if candidate else "True", "total", votes, total,
+                                rest[0] if rest else "False", "20210114", "OTHER"]))
+    return ("\n".join(lines) + "\n").encode("utf-8")
+
+
+def house_wrapped(rows: list[tuple]) -> bytes:
+    """rows: (year, postal, district, stage, runoff, special, candidate, party, votes, total, fusion).
+
+    Reproduces the served encoding: each record is one quoted field; names containing quotes or
+    commas are wrapped in \\" and inner quotes written as \\\\"\\".
+    """
+    lines = [",".join(HOUSE_HEADER)]
+    for year, postal, district, stage, runoff, special, candidate, party, votes, total, fusion in rows:
+        name, fips = _NAMES[postal]
+        if '"' in candidate or "," in candidate:
+            candidate = '\\"' + candidate.replace('"', '\\\\"\\"') + '\\"'
+        fields = [str(year), name, postal, fips, "1", "1", "US HOUSE", str(district), stage, runoff, special, candidate,
+                  party, "TRUE" if candidate == "WRITEIN" else "FALSE", "TOTAL", str(votes), str(total), "FALSE",
+                  "20250910", fusion]
+        lines.append('"' + ",".join(fields) + '"')
+    return ("\n".join(lines) + "\n").encode("utf-8")
+
+
+def nara_modern_page(year: int, recipients: list[tuple[str, str]], rows: list[tuple], *, total: list[int] | None = None,
+                     footnote: bool = False) -> bytes:
+    """recipients: [(label, 'p'|'v')]; rows: (state, electors, [votes...])."""
+    presidents = sum(role == "p" for _, role in recipients)
+    header = (f'<tr><th>State</th><th>Electoral Vote of Each State</th><th colspan="{presidents}">For President</th>'
+              f'<th colspan="{len(recipients) - presidents}">For Vice-President</th></tr>')
+    names = "<tr>" + "".join(f"<th>{label}</th>" for label, _ in recipients) + "</tr>"
+    body, sums = "", [0] * (len(recipients) + 1)
+    for state, electors, votes in rows:
+        sums = [a + b for a, b in zip(sums, [electors, *votes])]
+        marker = "<sup>1</sup>" if footnote else ""
+        body += f"<tr><td>{state}{marker}</td><td>{electors}{marker}</td>" + "".join(
+            f"<td>{value or '-'}</td>" for value in votes) + "</tr>"
+    body += "<tr><td>Total</td>" + "".join(f"<td>{value}</td>" for value in (total or sums)) + "</tr>"
+    body += "<tr><td>*A footnote row with one cell.</td></tr>"
+    return f"<html><body><table>{header}{names}{body}</table></body></html>".encode("utf-8")
+
+
+def census_cd_zip(congress: int, layer: str, districts: list[tuple[str, str]]) -> bytes:
+    """districts: (postal, code); each becomes a unit square."""
+    fips = {postal: code for postal, code, _ in STATES}
+    records = [({"STATEFP": fips[postal], f"CD{congress}FP": code, "GEOID": fips[postal] + code, "NAMELSAD": "x"},
+                [_square(-100 + index * 2, 30, 1.5, 1.5)]) for index, (postal, code) in enumerate(districts)]
+    records.append(({"STATEFP": "72", f"CD{congress}FP": "98", "GEOID": "7298", "NAMELSAD": "territory"},
+                    [_square(-60, 18, 1, 1)]))
+    return shapefile_zip(layer, records)
+
+
+def ucla_zip(congress: int, districts: list[tuple[str, int, int, int]]) -> bytes:
+    """districts: (state name, district, start congress, end congress); fine-grained squares."""
+    records = []
+    for index, (state, district, start, end) in enumerate(districts):
+        x = -110 + index * 2
+        ring = [(x, 40), (x, 41.0004), (x + 0.5003, 41.0004), (x + 1.0007, 41.0004), (x + 1.0007, 40), (x, 40)]
+        records.append(({"STATENAME": state, "DISTRICT": f"{district}.000000", "STARTCONG": f"{start}.000000",
+                         "ENDCONG": f"{end}.000000", "ID": f"{index:03d}{start:03d}{end:03d}{district:03d}"}, [ring]))
+    return shapefile_zip(f"districts{congress:03d}", records)

@@ -99,7 +99,10 @@ def ensure_reference(connection: sqlite3.Connection, curation: dict[str, Any]) -
                                (person_id(person["key"]), person["name"], person["key"]))
         connection.execute("INSERT OR IGNORE INTO geographic_entity VALUES (?,?,?,?)",
                            (geo_id("nation:US"), "nation", "United States", "nation:US"))
-        for decision in curation["decisions"]:
+        from .federal import ensure_federal_reference, load_federal
+        ensure_federal_reference(connection)
+        federal = load_federal()[0]
+        for decision in [*curation["decisions"], *federal["decisions"]]:
             payload = {key: value for key, value in decision.items() if key != "decision_id"}
             content_hash = sha256_text(canonical_json(payload))
             existing = connection.execute("SELECT content_hash FROM curation_decision WHERE decision_id=?",
